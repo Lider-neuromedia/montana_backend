@@ -1,0 +1,14 @@
+<?php
+
+namespace App\Entities;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Formulario extends Model
+{
+    protected $table = 'formularios';
+
+    protected $fillable = [
+        'formulario',
+    ];
+}
