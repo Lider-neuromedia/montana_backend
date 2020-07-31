@@ -14,6 +14,8 @@ class User extends Authenticatable
 {
     use Notifiable, HasRoles, HasApiTokens;
 
+    protected $table = 'users';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -44,7 +46,9 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
-    // public function rol(){
-    //     return $this->belongsTo(Rol::class);
-    // }
+
+    public function vendedor_clientes(){
+        /* Argumentos = (Entidad,tabla pivot, llave dentro de la tabla, id de la entidad) */
+        return $this->belongsToMany(User::class,'vendedor_clientes','vendedor_id','cliente_id');
+    }
 }

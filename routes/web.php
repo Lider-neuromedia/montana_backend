@@ -23,3 +23,9 @@ Route::get('/vendedores','UserController@getVendedores');
 Route::get('/vendedor/{id}','UserController@getVendedor');
 Route::get('/clientes','UserController@getClientes');
 Route::get('/cliente/{id}','UserController@getCliente');
+
+Route::get('/clientes-asignados/{id}', 'UserController@assignedCustomers');
+
+
+Route::get('/relacion/{id}', 'VendedorClienteController@show');
+Route::get('/users/{id}', 'UserController@show');

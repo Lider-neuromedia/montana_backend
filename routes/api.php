@@ -36,13 +36,14 @@ use Illuminate\Http\Request;
 // Route::apiResource('/tiendas', 'TiendaController');
 // Route::post('/create-admin','UserController@createAdmin');
 // Route::apiResource('/users', 'UserController');
-
 // Route::post('/create-admin','UserController@createAdmin');
 // Route::apiResource('/user-data', 'UserDataController');
-// Route::apiResource('/roles', 'RolController');
 // Route::apiResource('/permissions', 'PermissionController');
 
+
+Route::apiResource('/roles', 'RolController');
 Route::apiResource('/users', 'UserController');
+
 
 Route::group( [ 'middleware' => ['role:administrador'] ], function() {
     // Route::apiResource('/users', 'UserController');

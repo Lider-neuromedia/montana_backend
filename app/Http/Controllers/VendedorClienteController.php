@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Entities\VendedorCliente;
+use App\Entities\User;
 use Illuminate\Http\Request;
 
 class VendedorClienteController extends Controller
@@ -14,7 +15,7 @@ class VendedorClienteController extends Controller
      */
     public function index()
     {
-        //
+        return VendedorCliente::all();
     }
 
     /**
@@ -44,9 +45,10 @@ class VendedorClienteController extends Controller
      * @param  \App\Entities\VendedorCliente  $vendedorCliente
      * @return \Illuminate\Http\Response
      */
-    public function show(VendedorCliente $vendedorCliente)
+    public function show($id)
     {
-        //
+        $user = User::find($id)->vendedor_clientes()->get();
+        return $user;
     }
 
     /**

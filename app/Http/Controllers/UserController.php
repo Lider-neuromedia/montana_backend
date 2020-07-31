@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Entities\User;
 use App\Entities\UserData;
+use App\Entities\VendedorCliente;
 use Illuminate\Http\Request;
 
 // use App\Entities\Rol;
@@ -127,6 +128,17 @@ class UserController extends Controller
         //
     }
 
+    public function assignedCustomers($id){
+
+        // $idAsig = intval($id);
+
+        // // $assignedCustomers = VendedorCliente::where('vendedor_id',$id)->get();
+        // // return $assignedCustomers;
+
+        // // $assignedCustomers = User::find($id)->vendedores()->get();
+        // dd($idAsig);
+    }
+
     /**
      * Store a newly created resource in storage.
      *
@@ -173,8 +185,8 @@ class UserController extends Controller
      */
     public function show($id)
     {
-        $user = User::find($id);
-        return $user;
+        // $user = User::find($id);
+        // return $user;
     }
 
     /**
