@@ -17,31 +17,32 @@ use Illuminate\Http\Request;
 //     return $request->user();
 // });
 
-Route::apiResource('/catalogos', 'CatalogoController');
-Route::apiResource('/categorias', 'CategoriaController');
-Route::apiResource('/ciudades', 'CiudadController');
-Route::apiResource('/cilente-tienda', 'ClienteTiendaController');
-Route::apiResource('/comentarios', 'ComentarioController');
-Route::apiResource('/departamentos', 'DepartamentoController');
-Route::apiResource('/descuentos', 'DescuentoController');
-Route::apiResource('/encuestas', 'EncuestaController');
-Route::apiResource('/encuesta-pregunta', 'EncuestaPreguntaController');
-Route::apiResource('/estados', 'EstadoController');
-Route::apiResource('/formularios', 'FormularioController');
-Route::apiResource('/galeria-productos', 'GaleriaProductoController');
-Route::apiResource('/iva', 'IvaController');
-Route::apiResource('/marcas', 'MarcaController');
-Route::apiResource('/preguntas', 'PreguntaController');
-Route::apiResource('/productos', 'ProductoController');
-Route::apiResource('/tiendas', 'TiendaController');
-Route::post('/create-admin','UserController@createAdmin');
+// Route::apiResource('/catalogos', 'CatalogoController');
+// Route::apiResource('/categorias', 'CategoriaController');
+// Route::apiResource('/ciudades', 'CiudadController');
+// Route::apiResource('/cilente-tienda', 'ClienteTiendaController');
+// Route::apiResource('/comentarios', 'ComentarioController');
+// Route::apiResource('/departamentos', 'DepartamentoController');
+// Route::apiResource('/descuentos', 'DescuentoController');
+// Route::apiResource('/encuestas', 'EncuestaController');
+// Route::apiResource('/encuesta-pregunta', 'EncuestaPreguntaController');
+// Route::apiResource('/estados', 'EstadoController');
+// Route::apiResource('/formularios', 'FormularioController');
+// Route::apiResource('/galeria-productos', 'GaleriaProductoController');
+// Route::apiResource('/iva', 'IvaController');
+// Route::apiResource('/marcas', 'MarcaController');
+// Route::apiResource('/preguntas', 'PreguntaController');
+// Route::apiResource('/productos', 'ProductoController');
+// Route::apiResource('/tiendas', 'TiendaController');
+// Route::post('/create-admin','UserController@createAdmin');
+// Route::apiResource('/users', 'UserController');
+
+// Route::post('/create-admin','UserController@createAdmin');
+// Route::apiResource('/user-data', 'UserDataController');
+// Route::apiResource('/roles', 'RolController');
+// Route::apiResource('/permissions', 'PermissionController');
+
 Route::apiResource('/users', 'UserController');
-
-Route::post('/create-admin','UserController@createAdmin');
-
-Route::apiResource('/user-data', 'UserDataController');
-Route::apiResource('/roles', 'RolController');
-Route::apiResource('/permissions', 'PermissionController');
 
 Route::group( [ 'middleware' => ['role:administrador'] ], function() {
     // Route::apiResource('/users', 'UserController');

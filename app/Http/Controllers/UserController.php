@@ -19,7 +19,7 @@ class UserController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function index(){
-        return User::all();
+        return User::paginate(4);
         // $user = User::all();
         // // $rol = Rol::all();
         // // $data = Arr::collapse([$user,$rol]);
@@ -95,8 +95,9 @@ class UserController extends Controller
 
         $userdata = UserData::create([
             'user_id' => $user->id,
-            'field_key' => 'default',
-            'value_key' => $request->name,
+            // 'field_key' => $request->name,
+            'campo_id' => $request->name,
+            'value_key' => $request->nombre,
         ]);
 
         return response()->json([
@@ -134,8 +135,34 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        $user = User::create($request->all());
-        return $user;
+        $request->validate([
+            'rol_id'   => 'required',
+            'name'     => 'required|string',
+            'email'    => 'required|string|email|unique:users',
+            'password' => 'required|string',
+        ]);
+
+        $user = User::create([
+            'rol_id' => $request->rol_id,
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => bcrypt($request->password)
+        ]);
+
+        $metadata = $request->userdata;
+        if($metadata != null){
+            foreach($metadata as $key => $value){
+                $metadata = UserData::create([
+                    'user_id' => $user->id,
+                    'field_key' => $key,
+                    'value_key' => $value
+                ]);
+            }
+        }
+
+        return response()->json([
+            'message' => 'Successfully created user!'
+        ], 201);
     }
 
     /**
