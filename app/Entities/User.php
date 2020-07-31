@@ -51,4 +51,9 @@ class User extends Authenticatable
         /* Argumentos = (Entidad,tabla pivot, llave dentro de la tabla, id de la entidad) */
         return $this->belongsToMany(User::class,'vendedor_clientes','vendedor_id','cliente_id');
     }
+
+    public function cliente_vendedor(){
+        /* Argumentos = (Entidad,tabla pivot, llave dentro de la tabla, id de la entidad) */
+        return $this->belongsToMany(User::class,'vendedor_clientes','cliente_id','vendedor_id');
+    }
 }

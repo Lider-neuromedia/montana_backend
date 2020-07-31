@@ -47,8 +47,8 @@ class VendedorClienteController extends Controller
      */
     public function show($id)
     {
-        $user = User::find($id)->vendedor_clientes()->get();
-        return $user;
+        $cliente = User::find($id)->vendedor_clientes()->get();
+        return $cliente;
     }
 
     /**

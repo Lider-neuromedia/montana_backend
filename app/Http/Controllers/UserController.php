@@ -27,10 +27,15 @@ class UserController extends Controller
         // return $user;
     }
 
+    /*
+     * Traer usuarios por su tipo de rol
+     */
     public function getForRole($rol){
         $userdata = User::where('rol_id',$rol)->get();
         return $userdata;
     }
+
+
 
     public function getVendedores(){
         $userdata = User::where('rol_id',2)->get();
@@ -63,7 +68,6 @@ class UserController extends Controller
         $metadata = UserData::where('user_id',$id)->get();
 
         $filterData = [];
-
         foreach($metadata as $mt){
             $filterData[] = [
                 'field_key' => $mt->field_key,
@@ -173,8 +177,30 @@ class UserController extends Controller
         }
 
         return response()->json([
+            'tmp_user' => $user->id,
             'message' => 'Successfully created user!'
         ], 201);
+    }
+
+    public function userData(Request $request){
+
+        return $request;
+
+        $metadata[] = $request;
+        if($metadata != null){
+            foreach($metadata as $key => $value){
+                $metadata[] = UserData::create([
+                    'user_id' => $request->user_id,
+                    'field_key' => $key,
+                    'value_key' => $value
+                ]);
+            }
+        }
+
+        return response()->json([
+            'message' => 'Successfully created user!'
+        ], 201);
+
     }
 
     /**
@@ -185,8 +211,8 @@ class UserController extends Controller
      */
     public function show($id)
     {
-        // $user = User::find($id);
-        // return $user;
+        $user = User::find($id);
+        return $user;
     }
 
     /**

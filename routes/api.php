@@ -43,6 +43,8 @@ use Illuminate\Http\Request;
 
 Route::apiResource('/roles', 'RolController');
 Route::apiResource('/users', 'UserController');
+// Route::post('/userdata', 'UserController@userData');
+Route::apiResource('/userdata', 'UserDataController');
 
 
 Route::group( [ 'middleware' => ['role:administrador'] ], function() {

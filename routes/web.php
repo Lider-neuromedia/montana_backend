@@ -28,4 +28,6 @@ Route::get('/clientes-asignados/{id}', 'UserController@assignedCustomers');
 
 
 Route::get('/relacion/{id}', 'VendedorClienteController@show');
-Route::get('/users/{id}', 'UserController@show');
+// Route::get('/users/{id}', 'UserController@show');
+
+Route::get('/users-for-rol/{id}', 'UserController@getForRole');
