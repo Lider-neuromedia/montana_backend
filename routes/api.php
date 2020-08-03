@@ -47,6 +47,7 @@ Route::apiResource('/users', 'UserController');
 Route::apiResource('/userdata', 'UserDataController');
 
 
+
 Route::group( [ 'middleware' => ['role:administrador'] ], function() {
     // Route::apiResource('/users', 'UserController');
 });

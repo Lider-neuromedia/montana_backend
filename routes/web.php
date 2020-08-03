@@ -31,3 +31,5 @@ Route::get('/relacion/{id}', 'VendedorClienteController@show');
 // Route::get('/users/{id}', 'UserController@show');
 
 Route::get('/users-for-rol/{id}', 'UserController@getForRole');
+Route::get('/users-admin/{name}', 'UserController@searchAdmin');
+Route::get('/users-admin', 'UserController@searchAdmin');

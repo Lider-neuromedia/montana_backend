@@ -7,6 +7,8 @@ use App\Entities\UserData;
 use App\Entities\VendedorCliente;
 use Illuminate\Http\Request;
 
+use Illuminate\Support\Facades\DB;
+
 // use App\Entities\Rol;
 
 use Illuminate\Support\Collection;
@@ -33,6 +35,18 @@ class UserController extends Controller
     public function getForRole($rol){
         $userdata = User::where('rol_id',$rol)->get();
         return $userdata;
+    }
+
+    /*
+     * buscador administradores
+     */
+    public function searchAdmin($name = null){
+        if($name){
+            $admin = DB::table('users')->where('name','like','%'. $name .'%')->get();
+        } else {
+            $admin = User::where('rol_id',1)->get();
+        }
+        return $admin;
     }
 
 

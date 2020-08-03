@@ -35,21 +35,22 @@ class UserDataController extends Controller
      */
     public function store(Request $request)
     {
-        $metadata[] = $request;
-        if($metadata != null){
-            foreach($metadata as $key => $value){
-                $metadata = UserData::create([
-                    'user_id' => $metadata[0],
-                    'field_key' => $key,
-                    'value_key' => $value
-                ]);
-            }
-        }
 
+        $data = $request->all();
+        foreach($data as $d){
+
+            $metadata = UserData::create([
+                'user_id' => $d['user_id'],
+                'field_key' => $d['field_key'],
+                'value_key' => $d['value']
+            ]);
+
+        }
+        
         return response()->json([
-            'tmp_user' => $user->id,
-            'message' => 'Successfully created user!'
-        ], 201);
+            'messages' => 'Datos enviados correctamente'
+        ]);
+
     }
 
     /**
@@ -87,6 +88,7 @@ class UserDataController extends Controller
         $userData->update($request->all());
         return $userData;
     }
+
 
     /**
      * Remove the specified resource from storage.
