@@ -9,8 +9,9 @@ use Illuminate\Http\Request;
 
 use Illuminate\Support\Facades\DB;
 
-// use App\Entities\Rol;
+use App\Http\Requests\UserRequest;
 
+// use App\Entities\Rol;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Arr;
 
@@ -33,7 +34,21 @@ class UserController extends Controller
      * Traer usuarios por su tipo de rol
      */
     public function getForRole($rol){
-        $userdata = User::where('rol_id',$rol)->get();
+
+        $userdata = DB::select('
+            select * from users
+            where rol_id = 2
+        ');
+   
+        // $userdata = DB::select('
+        //     select u.name, u.email, data1.value_key as "telefono", data2.value_key as "codigo"
+        //     from users as u, user_data as data1, user_data as data2
+        //     where data1.field_key = "telefono"
+        //     and data2.field_key = "codigo"
+        //     and u.rol_id = "'.$rol.'"
+        //     #GROUP BY "telefono"
+        // ');
+
         return $userdata;
     }
 
@@ -42,14 +57,23 @@ class UserController extends Controller
      */
     public function searchAdmin($name = null){
         if($name){
-            $admin = DB::table('users')->where('name','like','%'. $name .'%')->get();
+            //$admin = DB::table('users')->where('name','like','%'. $name .'%')->get();
+
+            // $admin = DB::table('users')->join('user_data','users.id', '=','user_data.user_id' )
+            //                            ->select('users.*','user_data.field_key','user_data.value_key')
+            //                            ->get();
+           
+
         } else {
-            $admin = User::where('rol_id',1)->get();
+            //$admin = User::where('rol_id',1)->get();
+            $admin = DB::table('users')->join('user_data','users.id', '=','user_data.user_id' )
+                                       ->select('users.*','user_data.field_key','user_data.value_key')
+                                       ->where('field_key','telefono')
+                                       ->where('rol_id',1)
+                                       ->get();
         }
         return $admin;
     }
-
-
 
     public function getVendedores(){
         $userdata = User::where('rol_id',2)->get();
@@ -66,14 +90,26 @@ class UserController extends Controller
         $metadata = UserData::where('user_id',$id)->get();
         //return $metadata;
 
-        return response()->json([
-            'rol' => $user[0]->rol_id,
-            'nombres' => $metadata[0]->value_key,
-            'apellidos' => $metadata[1]->value_key,
-            'telefono' => $metadata[2]->value_key,
-            'email' => $user[0]->email,
-            'ciudad' => $metadata[4]->value_key,
-        ]);
+        $filterData = [];
+        foreach($metadata as $mt){
+            $filterData[] = [
+                'field_key' => $mt->field_key,
+                'value_key' => $mt->value_key
+            ];
+        }
+
+        return response()->json(
+            $filterData
+        );
+
+        // return response()->json([
+        //     'rol' => $user[0]->rol_id,
+        //     'nombres' => $metadata[0]->value_key,
+        //     'apellidos' => $metadata[1]->value_key,
+        //     'telefono' => $metadata[2]->value_key,
+        //     'email' => $user[0]->email,
+        //     'ciudad' => $metadata[4]->value_key,
+        // ]);
 
     }
 
@@ -163,14 +199,20 @@ class UserController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+
+    // public function store(Request - UserRequest $request)
+    
+    public function store(UserRequest $request)
     {
-        $request->validate([
-            'rol_id'   => 'required',
-            'name'     => 'required|string',
-            'email'    => 'required|string|email|unique:users',
-            'password' => 'required|string',
-        ]);
+        $validate = $request->validated();
+
+        // return $validate;
+        // $request->validate([
+        //     'rol_id'   => 'required',
+        //     'name'     => 'required|string',
+        //     'email'    => 'required|string|email|unique:users',
+        //     'password' => 'required|string',
+        // ]);
 
         $user = User::create([
             'rol_id' => $request->rol_id,

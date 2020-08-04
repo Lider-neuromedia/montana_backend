@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Entities\UserData;
 use Illuminate\Http\Request;
 
+use App\Http\Requests\UserDataRequest;
+
 class UserDataController extends Controller
 {
     /**
@@ -33,8 +35,11 @@ class UserDataController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    // public function store(Request $request)
+    public function store(UserDataRequest $request)
     {
+
+        $validate = $request->validated();
 
         $data = $request->all();
         foreach($data as $d){
