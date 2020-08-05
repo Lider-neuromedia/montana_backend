@@ -45,6 +45,9 @@ Route::apiResource('/roles', 'RolController');
 Route::apiResource('/users', 'UserController');
 // Route::post('/userdata', 'UserController@userData');
 Route::apiResource('/userdata', 'UserDataController');
+Route::post('/delete-users', 'UserController@destroyUsers');
+
+Route::apiResource('/asignar-cliente', 'VendedorClienteController');
 
 
 

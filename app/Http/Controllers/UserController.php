@@ -301,9 +301,25 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
+    // public function destroy(User $user)
     public function destroy(User $user)
     {
-        $userData->delete();
-        return $userData;
+        // return $user;
+        $user->delete();
+        return $user;
     }
+
+    public function destroyUsers(Request $request)
+    {
+        $data = $request->all();
+        
+        for($i = 0; $i < count($data); $i++ ){
+            User::where('id',$data[$i])->delete();
+        }
+        return response()->json([
+            'messages' => 'Datos eliminados',
+        ], 201);
+
+    }
+
 }

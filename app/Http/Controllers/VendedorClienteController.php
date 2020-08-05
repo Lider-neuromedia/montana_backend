@@ -36,7 +36,8 @@ class VendedorClienteController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $asingar = VendedorCliente::create($request->all());
+        return $asingar;
     }
 
     /**

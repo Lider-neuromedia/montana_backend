@@ -27,7 +27,6 @@ class UserRequest extends FormRequest
             'name' => 'required|string',
             'email' => 'required|email:rfc,dns',
             'password' => 'required|string',
-            'nombres' => 'required'
         ];
     }
 
@@ -37,8 +36,6 @@ class UserRequest extends FormRequest
             'name' => 'nombre',
             'email' => 'email',
             'password' => 'contraseña',
-
-            'nombres' => 'nombre'
         ];
     }
 
@@ -48,7 +45,6 @@ class UserRequest extends FormRequest
             'name.required' => 'El :attribute es obligatorio',
             'email.required' => 'El :attribute es obligatorio',
             'password.required' => 'La :attribute es obligatoria',
-            'nombres.required' => 'El :attribute es obligatorio',
         ];
     }
 }
