@@ -35,26 +35,39 @@ class UserDataController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    // public function store(Request $request)
-    public function store(UserDataRequest $request)
+    public function store(Request $request)
+    // public function store(UserDataRequest $request)
     {
 
-        $validate = $request->validated();
+        // return $request->all();
 
-        $data = $request->all();
-        foreach($data as $d){
-
-            $metadata = UserData::create([
-                'user_id' => $d['user_id'],
-                'field_key' => $d['field_key'],
-                'value_key' => $d['value']
-            ]);
-
-        }
-        
-        return response()->json([
-            'messages' => 'Datos enviados correctamente'
+        $request->validate([
+            'nombres'   => 'required',
+            // 'apellidos'     => 'required',
+            // 'tipo_documento'    => 'required',
+            // 'numero_documento'    => 'required',
+            // 'celular' => 'required',
+            // 'codigo' => 'required',
         ]);
+        return $request;
+
+        // return $request;
+        // $validate = $request->validated();
+
+        // $data = $request->all();
+        // foreach($data as $d){
+
+        //     $metadata = UserData::create([
+        //         'user_id' => $d['user_id'],
+        //         'field_key' => $d['field_key'],
+        //         'value_key' => $d['value']
+        //     ]);
+
+        // }
+        
+        // return response()->json([
+        //     'messages' => 'Datos enviados correctamente'
+        // ]);
 
     }
 

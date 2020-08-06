@@ -6,6 +6,8 @@ use App\Entities\VendedorCliente;
 use App\Entities\User;
 use Illuminate\Http\Request;
 
+
+
 class VendedorClienteController extends Controller
 {
     /**

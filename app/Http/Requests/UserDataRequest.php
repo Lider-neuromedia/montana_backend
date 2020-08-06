@@ -24,36 +24,22 @@ class UserDataRequest extends FormRequest
     public function rules()
     {
         return [
-            'nombres' => 'required|string',
-            'apellidos' => 'required|string',
-            'tipo_documento' => 'required',
-            'numero_documento' => 'required',
-            'celular' => 'required',
-            'codigo' => 'required',
+            'nombres' => 'required'
         ];
     }
 
     public function attributes()
     {
         return [
-            'nombres' => 'nombre',
-            'apellidos' => 'apellido',
-            'tipo_documento' => 'tipo de documento',
-            'numero_documento' => 'número de documento',
-            'celular' => 'número',
-            'codigo' => 'código',
+            'nombres' => 'nombres',
         ];
     }
 
     public function messages()
     {
         return [
-            'nombres.required' => 'El :attribute es obligatorio',
-            'apellidos.required' => 'El :attribute es obligatorio',
-            'tipo_documento.required' => 'El :attribute es obligatorio',
-            'numero_documento.required' => 'El :attribute es obligatorio',
-            'celular.required' => 'Ingresa un :attribute de contacto',
-            'codigo.required' => 'El :attribute es obligatorio',
+            'nombres.required' => 'El :attribute es obligatorio'
         ];
     }
+
 }

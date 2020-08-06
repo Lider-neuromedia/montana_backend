@@ -37,7 +37,7 @@ class UserController extends Controller
 
         $userdata = DB::select('
             select * from users
-            where rol_id = 2
+            where rol_id = "'.$rol.'"
         ');
    
         // $userdata = DB::select('
@@ -200,12 +200,10 @@ class UserController extends Controller
      * @return \Illuminate\Http\Response
      */
 
-    // public function store(Request - UserRequest $request)
     
     public function store(UserRequest $request)
+    // public function store(Request $request)
     {
-        $validate = $request->validated();
-
         // return $validate;
         // $request->validate([
         //     'rol_id'   => 'required',
@@ -213,7 +211,8 @@ class UserController extends Controller
         //     'email'    => 'required|string|email|unique:users',
         //     'password' => 'required|string',
         // ]);
-
+        
+        $validate = $request->validated();
         $user = User::create([
             'rol_id' => $request->rol_id,
             'name' => $request->name,
