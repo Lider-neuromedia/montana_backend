@@ -35,17 +35,17 @@ class AuthController extends Controller
             'password'    => 'required|string',
             'remember_me' => 'boolean',
         ]);
-        $credentials = request(['email', 'password']);
+        // $credentials = request(['email', 'password']);
+        $credentials = $request->only('email', 'password');
         if (!Auth::attempt($credentials)) {
             return response()->json([
-                'message' => 'Unauthorized'], 401);
+                    'message' => 'Unauthorized'
+                ], 401
+            );
         }
 
         $user = auth()->user();
         $userdata = UserData::where('user_id',$user->id)->get();
-
-        //dd($userdata);
-
         $tokenResult = $user->createToken('Personal Access Token');
         $token = $tokenResult->token;
         if ($request->remember_me) {

@@ -14,9 +14,11 @@ use App\Http\Requests\UserRequest;
 // use App\Entities\Rol;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Arr;
+use Auth;
 
 class UserController extends Controller
 {
+    
     /**
      * Display a listing of the resource.
      *
@@ -55,24 +57,41 @@ class UserController extends Controller
     /*
      * buscador administradores
      */
-    public function searchAdmin($name = null){
-        if($name){
-            //$admin = DB::table('users')->where('name','like','%'. $name .'%')->get();
+    // public function searchAdmin($name = null){
+    //     if($name){
+    //         //$admin = DB::table('users')->where('name','like','%'. $name .'%')->get();
 
-            // $admin = DB::table('users')->join('user_data','users.id', '=','user_data.user_id' )
-            //                            ->select('users.*','user_data.field_key','user_data.value_key')
-            //                            ->get();
+    //         // $admin = DB::table('users')->join('user_data','users.id', '=','user_data.user_id' )
+    //         //                            ->select('users.*','user_data.field_key','user_data.value_key')
+    //         //                            ->get();
            
 
-        } else {
-            //$admin = User::where('rol_id',1)->get();
-            $admin = DB::table('users')->join('user_data','users.id', '=','user_data.user_id' )
+    //     } else {
+    //         //$admin = User::where('rol_id',1)->get();
+    //         $admin = DB::table('users')->join('user_data','users.id', '=','user_data.user_id' )
+    //                                    ->select('users.*','user_data.field_key','user_data.value_key')
+    //                                    ->where('field_key','telefono')
+    //                                    ->where('rol_id',1)
+    //                                    ->get();
+    //     }
+    //     return $admin;
+    // }
+    public function getAdmins(){
+        $data = DB::table('users')->join('user_data','users.id', '=','user_data.user_id' )
                                        ->select('users.*','user_data.field_key','user_data.value_key')
                                        ->where('field_key','telefono')
-                                       ->where('rol_id',1)
+                                       ->where('rol_id', 1)
                                        ->get();
-        }
-        return $admin;
+        return $data;
+    }
+
+    public function getAdmin($id){
+        $id = DB::table('users')->join('user_data','users.id', '=','user_data.user_id' )
+                                       ->select('users.*','user_data.field_key','user_data.value_key')
+                                       ->where('field_key','telefono')
+                                       ->where('users.id', $id)
+                                       ->get();
+        return $id;
     }
 
     public function getVendedores(){
@@ -310,14 +329,17 @@ class UserController extends Controller
 
     public function destroyUsers(Request $request)
     {
-        $data = $request->all();
-        
-        for($i = 0; $i < count($data); $i++ ){
-            User::where('id',$data[$i])->delete();
-        }
-        return response()->json([
-            'messages' => 'Datos eliminados',
-        ], 201);
+        $data = $request->get('id');
+        $res = User::whereIn('id', explode(',', $data))->get();
+        dd($res);
+        // $result=myModel::whereIn('id',$id)->delete();
+
+        // for($i = 0; $i < count($data); $i++ ){
+        //     User::where('id',$data[$i])->delete();
+        // }
+        // return response()->json([
+        //     'messages' => 'Datos eliminados',
+        // ], 201);
 
     }
 

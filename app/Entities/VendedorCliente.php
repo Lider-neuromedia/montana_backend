@@ -13,10 +13,10 @@ class VendedorCliente extends Model
         'cliente_id',
     ];
 
-    // public function user_vendedor(){
-    //     // return $this->hasMany(User::class);
-    //     // return $this->hasMany(User::class,'vendedor_id');
-    //     return $this->belongsTo(User::class,'id');
-    // }
+    public function user_vendedor(){
+        // return $this->hasMany(User::class);
+        // return $this->hasMany(User::class,'vendedor_id');
+        return $this->belongsTo(User::class,'id');
+    }
 
 }
