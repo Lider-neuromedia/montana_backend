@@ -7,7 +7,7 @@ use App\Entities\UserData;
 use App\Entities\VendedorCliente;
 use Illuminate\Http\Request;
 
-use Illuminate\Support\Facades\DB;
+use DB;
 
 use App\Http\Requests\UserRequest;
 
@@ -105,10 +105,22 @@ class UserController extends Controller
     }
 
     public function getVendedor($id){
-        $user = User::where('id',$id)->get();
-        $metadata = UserData::where('user_id',$id)->get();
-        //return $metadata;
+        // Buscar el vendedor.
+        $user = User::where('rol_id', 2)->find($id);
+        // validar que sea un vendedor.
+        if ($user == null) {
+            $response = [
+                'response' => 'error',
+                'message' => 'El id del usuario no es un vendedor.',
+                'status' => 403
+            ];
+            return response()->json($response);
+        }
 
+        // Buscar la data del usuario en cuestion.
+        $metadata = UserData::where('user_id', $id)->get();
+
+        // Organizar los campos administrados del usuario y organizarlos.
         $filterData = [];
         foreach($metadata as $mt){
             $filterData[] = [
@@ -116,9 +128,19 @@ class UserController extends Controller
                 'value_key' => $mt->value_key
             ];
         }
-
+        // Setear los campos administrador en un atributo "data_user".
+        $user->data_user = $filterData;
+        // Buscar clientes.
+        $clientes_vendedor = DB::table('vendedor_cliente')
+                            ->select('id_vendedor_cliente', 'id as id_cliente', 'rol_id', 'name', 'email')
+                            ->join('users', 'cliente', '=', 'id')
+                            ->where('vendedor', $id)
+                            ->get();
+        
+        // Setear clientes.
+        $user->clientes = $clientes_vendedor;
         return response()->json(
-            $filterData
+            $user
         );
 
         // return response()->json([
@@ -133,9 +155,23 @@ class UserController extends Controller
     }
 
     public function getCliente($id){
-        $user = User::where('id',$id)->get();
-        $metadata = UserData::where('user_id',$id)->get();
+        
+        // Buscar el cliente.
+        $user = User::where('rol_id', 3)->find($id);
+        // validar que sea un cliente.
+        if ($user == null) {
+            $response = [
+                'response' => 'error',
+                'message' => 'El id del usuario no es un cliente.',
+                'status' => 403
+            ];
+            return response()->json($response);
+        }
 
+        // Buscar la data del usuario en cuestion.
+        $metadata = UserData::where('user_id', $id)->get();
+
+        // Organizar los campos administrados del usuario y organizarlos.
         $filterData = [];
         foreach($metadata as $mt){
             $filterData[] = [
@@ -143,10 +179,29 @@ class UserController extends Controller
                 'value_key' => $mt->value_key
             ];
         }
+        // Setear los campos administrador en un atributo "data_user".
+        $user->data_user = $filterData;
 
-        return response()->json(
-            $filterData
-        );
+        // Buscar su vendedor.
+        $vendedor = DB::table('vendedor_cliente')
+                            ->select('id_vendedor_cliente', 'id as id_cliente', 'rol_id', 'name', 'email')
+                            ->join('users', 'vendedor', '=', 'id')
+                            ->where('cliente', $id)
+                            ->first();
+        // Setear el vendedor.
+        $user->vendedor = $vendedor;
+
+        // Buscar las tiendas del cliente.
+        $tiendas = DB::table('tiendas')
+                    ->select('id_tiendas', 'nombre', 'lugar', 'local', 'codigo', 'direccion', 'telefono', 'ciudad', 'nombre_ciudad')
+                    ->join('ciudades', 'ciudad', '=', 'id_ciudad')
+                    ->where('cliente', $id)
+                    ->get();
+        $user->tiendas = $tiendas;
+        
+         return response()->json(
+             $user
+         );
 
     }
 
