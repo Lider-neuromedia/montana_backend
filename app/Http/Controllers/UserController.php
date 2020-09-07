@@ -82,7 +82,15 @@ class UserController extends Controller
             $data_admin = DB::table('user_data')->where('user_id', $admin->id)->get();
             $admin->user_data = $data_admin;
         }
-        return $admins;
+        
+        $admin_ramdom = DB::table('users')->where('rol_id', 1)->first();
+        $fields_db = DB::table('user_data')->where('user_id', $admin_ramdom->id)->get();
+        $fields = [];
+        foreach ($fields_db as  $field) {
+            $fields[] = $field->field_key;
+        }
+        $response = ['fields' => $fields, 'admins' => $admins];
+        return response()->json($response);
     }
 
     public function getAdmin($id){
