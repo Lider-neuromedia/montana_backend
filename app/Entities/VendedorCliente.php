@@ -6,11 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class VendedorCliente extends Model
 {
-    protected $table = 'vendedor_clientes';
+    protected $table = 'vendedor_cliente';
 
     protected $fillable = [
-        'vendedor_id',
-        'cliente_id',
+        'vendedor',
+        'cliente',
     ];
 
     public function user_vendedor(){

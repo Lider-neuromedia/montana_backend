@@ -36,10 +36,41 @@ class VendedorClienteController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
-    {
-        $asingar = VendedorCliente::create($request->all());
-        return $asingar;
+    public function store(Request $request){
+        $request->validate([
+            'vendedor_id' => 'required',
+            'cliente_id' => 'required',
+        ]);
+
+        $validate = VendedorCliente::where('vendedor', $request['vendedor_id'])->where('cliente', $request['cliente_id'])->exists();
+        
+        if ($validate) {
+            $response = [
+                'response' => 'error',
+                'message' => 'La asignación que desea hacer ya se encuentra registrada.',
+                'status' => 403
+            ];
+            return response()->json($response);
+        }
+
+        $vendedor_cliente = new VendedorCliente();
+        $vendedor_cliente->cliente = $request['cliente_id'];
+        $vendedor_cliente->vendedor = $request['vendedor_id'];
+
+        if ($vendedor_cliente->save()) {
+            $response = [
+                'response' => 'success',
+                'message' => 'Cliente asignado correctamente.',
+                'satatus' => 200
+            ];
+        }else{
+            $response = [
+                'response' => 'error',
+                'message' => 'Error en el servidor.',
+                'satatus' => 403
+            ];
+        }
+        return response()->json($response);
     }
 
     /**

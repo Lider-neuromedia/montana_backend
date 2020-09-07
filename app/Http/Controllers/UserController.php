@@ -77,21 +77,29 @@ class UserController extends Controller
     //     return $admin;
     // }
     public function getAdmins(){
-        $data = DB::table('users')->join('user_data','users.id', '=','user_data.user_id' )
-                                       ->select('users.*','user_data.field_key','user_data.value_key')
-                                       ->where('field_key','telefono')
-                                       ->where('rol_id', 1)
-                                       ->get();
-        return $data;
+        $admins = DB::table('users')->where('rol_id', 1)->get();
+        foreach ($admins as $admin) {
+            $data_admin = DB::table('user_data')->where('user_id', $admin->id)->get();
+            $admin->user_data = $data_admin;
+        }
+        return $admins;
     }
 
     public function getAdmin($id){
-        $id = DB::table('users')->join('user_data','users.id', '=','user_data.user_id' )
-                                       ->select('users.*','user_data.field_key','user_data.value_key')
-                                       ->where('field_key','telefono')
-                                       ->where('users.id', $id)
-                                       ->get();
-        return $id;
+        $admin = DB::table('users')->where('id', $id)->where('rol_id', 1)->first();
+        if ($admin == null) {
+            $response = [
+                'response' => 'error',
+                'message' => 'El id del usuario no es un administrador.',
+                'status' => 403
+            ];
+            return response()->json($response);
+        }
+
+        $data_admin = DB::table('user_data')->where('user_id', $id)->get();
+        $admin->user_data = $data_admin;
+    
+        return response()->json($admin);
     }
 
     public function getVendedores(){
@@ -100,7 +108,7 @@ class UserController extends Controller
     }
 
     public function getClientes(){
-        $userdata = User::where('rol_id',3)->get();
+        $userdata = User::where('rol_id', 3)->get();
         return $userdata;
     }
 
@@ -124,6 +132,7 @@ class UserController extends Controller
         $filterData = [];
         foreach($metadata as $mt){
             $filterData[] = [
+                'id_field' => $mt->id,
                 'field_key' => $mt->field_key,
                 'value_key' => $mt->value_key
             ];
@@ -175,6 +184,7 @@ class UserController extends Controller
         $filterData = [];
         foreach($metadata as $mt){
             $filterData[] = [
+                'id_field' => $mt->id,
                 'field_key' => $mt->field_key,
                 'value_key' => $mt->value_key
             ];
@@ -258,13 +268,38 @@ class UserController extends Controller
 
     public function assignedCustomers($id){
 
-        // $idAsig = intval($id);
+        $vendedor = DB::table('users')->where('id', $id)->where('rol_id', 2)->first();
+        if ($vendedor == null) {
+            $response = [
+                'response' => 'error',
+                'message' => 'El id del usuario no es un vendedor.',
+                'status' => 403
+            ];
+            return response()->json($response);
+        }
 
-        // // $assignedCustomers = VendedorCliente::where('vendedor_id',$id)->get();
-        // // return $assignedCustomers;
+        $clientes_vendedor = DB::table('vendedor_cliente')
+        ->select('id_vendedor_cliente', 'id as id_cliente', 'rol_id', 'name', 'email')
+        ->join('users', 'cliente', '=', 'id')
+        ->where('vendedor', $id)
+        ->get();
 
-        // // $assignedCustomers = User::find($id)->vendedores()->get();
-        // dd($idAsig);
+        foreach ($clientes_vendedor as $cliente) {
+            // Buscar la data del usuario en cuestion.
+            $metadata = UserData::where('user_id', $cliente->id_cliente)->get();
+            // Organizar los campos administrados del usuario y organizarlos.
+            $filterData = [];
+            foreach($metadata as $mt){
+                $filterData[] = [
+                    'id_field' => $mt->id,
+                    'field_key' => $mt->field_key,
+                    'value_key' => $mt->value_key
+                ];
+            }
+            $cliente->data = $filterData;
+        }
+
+        return response()->json($clientes_vendedor);
     }
 
     /**
@@ -362,10 +397,44 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, User $user)
-    {
-        $user->update($request->all());
-        return $user;
+    public function updateUser(Request $request){
+        $request->validate([
+            'id' => 'required',
+            'rol_id' => 'required',
+            'name' => 'required',
+            'email' => 'required',
+            'user_data' => 'required',
+        ]);
+
+        //Actualizacion de la informacion basica del usuario.
+        $user = User::find($request['id']); 
+        $user->rol_id = $request['rol_id'];
+        $user->name = $request['name'];
+        $user->email = $request['email'];
+
+        if(!$user->save()){
+            $response = [
+                'response' => 'error',
+                'message' => 'Error en la actualizacion del usuario.',
+                'status' => 403
+            ];
+            return response()->json($response);
+        }
+
+        foreach ($request['user_data'] as $data) {
+            $user_data = UserData::find($data->id_field);
+            $user_data->field_key = $data->field_key;
+            $user_data->value_key = $data->value_key;
+            $user_data->save();
+        }
+
+        $response = [
+            'response' => 'success',
+            'message' => 'Usuario actualizado con exito.',
+            'status' => 200
+        ];
+
+        return response()->json($response);
     }
 
     /**

@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Http\Request;
 
 /*
 |--------------------------------------------------------------------------
@@ -13,9 +12,6 @@ use Illuminate\Http\Request;
 |
 */
 
-// Route::middleware('auth:api')->get('/user', function (Request $request) {
-//     return $request->user();
-// });
 
 // Route::apiResource('/catalogos', 'CatalogoController');
 // Route::apiResource('/categorias', 'CategoriaController');
@@ -42,14 +38,10 @@ use Illuminate\Http\Request;
 
 
 Route::apiResource('/roles', 'RolController');
-Route::apiResource('/users', 'UserController');
+// Route::apiResource('/users', 'UserController');
 // Route::post('/userdata', 'UserController@userData');
-Route::apiResource('/userdata', 'UserDataController');
-Route::post('/delete-users', 'UserController@destroyUsers');
 
 Route::apiResource('/asignar-cliente', 'VendedorClienteController');
-
-
 
 Route::group( [ 'middleware' => ['role:administrador'] ], function() {
     // Route::apiResource('/users', 'UserController');
@@ -59,6 +51,7 @@ Route::group( [ 'middleware' => ['permission:create user'] ], function() {
     #Route::apiResource('/users', 'UserController');
 });
 
+Route::post('/update-user', 'UserController@updateUser');
 
 Route::group(['prefix' => 'auth'], function () {
     Route::post('login', 'AuthController@login');
@@ -68,4 +61,24 @@ Route::group(['prefix' => 'auth'], function () {
         Route::get('logout', 'AuthController@logout');
         Route::get('user', 'AuthController@user');
     });
+});
+
+Route::group(['middleware' => 'auth:api'], function() {
+    //USUARIOS 
+    Route::delete('/delete-users', 'UserController@destroyUsers');
+    Route::get('/user-rol/{id}','UserController@getForRole');
+    Route::post('/delete-user', 'UserController@destroyUsers');
+    
+    //VENDEDORES. 
+    Route::get('/vendedores','UserController@getVendedores');
+    Route::get('/vendedor/{id}','UserController@getVendedor');
+    Route::get('/clientes-asignados/{id}', 'UserController@assignedCustomers');
+    
+    // CLIENTES.
+    Route::get('/clientes','UserController@getClientes');
+    Route::get('/cliente/{id}','UserController@getCliente');
+    
+    // ADMINISTRADORES.
+    Route::get('/admins', 'UserController@getAdmins');
+    Route::get('/admin/{id}', 'UserController@getAdmin');
 });
