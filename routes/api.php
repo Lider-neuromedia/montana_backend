@@ -51,6 +51,7 @@ Route::group( [ 'middleware' => ['permission:create user'] ], function() {
     #Route::apiResource('/users', 'UserController');
 });
 
+Route::apiResource('/users', 'UserController');
 Route::post('/update-user', 'UserController@updateUser');
 
 Route::group(['prefix' => 'auth'], function () {
@@ -81,4 +82,8 @@ Route::group(['middleware' => 'auth:api'], function() {
     // ADMINISTRADORES.
     Route::get('/admins', 'UserController@getAdmins');
     Route::get('/admin/{id}', 'UserController@getAdmin');
+
+    // CATALOGOS.
+    Route::apiResource('/catalogos', 'CatalogoController');
+
 });

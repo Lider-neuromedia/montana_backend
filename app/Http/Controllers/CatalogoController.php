@@ -8,13 +8,19 @@ use Illuminate\Http\Request;
 class CatalogoController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Listado de todos los catalogos.
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
-    {
-        return Catalogo::all();
+    public function index(){
+        $catalogos = Catalogo::all();
+
+        // Setear la url de la imagen segun servidor.
+        foreach ($catalogos as $catalogo) {
+            $catalogo->imagen = url($catalogo->imagen);
+        }
+
+        return $catalogos;
     }
 
     /**
@@ -28,14 +34,14 @@ class CatalogoController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Crear un nuevo catalogo.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
     {
-        $catalogo = Catalogo::create($request->all());
+        $catalogo = Catalogo::  create($request->all());
         return $catalogo;
     }
 
