@@ -54,6 +54,13 @@ return [
             'url' => env('APP_URL').'/storage',
             'visibility' => 'public',
         ],
+        
+        'catalogos' => [
+            'driver' => 'local',
+            'root' => storage_path('app/public/catalogos'),
+            'url' => env('APP_URL').'/storage',
+            'visibility' => 'public',
+        ],
 
         's3' => [
             'driver' => 's3',

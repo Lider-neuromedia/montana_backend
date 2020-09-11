@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Entities\Catalogo;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use DB;
 
 class CatalogoController extends Controller
 {
@@ -20,18 +22,16 @@ class CatalogoController extends Controller
             $catalogo->imagen = url($catalogo->imagen);
         }
 
-        return $catalogos;
+        $response = [
+            'response' => 'success',
+            'message' => '',
+            'status' => 200,
+            'catalogos' => $catalogos
+        ];
+
+        return response()->json($response);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
 
     /**
      * Crear un nuevo catalogo.
@@ -39,10 +39,35 @@ class CatalogoController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
-    {
-        $catalogo = Catalogo::  create($request->all());
-        return $catalogo;
+    public function store(Request $request){
+        $request->validate([
+            'nombre' => 'required',
+            'estado' => 'required',
+            'image' => 'required',
+        ]);
+
+        $catalogo = new Catalogo();
+        $catalogo->titulo = $request['nombre'];
+        $catalogo->estado = $request['estado'];
+        $catalogo->cantidad = 0;
+        $catalogo->save();
+        $filename = $this->saveImage($request['image'], $catalogo->id_catalogo);
+        $catalogo->imagen = "storage/catalogos/{$filename}";
+        $catalogo->save();
+
+        return response()->json(['response' => 'success', 'status' => 200]);
+    }
+
+    public function saveImage($image, $id_catalogo){
+        $extension = explode('/', explode(':', substr($image, 0, strpos($image, ';')))[1])[1];   // .jpg .png .pdf
+        $replace = substr($image, 0, strpos($image, ',')+1); 
+
+        $image = str_replace($replace, '', $image); 
+        $image = str_replace(' ', '+', $image); 
+        $filename = $id_catalogo.'.'.$extension;
+        \Storage::disk('catalogos')->put($filename, base64_decode($image));
+
+        return $filename;
     }
 
     /**
@@ -87,9 +112,21 @@ class CatalogoController extends Controller
      * @param  \App\Entities\Catalogo  $catalogo
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Catalogo $catalogo)
-    {
-        $catalogo->delete();
-        return $catalogo;
+    public function destroy($id){
+        $catalogo = Catalogo::find($id);
+        if ($catalogo->cantidad == 0) {
+            $catalogo->delete();
+            $response = [
+                'response' => 'success',
+                'status' => 200
+            ];
+        }else{
+            $response = [
+                'response' => 'error',
+                'status' => 401,
+                'message' => 'El catalogo tiene productos registrados. No se puede eliminar.'
+            ];
+        }
+        return response()->json($response);
     }
 }

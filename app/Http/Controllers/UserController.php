@@ -218,7 +218,7 @@ class UserController extends Controller
         $user->tiendas = $tiendas;
         
          return response()->json(
-             $user
+            $user
          );
 
     }
@@ -430,9 +430,9 @@ class UserController extends Controller
         }
 
         foreach ($request['user_data'] as $data) {
-            $user_data = UserData::find($data->id_field);
-            $user_data->field_key = $data->field_key;
-            $user_data->value_key = $data->value_key;
+            $user_data = UserData::find($data['id_field']);
+            $user_data->field_key = $data['field_key'];
+            $user_data->value_key = $data['value_key'];
             $user_data->save();
         }
 
