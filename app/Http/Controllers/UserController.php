@@ -228,6 +228,7 @@ class UserController extends Controller
         $request->validate([
             'rol_id'   => 'required',
             'name'     => 'required|string',
+            'apellidos'     => 'required|string',
             'email'    => 'required|string|email|unique:users',
             'password' => 'required|string',
         ]);
@@ -236,15 +237,16 @@ class UserController extends Controller
             //'rol_id' => $request->rol,
             'rol_id' => 1,
             'name' => $request->name,
+            'apellidos' => $request->apellidos,
             'email' => $request->email,
             'password' => bcrypt($request->password)
         ]);
 
         $userdata = UserData::create([
             'user_id' => $user->id,
-            // 'field_key' => $request->name,
-            'campo_id' => $request->name,
+            'field_key' => $request->name,
             'value_key' => $request->nombre,
+            // 'campo_id' => $request->name,
         ]);
 
         return response()->json([
@@ -333,6 +335,7 @@ class UserController extends Controller
         $user = User::create([
             'rol_id' => $request->rol_id,
             'name' => $request->name,
+            'apellidos' => $request->apellidos,
             'email' => $request->email,
             'password' => bcrypt($request->password)
         ]);
@@ -411,7 +414,7 @@ class UserController extends Controller
             'rol_id' => 'required',
             'name' => 'required',
             'email' => 'required',
-            'user_data' => 'required',
+            'user_data' => 'required'
         ]);
 
         //Actualizacion de la informacion basica del usuario.
