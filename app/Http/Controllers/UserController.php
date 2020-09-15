@@ -413,6 +413,7 @@ class UserController extends Controller
             'id' => 'required',
             'rol_id' => 'required',
             'name' => 'required',
+            'apellidos' => 'required',
             'email' => 'required',
             'user_data' => 'required'
         ]);
@@ -421,6 +422,7 @@ class UserController extends Controller
         $user = User::find($request['id']); 
         $user->rol_id = $request['rol_id'];
         $user->name = $request['name'];
+        $user->apellidos = $request['apellidos'];
         $user->email = $request['email'];
 
         if(!$user->save()){
