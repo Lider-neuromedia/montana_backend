@@ -85,5 +85,8 @@ Route::group(['middleware' => 'auth:api'], function() {
 
     // CATALOGOS.
     Route::apiResource('/catalogos', 'CatalogoController');
+    
+    // PRODUCTO.
+    Route::get('/productos/{catalogo}', 'ProductoController@index');
 
 });

@@ -43,12 +43,14 @@ class CatalogoController extends Controller
         $request->validate([
             'nombre' => 'required',
             'estado' => 'required',
+            'tipo' => 'required',
             'image' => 'required',
         ]);
 
         $catalogo = new Catalogo();
         $catalogo->titulo = $request['nombre'];
         $catalogo->estado = $request['estado'];
+        $catalogo->tipo = $request['tipo'];
         $catalogo->cantidad = 0;
         $catalogo->save();
         $filename = $this->saveImage($request['image'], $catalogo->id_catalogo);
@@ -100,10 +102,39 @@ class CatalogoController extends Controller
      * @param  \App\Entities\Catalogo  $catalogo
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Catalogo $catalogo)
-    {
-        $catalogo->update($request->all());
-        return $catalogo;
+    public function update(Request $request){
+        $request->validate([
+            'id_catalogo' => 'required',
+            'titulo' => 'required',
+            'estado' => 'required',
+            'tipo' => 'required',
+            'imagen' => 'required',
+        ]);
+        $validate_image = $this->validateLinkImage($request['imagen']);
+
+        $catalogo = Catalogo::find($request['id_catalogo']);
+        $catalogo->titulo = $request['titulo'];
+        $catalogo->estado = $request['estado'];
+        $catalogo->tipo = $request['tipo'];
+        $catalogo->descuento = (isset($request['descuento'])) ? $request['descuento'] : $catalogo->descuento;
+        $catalogo->cantidad = 0;
+        $catalogo->save();
+        if ($validate_image) {
+            $filename = $this->saveImage($request['imagen'], $catalogo->id_catalogo);
+            $catalogo->imagen = "storage/catalogos/{$filename}";
+            $catalogo->save();
+        }
+
+        return response()->json(['response' => 'success', 'status' => 200]);
+    }
+    
+    public function validateLinkImage($image){
+        $substr_image = substr($image, 0, 4);
+        if ($substr_image == 'http') {
+            return false;
+        }else{
+            return true;
+        }
     }
 
     /**

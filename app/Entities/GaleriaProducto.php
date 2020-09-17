@@ -8,8 +8,11 @@ class GaleriaProducto extends Model
 {
     protected $table = 'galeria_productos';
 
+    protected $primaryKey = 'id_galeria_prod';
+
     protected $fillable = [
-        'producto_id',
-        'image',
+        'producto',
+        'img',
+        'destacada',
     ];
 }

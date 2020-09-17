@@ -12,9 +12,32 @@ class ProductoController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
-    {
-        return Producto::all();
+    public function index($catalogo){
+        $productos = Producto::where('catalogo', $catalogo)
+                    ->join('galeria_productos', 'id_producto', '=', 'producto')
+                    ->join('marcas', 'marca', '=', 'id_marca')
+                    ->where('destacada', 1)
+                    ->get();
+        
+        if(count($productos) == 0){
+            return response()->json(['response' => 'error', 'status' => 404, 'message' => 'El catalogo no tiene productos registrados.']);
+        }else{
+            
+            foreach ($productos as $producto) {
+                $producto->image = url($producto->image);
+            }
+
+            $response = [
+                'response' => 'success',
+                'message' => '',
+                'status' => 200,
+                'productos' => $productos
+            ];
+    
+            return response()->json($response);
+        }
+
+        
     }
 
     /**
@@ -48,7 +71,7 @@ class ProductoController extends Controller
     public function show($id)
     {
         $producto = Producto::find($id);
-        return $Producto;
+        return $producto;
     }
 
     /**

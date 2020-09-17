@@ -14,6 +14,7 @@ class Catalogo extends Model
     protected $fillable = [
         'descuento_id',
         'estado',
+        'tipo',
         'imagen',
         'titulo',
     ];
