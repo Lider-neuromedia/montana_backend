@@ -76,14 +76,16 @@ class UserController extends Controller
     //     }
     //     return $admin;
     // }
-    public function getAdmins(){
-        $admins = DB::table('users')->where('rol_id', 1)->get();
+
+    
+    public function getUsers($rol_id){
+        $admins = DB::table('users')->where('rol_id', $rol_id)->get();
         foreach ($admins as $admin) {
             $data_admin = DB::table('user_data')->where('user_id', $admin->id)->get();
             $admin->user_data = $data_admin;
         }
         
-        $admin_ramdom = DB::table('users')->where('rol_id', 1)->first();
+        $admin_ramdom = DB::table('users')->where('rol_id', $rol_id)->first();
         $fields_db = DB::table('user_data')->where('user_id', $admin_ramdom->id)->get();
         $fields = [];
         foreach ($fields_db as  $field) {
@@ -92,6 +94,11 @@ class UserController extends Controller
         $response = ['fields' => $fields, 'admins' => $admins];
         return response()->json($response);
     }
+
+    public function getAdmins(){
+        return $this->getUsers(1);
+    }
+
 
     public function getAdmin($id){
         $admin = DB::table('users')->where('id', $id)->where('rol_id', 1)->first();
@@ -110,14 +117,14 @@ class UserController extends Controller
         return response()->json($admin);
     }
 
+
+
     public function getVendedores(){
-        $userdata = User::where('rol_id',2)->get();
-        return $userdata;
+        return $this->getUsers(2);
     }
 
     public function getClientes(){
-        $userdata = User::where('rol_id', 3)->get();
-        return $userdata;
+        return $this->getUsers(3);
     }
 
     public function getVendedor($id){
