@@ -457,27 +457,36 @@ class UserController extends Controller
      * @return \Illuminate\Http\Response
      */
     // public function destroy(User $user)
-    public function destroy(User $user)
-    {
-        // return $user;
-        $user->delete();
-        return $user;
-    }
+    public function destroy($id){
+        $user = User::find($id);
+        try{
+            DB::table('user_data')->where('user_id', $id)->delete();
+            if ($user->rol_id == 2) {
+                DB::table('vendedor_cliente')->where('vendedor', $id)->delete();
+                $user->delete();
+            }else if($user->rol_id == 3){
+                return response()->json([
+                    'response' => 'error', 
+                    'message' => "Los Usuarios tipo clientes no se pueden eliminar.", 
+                    'status' => 505
+                ]);
+            }else{
+                $user->delete();
+            }
 
-    public function destroyUsers(Request $request)
-    {
-        $data = $request->get('id');
-        $res = User::whereIn('id', explode(',', $data))->get();
-        dd($res);
-        // $result=myModel::whereIn('id',$id)->delete();
+        }catch(\Exception $e){
+            return response()->json([
+                'response' => 'error', 
+                'message' => $e->getMessage(), 
+                'status' => 505
+            ]);
+        }
 
-        // for($i = 0; $i < count($data); $i++ ){
-        //     User::where('id',$data[$i])->delete();
-        // }
-        // return response()->json([
-        //     'messages' => 'Datos eliminados',
-        // ], 201);
-
+        return response()->json([
+            'response' => 'success', 
+            'message' => "Usuario eliminado correctamente", 
+            'status' => 200
+        ]);
     }
 
 }

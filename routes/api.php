@@ -68,7 +68,7 @@ Route::group(['middleware' => 'auth:api'], function() {
     //USUARIOS 
     Route::delete('/delete-users', 'UserController@destroyUsers');
     Route::get('/user-rol/{id}','UserController@getForRole');
-    Route::post('/delete-user', 'UserController@destroyUsers');
+    // Route::post('/delete-user', 'UserController@destroyUsers');
     
     //VENDEDORES. 
     Route::get('/vendedores','UserController@getVendedores');
@@ -88,5 +88,6 @@ Route::group(['middleware' => 'auth:api'], function() {
     
     // PRODUCTO.
     Route::get('/productos/{catalogo}', 'ProductoController@index');
+    Route::post('/productos', 'ProductoController@store');
 
 });

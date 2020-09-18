@@ -15,4 +15,5 @@ class GaleriaProducto extends Model
         'img',
         'destacada',
     ];
+
 }
