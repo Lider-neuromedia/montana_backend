@@ -209,10 +209,16 @@ class UserController extends Controller
 
         // Buscar su vendedor.
         $vendedor = DB::table('vendedor_cliente')
-                            ->select('id_vendedor_cliente', 'id as id_cliente', 'rol_id', 'name', 'email')
+                            ->select('id_vendedor_cliente', 'id as id_vendedor', 'cliente as id_cliente', 'rol_id', 'name', 'email')
                             ->join('users', 'vendedor', '=', 'id')
                             ->where('cliente', $id)
                             ->first();
+        if ($vendedor != null) {
+            $data_vendedor = DB::table('user_data')->where('user_id', $vendedor->id_vendedor)->get();
+            $vendedor->user_data = $data_vendedor;
+        }else{
+            $vendedor->user_data = [];
+        }        
         // Setear el vendedor.
         $user->vendedor = $vendedor;
 
