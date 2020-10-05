@@ -89,5 +89,14 @@ Route::group(['middleware' => 'auth:api'], function() {
     // PRODUCTO.
     Route::get('/productos/{catalogo}', 'ProductoController@index');
     Route::post('/productos', 'ProductoController@store');
-
+    Route::get('/producto/{id}', 'ProductoController@detalleProducto');
+    Route::put('/producto/{id}', 'ProductoController@update');
+    Route::delete('/producto/{id}', 'ProductoController@destroy');
+    
+    // PEDIDOS
+    Route::apiResource('/pedidos', 'PedidoController');
+    Route::get('/recursos-crear-pedido', 'PedidoController@resourcesCreate');
+    Route::get('tiendas-cliente/{id}', 'PedidoController@tiendaCliente');
+    Route::get('generate-code', 'PedidoController@generateCodePedido');
+    
 });
