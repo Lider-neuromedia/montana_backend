@@ -3,12 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Entities\Catalogo;
+use App\Entities\Novedades;
 use App\Entities\Pedido;
 use App\Entities\PedidoProduct;
 use App\Entities\Producto;
 use App\Entities\User;
+use App\Exports\PedidoExport;
 use Illuminate\Http\Request;
 use DB;
+use Excel;
 
 class PedidoController extends Controller
 {
@@ -17,17 +20,40 @@ class PedidoController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(){
-        $pedidos = Pedido::select('fecha', 'codigo', 'total', 'ven.name AS name_vendedor', 
+    public function index(Request $request){
+
+        $search = $request['search'];
+        $date = $request['date'];
+
+        $pedidos = Pedido::select('id_pedido', 'fecha', 'codigo', 'total', 'ven.name AS name_vendedor', 
                     'ven.apellidos AS apellido_vendedor', 'cli.name AS name_cliente', 'cli.apellidos AS apellido_cliente', 'estado')
                     ->join('users AS ven', 'vendedor', '=','ven.id')
-                    ->join('users AS cli', 'cliente', '=','cli.id')
-                    ->get();
+                    ->join('users AS cli', 'cliente', '=','cli.id');
+      
+        if ($date == 'hoy') {
+            // Seteamos la zona horaria en caso de que no funcione la configuracion del servidor.
+            date_default_timezone_set('America/Bogota');
+            $date_filter = date('Y-m-d');
+            $pedidos = $pedidos->orWhere('fecha', '=', $date_filter);
+        }else if ($date == 'ayer') {
+            date_default_timezone_set('America/Bogota');
+            $current_day = date('Y-m-d');
+            $date_filter = date("Y-m-d",strtotime($current_day."- 1 days"));
+            $pedidos = $pedidos->orWhere('fecha', '=', $date_filter);
+        }else{
+            $pedidos = $pedidos->where('codigo', 'like', "%$search%")
+                        ->orWhere('total', 'like', "%$search%")
+                        ->orWhere('ven.name', 'like', "%$search%")
+                        ->orWhere('ven.apellidos', 'like', "%$search%")
+                        ->orWhere('cli.name', 'like', "%$search%");
+        }
+
+        $pedidos = $pedidos->get();
 
         $response = [
             'response' => 'success',
             'status' => 200,
-            'pedidos' => $pedidos 
+            'pedidos' => $pedidos
         ];
 
         return response()->json($response);
@@ -90,7 +116,6 @@ class PedidoController extends Controller
             'total_pedido' => 'required|numeric',
             'descuento' => 'required|numeric',
             'forma_pago' => 'required',
-            'notas' => 'required',
         ]);
 
         $pedido = new Pedido();
@@ -115,18 +140,18 @@ class PedidoController extends Controller
         // Creamos la relacion con productos.
         if ($pedido->save()) {
             foreach ($request['productos'] as $product) {
-                $pedido_product = new PedidoProduct();
-                $pedido_product->pedido = $pedido->id_pedido;
-                $pedido_product->producto = $product['id_producto'];
-                if($pedido_product->save()){
-                    $cantidad = 0;
-                    foreach ($product['tiendas'] as $tienda) {
-                        $cantidad += $tienda['cantidad'];
+                foreach ($product['tiendas'] as $tienda) {
+                    $pedido_product = new PedidoProduct();
+                    $pedido_product->pedido = $pedido->id_pedido;
+                    $pedido_product->producto = $product['id_producto'];    
+                    $pedido_product->cantidad_producto = $tienda['cantidad'];
+                    $pedido_product->tienda = $tienda['id_tienda'];
+                    if ($pedido_product->save()) {
+                        $producto = Producto::find($product['id_producto']);
+                        $producto->stock = $producto->stock - $tienda['cantidad'];
+                        $producto->save();
                     }
-                    $producto = Producto::find($product['id_producto']);
-                    $producto->stock = $producto->stock - $cantidad;
-                    $producto->save();
-                } 
+                }
             }
         }
 
@@ -145,20 +170,125 @@ class PedidoController extends Controller
      * @param  \App\Entities\Pedido  $pedido
      * @return \Illuminate\Http\Response
      */
-    public function show(Pedido $pedido)
-    {
-        //
+    public function show($id){
+        $pedido = Pedido::select('id_pedido', 'fecha', 'codigo', 'metodo_pago', 'sub_total', 'total',
+                'descuento', 'notas', 'vendedor', 'estados.estado', 'id_estado', 'cliente')
+                ->join('estados', 'pedidos.estado', '=', 'id_estado')
+                ->where('id_pedido', $id)
+                ->first();
+        
+        // Consulta del cliente asignado.
+        $cliente = User::find($pedido->cliente);
+        $pedido->info_cliente = $cliente;
+
+        // Consulta de productos.
+        $productos = PedidoProduct::select('referencia', 'cantidad_producto', 'lugar')
+                    ->where('pedido', $pedido->id_pedido)
+                    ->join('productos', 'producto', '=', 'id_producto')
+                    ->join('tiendas', 'tienda', '=', 'id_tiendas')
+                    ->get();
+        $pedido->productos = $productos;
+        
+        // Consulta de novedades.
+        $novedades = Novedades::where('pedido', $pedido->id_pedido)->get();
+        $pedido->novedades = $novedades;
+        
+        $response = [
+            'status' => 200,
+            'response' => 'success',
+            'pedido' => $pedido
+        ];
+        
+        return response()->json($response);
+    }
+
+    public function changeState(Request $request){
+        $pedido = Pedido::find($request['pedido']);
+        $pedido->estado = $request['state'];
+        
+        if($pedido->save()){
+            $response = [
+                'status' => 200,
+                'response' => 'success',
+                'message' => 'Actualizado.'
+            ];
+        }else{
+            $response = [
+                'status' => 403,
+                'response' => 'error',
+                'message' => 'error en la actualizacion'
+            ];
+        }
+
+        return response()->json($response);
+    }
+
+    public function storeNovedades(Request $request){
+        $request->validate([
+            'tipo' => 'required',
+            'descripcion' => 'required',
+            'pedido' => 'required'
+        ]);
+
+        $novedad = new Novedades();
+        $novedad->tipo = $request['tipo'];
+        $novedad->descripcion = $request['descripcion'];
+        $novedad->pedido = $request['pedido'];
+
+        if($novedad->save()){
+            $response = [
+                'status' => 200,
+                'response' => 'success',
+                'message' => 'Novedad creada.'
+            ];
+        }else{
+            $response = [
+                'status' => 403,
+                'response' => 'error',
+                'message' => 'Error en la creación.'
+            ];
+        }
+
+        return response()->json($response);
+
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Edit the specified resource in storage.
      *
-     * @param  \App\Entities\Pedido  $pedido
+     * @param  Id pedido  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit(Pedido $pedido)
-    {
-        //
+    public function edit($id){
+        $pedido = Pedido::select('id_pedido', 'fecha', 'codigo', 'metodo_pago', 'sub_total', 'total',
+                'descuento', 'notas', 'vendedor', 'estados.estado', 'id_estado', 'cliente')
+                ->join('estados', 'pedidos.estado', '=', 'id_estado')
+                ->where('id_pedido', $id)
+                ->first();
+        
+        // Consulta de productos.
+        $productos = PedidoProduct::select('pedido', 'producto', 'referencia', 'stock', 'productos.total')
+                    ->where('pedido', $pedido->id_pedido)
+                    ->join('productos', 'producto', '=', 'id_producto')
+                    ->groupBy('producto')
+                    ->get();
+    
+        foreach ($productos as $product) {
+            $product->tiendas = PedidoProduct::select('id_pedido_prod','cantidad_producto', 'tienda', 'lugar', 'local')
+                    ->join('tiendas', 'tienda', '=', 'id_tiendas')
+                    ->where('producto', $product->producto)
+                    ->get();
+        }
+
+        $pedido->productos = $productos;
+    
+        $response = [
+            'status' => 200,
+            'response' => 'success',
+            'pedido' => $pedido
+        ];
+        
+        return response()->json($response);
     }
 
     /**
@@ -168,19 +298,41 @@ class PedidoController extends Controller
      * @param  \App\Entities\Pedido  $pedido
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Pedido $pedido)
-    {
-        //
+    public function update(Request $request){
+        $request->validate([
+            'id_pedido' => 'required',
+            'metodo_pago' => 'required'
+        ]);
+
+        $pedido = Pedido::find($request['id_pedido']);
+        $pedido->metodo_pago = $request['metodo_pago'];
+        $pedido->sub_total = $request['total'];
+        $pedido->total = $request['total'];
+        $pedido->save();
+
+        foreach ($request['productos'] as $producto) {
+            $update_producto = Producto::find($producto['producto']);
+            $update_producto->stock = $producto['stock'];
+            $update_producto->save();
+            foreach ($producto['tiendas'] as $tiendas) {
+                $pedido_prod = PedidoProduct::find($tiendas['id_pedido_prod']);
+                $pedido_prod->cantidad_producto = $tiendas['cantidad_producto'];
+                $pedido_prod->save();
+            }
+        }
+
+        $response = [
+            'status' => 200,
+            'response' => 'success',
+            'message' => 'Pedido actualizado.'
+        ];
+        
+        return response()->json($response);
+
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Entities\Pedido  $pedido
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(Pedido $pedido)
-    {
-        //
+    public function exportPedido(){ 
+        return Excel::download(new PedidoExport(), 'pedido.xlsx');
     }
+
 }

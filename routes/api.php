@@ -36,7 +36,6 @@
 // Route::apiResource('/user-data', 'UserDataController');
 // Route::apiResource('/permissions', 'PermissionController');
 
-
 Route::apiResource('/roles', 'RolController');
 // Route::apiResource('/users', 'UserController');
 // Route::post('/userdata', 'UserController@userData');
@@ -98,5 +97,9 @@ Route::group(['middleware' => 'auth:api'], function() {
     Route::get('/recursos-crear-pedido', 'PedidoController@resourcesCreate');
     Route::get('tiendas-cliente/{id}', 'PedidoController@tiendaCliente');
     Route::get('generate-code', 'PedidoController@generateCodePedido');
-    
+    Route::post('change-state-pedido', 'PedidoController@changeState');
+    Route::post('crear-novedad', 'PedidoController@storeNovedades');
+    Route::get('edit-pedido/{id}', 'PedidoController@edit');
+    Route::post('update-pedido', 'PedidoController@update');
+    Route::get('export-pedido', 'PedidoController@exportPedido');
 });

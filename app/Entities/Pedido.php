@@ -23,4 +23,8 @@ class Pedido extends Model
         'estado',
     ];
     
+    public function products(){
+        return $this->belongsToMany('App\Entities\Producto', 'pedido_productos', 'pedido', 'producto');
+    }
+
 }
