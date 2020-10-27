@@ -13,6 +13,7 @@ class GaleriaProducto extends Model
     protected $fillable = [
         'producto',
         'img',
+        'name_img',
         'destacada',
     ];
 
