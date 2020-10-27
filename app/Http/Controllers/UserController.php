@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Entities\Pedido;
 use App\Entities\User;
 use App\Entities\UserData;
 use App\Entities\VendedorCliente;
@@ -83,6 +84,8 @@ class UserController extends Controller
         foreach ($admins as $admin) {
             $data_admin = DB::table('user_data')->where('user_id', $admin->id)->get();
             $admin->user_data = $data_admin;
+            $admin->iniciales = substr($admin->name, 0, 1);
+            $admin->iniciales .= substr($admin->apellidos, 0, 1);
         }
         
         $admin_ramdom = DB::table('users')->where('rol_id', $rol_id)->first();
@@ -333,22 +336,22 @@ class UserController extends Controller
      */
 
     
-    public function store(UserRequest $request)
-    // public function store(Request $request)
-    {
-        // return $validate;
-        // $request->validate([
-        //     'rol_id'   => 'required',
-        //     'name'     => 'required|string',
-        //     'email'    => 'required|string|email|unique:users',
-        //     'password' => 'required|string',
-        // ]);
+    public function store(UserRequest $request){
+        $request->validate([
+            'rol_id'   => 'required',
+            'name'     => 'required|string',
+            'apellidos'     => 'required|string',
+            'dni'     => 'required|string',
+            'email'    => 'required|string|email|unique:users',
+            'password' => 'required|string',
+        ]);
         
         $validate = $request->validated();
         $user = User::create([
             'rol_id' => $request->rol_id,
             'name' => $request->name,
             'apellidos' => $request->apellidos,
+            'dni' => $request->dni,
             'email' => $request->email,
             'password' => bcrypt($request->password)
         ]);
@@ -371,7 +374,6 @@ class UserController extends Controller
     }
 
     public function userData(Request $request){
-
         return $request;
 
         $metadata[] = $request;
@@ -389,29 +391,6 @@ class UserController extends Controller
             'message' => 'Successfully created user!'
         ], 201);
 
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        $user = User::find($id);
-        return $user;
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
     }
 
     /**
@@ -470,36 +449,63 @@ class UserController extends Controller
      * @return \Illuminate\Http\Response
      */
     // public function destroy(User $user)
-    public function destroy($id){
-        $user = User::find($id);
-        try{
-            DB::table('user_data')->where('user_id', $id)->delete();
-            if ($user->rol_id == 2) {
-                DB::table('vendedor_cliente')->where('vendedor', $id)->delete();
-                $user->delete();
-            }else if($user->rol_id == 3){
-                return response()->json([
-                    'response' => 'error', 
-                    'message' => "Los Usuarios tipo clientes no se pueden eliminar.", 
-                    'status' => 505
-                ]);
-            }else{
-                $user->delete();
-            }
+    public function destroyUsers(Request $request){
 
-        }catch(\Exception $e){
-            return response()->json([
-                'response' => 'error', 
-                'message' => $e->getMessage(), 
-                'status' => 505
-            ]);
+        foreach ($request['usuarios'] as $key => $id) {
+            $user = User::find($id);
+
+            if ($user->rol_id == 1) {
+                DB::table('user_data')->where('user_id', $id)->delete();
+                $user->delete();
+                $response = [
+                    'response' => 'success', 
+                    'message' => "Usuario eliminado correctamente", 
+                    'status' => 200
+                ];
+
+            }else if($user->rol_id == 2){
+                $validate_vendedor = DB::table('vendedor_cliente')->where('vendedor', $id)->exists();
+                if (!$validate_vendedor) {
+                    DB::table('user_data')->where('user_id', $id)->delete();
+                    $user->delete();
+                    $response = [
+                        'response' => 'success', 
+                        'message' => "Usuario eliminado correctamente", 
+                        'status' => 200
+                    ];
+
+                }else{
+                    $response = [
+                        'response' => 'error', 
+                        'message' => "El usuario {$user->name} {$user->apellido} no se puede eliminar, porque tiene clientes asignados.", 
+                        'status' => 200
+                    ];
+                    return response()->json($response);
+                }
+            }else{
+                
+                $validate_cliente = DB::table('pedidos')->where('cliente', $id)->exists();
+                if (!$validate_cliente) {
+                    DB::table('vendedor_cliente')->where('cliente', $id)->delete();
+                    DB::table('user_data')->where('user_id', $id)->delete();
+                    $user->delete();
+                    $response = [
+                        'response' => 'success', 
+                        'message' => "Usuario eliminado correctamente", 
+                        'status' => 200
+                    ];
+                }else{
+                    $response = [
+                        'response' => 'error', 
+                        'message' => "El usuario {$user->name} {$user->apellido} no se puede eliminar, porque tiene pedidos registrados.", 
+                        'status' => 200
+                    ];
+                    return response()->json($response);
+                }
+            }
         }
 
-        return response()->json([
-            'response' => 'success', 
-            'message' => "Usuario eliminado correctamente", 
-            'status' => 200
-        ]);
+        return response()->json($response);
     }
 
 }

@@ -56,7 +56,7 @@ Route::post('/update-user', 'UserController@updateUser');
 Route::group(['prefix' => 'auth'], function () {
     Route::post('login', 'AuthController@login');
     Route::post('signup', 'AuthController@signup');
-  
+    
     Route::group(['middleware' => 'auth:api'], function() {
         Route::get('logout', 'AuthController@logout');
         Route::get('user', 'AuthController@user');
@@ -65,7 +65,7 @@ Route::group(['prefix' => 'auth'], function () {
 
 Route::group(['middleware' => 'auth:api'], function() {
     //USUARIOS 
-    Route::delete('/delete-users', 'UserController@destroyUsers');
+    Route::post('/delete-users', 'UserController@destroyUsers');
     Route::get('/user-rol/{id}','UserController@getForRole');
     // Route::post('/delete-user', 'UserController@destroyUsers');
     
