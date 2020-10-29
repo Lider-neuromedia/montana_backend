@@ -80,12 +80,20 @@ class UserController extends Controller
 
     
     public function getUsers($rol_id){
-        $admins = DB::table('users')->where('rol_id', $rol_id)->get();
-        foreach ($admins as $admin) {
-            $data_admin = DB::table('user_data')->where('user_id', $admin->id)->get();
-            $admin->user_data = $data_admin;
-            $admin->iniciales = substr($admin->name, 0, 1);
-            $admin->iniciales .= substr($admin->apellidos, 0, 1);
+        $users = DB::table('users')->where('rol_id', $rol_id)->get();
+
+        foreach ($users as $user) {
+            $data_admin = DB::table('user_data')->where('user_id', $user->id)->get();
+            $user->user_data = $data_admin;
+            $user->iniciales = substr($user->name, 0, 1);
+            $user->iniciales .= substr($user->apellidos, 0, 1);
+            if ($rol_id == 3) {
+                $vendedor = DB::table('vendedor_cliente')
+                            ->where('cliente', $user->id)
+                            ->join('users', 'vendedor', '=', 'users.id')
+                            ->first();
+                $user->vendedor = $vendedor;
+            }
         }
         
         $admin_ramdom = DB::table('users')->where('rol_id', $rol_id)->first();
@@ -94,7 +102,7 @@ class UserController extends Controller
         foreach ($fields_db as  $field) {
             $fields[] = $field->field_key;
         }
-        $response = ['fields' => $fields, 'admins' => $admins];
+        $response = ['fields' => $fields, 'users' => $users];
         return response()->json($response);
     }
 
@@ -334,13 +342,11 @@ class UserController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-
-    
     public function store(UserRequest $request){
         $request->validate([
             'rol_id'   => 'required',
             'name'     => 'required|string',
-            'apellidos'     => 'required|string',
+            'apellidos' => 'required|string',
             'dni'     => 'required|string',
             'email'    => 'required|string|email|unique:users',
             'password' => 'required|string',
@@ -369,28 +375,8 @@ class UserController extends Controller
 
         return response()->json([
             'tmp_user' => $user->id,
-            'message' => 'Successfully created user!'
+            'message' => 'Usuario creado de manera correcta!'
         ], 201);
-    }
-
-    public function userData(Request $request){
-        return $request;
-
-        $metadata[] = $request;
-        if($metadata != null){
-            foreach($metadata as $key => $value){
-                $metadata[] = UserData::create([
-                    'user_id' => $request->user_id,
-                    'field_key' => $key,
-                    'value_key' => $value
-                ]);
-            }
-        }
-
-        return response()->json([
-            'message' => 'Successfully created user!'
-        ], 201);
-
     }
 
     /**
@@ -405,6 +391,7 @@ class UserController extends Controller
             'id' => 'required',
             'rol_id' => 'required',
             'name' => 'required',
+            'dni' => 'required',
             'apellidos' => 'required',
             'email' => 'required',
             'user_data' => 'required'
@@ -414,6 +401,7 @@ class UserController extends Controller
         $user = User::find($request['id']); 
         $user->rol_id = $request['rol_id'];
         $user->name = $request['name'];
+        $user->dni = $request['dni'];
         $user->apellidos = $request['apellidos'];
         $user->email = $request['email'];
 
@@ -503,6 +491,36 @@ class UserController extends Controller
                     return response()->json($response);
                 }
             }
+        }
+
+        return response()->json($response);
+    }
+
+    public function searchVendedor(Request $request){
+        if (isset($request['search'])) {
+            $search = $request['search'];
+            if ($request['search'] == '') {
+                $vendedores = User::where('rol_id', 2)->get();
+            }else{
+                $vendedores = User::where( function($query) use($search){
+                                $query->where('name', 'like', "%{$search}%");
+                                $query->orWhere('apellidos', 'like', "%{$search}%");
+                                $query->orWhere('dni', 'like', "%{$search}%");
+                            })->where('rol_id', '=' ,2)
+                            ->get();
+            }
+            $response = [
+                'response' => 'success',
+                'vendedores' => $vendedores,
+                'status' => 200
+            ];
+        }else{
+            $response = [
+                'response' => 'error',
+                'vendedores' => null,
+                'status' => 403,
+                'message' => 'Sin busqueda.'
+            ];
         }
 
         return response()->json($response);

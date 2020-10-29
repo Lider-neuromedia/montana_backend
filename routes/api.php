@@ -13,29 +13,6 @@
 */
 
 
-// Route::apiResource('/catalogos', 'CatalogoController');
-// Route::apiResource('/categorias', 'CategoriaController');
-// Route::apiResource('/ciudades', 'CiudadController');
-// Route::apiResource('/cilente-tienda', 'ClienteTiendaController');
-// Route::apiResource('/comentarios', 'ComentarioController');
-// Route::apiResource('/departamentos', 'DepartamentoController');
-// Route::apiResource('/descuentos', 'DescuentoController');
-// Route::apiResource('/encuestas', 'EncuestaController');
-// Route::apiResource('/encuesta-pregunta', 'EncuestaPreguntaController');
-// Route::apiResource('/estados', 'EstadoController');
-// Route::apiResource('/formularios', 'FormularioController');
-// Route::apiResource('/galeria-productos', 'GaleriaProductoController');
-// Route::apiResource('/iva', 'IvaController');
-// Route::apiResource('/marcas', 'MarcaController');
-// Route::apiResource('/preguntas', 'PreguntaController');
-// Route::apiResource('/productos', 'ProductoController');
-// Route::apiResource('/tiendas', 'TiendaController');
-// Route::post('/create-admin','UserController@createAdmin');
-// Route::apiResource('/users', 'UserController');
-// Route::post('/create-admin','UserController@createAdmin');
-// Route::apiResource('/user-data', 'UserDataController');
-// Route::apiResource('/permissions', 'PermissionController');
-
 Route::apiResource('/roles', 'RolController');
 // Route::apiResource('/users', 'UserController');
 // Route::post('/userdata', 'UserController@userData');
@@ -64,23 +41,27 @@ Route::group(['prefix' => 'auth'], function () {
 });
 
 Route::group(['middleware' => 'auth:api'], function() {
-    //USUARIOS 
+    
+    /*
+        USUARIOS
+    */ 
     Route::post('/delete-users', 'UserController@destroyUsers');
     Route::get('/user-rol/{id}','UserController@getForRole');
     // Route::post('/delete-user', 'UserController@destroyUsers');
+        
+        // ADMINISTRADORES.
+        Route::get('/admins', 'UserController@getAdmins');
+        Route::get('/admin/{id}', 'UserController@getAdmin');
     
-    //VENDEDORES. 
-    Route::get('/vendedores','UserController@getVendedores');
-    Route::get('/vendedor/{id}','UserController@getVendedor');
-    Route::get('/clientes-asignados/{id}', 'UserController@assignedCustomers');
-    
-    // CLIENTES.
-    Route::get('/clientes','UserController@getClientes');
-    Route::get('/cliente/{id}','UserController@getCliente');
-    
-    // ADMINISTRADORES.
-    Route::get('/admins', 'UserController@getAdmins');
-    Route::get('/admin/{id}', 'UserController@getAdmin');
+        //VENDEDORES. 
+        Route::get('/vendedores','UserController@getVendedores');
+        Route::get('/vendedor/{id}','UserController@getVendedor');
+        Route::get('/clientes-asignados/{id}', 'UserController@assignedCustomers');
+        
+        // CLIENTES.
+        Route::get('/clientes','UserController@getClientes');
+        Route::get('/cliente/{id}','UserController@getCliente');
+        Route::get('/searchVendedor', 'UserController@searchVendedor');
 
     // CATALOGOS.
     Route::apiResource('/catalogos', 'CatalogoController');
