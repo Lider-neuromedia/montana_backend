@@ -190,7 +190,7 @@ class UserController extends Controller
     }
 
     public function getCliente($id){
-        
+    
         // Buscar el cliente.
         $user = User::where('rol_id', 3)->find($id);
         // validar que sea un cliente.
@@ -206,7 +206,7 @@ class UserController extends Controller
         // Buscar la data del usuario en cuestion.
         $metadata = UserData::where('user_id', $id)->get();
 
-        // Organizar los campos administrados del usuario y organizarlos.
+        // Organizar los campos administrados del usuario.
         $filterData = [];
         foreach($metadata as $mt){
             $filterData[] = [
@@ -220,10 +220,11 @@ class UserController extends Controller
 
         // Buscar su vendedor.
         $vendedor = DB::table('vendedor_cliente')
-                            ->select('id_vendedor_cliente', 'id as id_vendedor', 'cliente as id_cliente', 'rol_id', 'name', 'email')
+                            ->select('id_vendedor_cliente', 'id as id_vendedor', 'cliente as id_cliente', 'rol_id', 'name', 'apellidos', 'email')
                             ->join('users', 'vendedor', '=', 'id')
                             ->where('cliente', $id)
                             ->first();
+
         if ($vendedor != null) {
             $data_vendedor = DB::table('user_data')->where('user_id', $vendedor->id_vendedor)->get();
             $vendedor->user_data = $data_vendedor;
@@ -235,12 +236,15 @@ class UserController extends Controller
 
         // Buscar las tiendas del cliente.
         $tiendas = DB::table('tiendas')
-                    ->select('id_tiendas', 'nombre', 'lugar', 'local', 'codigo', 'direccion', 'telefono', 'ciudad', 'nombre_ciudad')
-                    ->join('ciudades', 'ciudad', '=', 'id_ciudad')
+                    ->select('id_tiendas', 'nombre', 'lugar', 'local', 'direccion', 'telefono')
                     ->where('cliente', $id)
                     ->get();
         $user->tiendas = $tiendas;
         
+        // Pedidos
+        $pedidos = DB::table('pedidos')->where('cliente', $id)->get();
+        $user->pedidos = $pedidos;
+
          return response()->json(
             $user
          );
@@ -277,27 +281,6 @@ class UserController extends Controller
             'message' => 'Successfully created user!'
         ], 201);
 
-    }
-
-
-    // public function getForRole($rol){
-    //     $userdata = User::where('rol_id',$rol)->get();
-    //     return $userdata;
-    // }
-
-    // public function getForRole($rol){
-    //     $userdata = User::where('rol_id',$rol)->get();
-    //     return $userdata;
-    // }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
     }
 
     public function assignedCustomers($id){
@@ -347,12 +330,10 @@ class UserController extends Controller
             'rol_id'   => 'required',
             'name'     => 'required|string',
             'apellidos' => 'required|string',
-            'dni'     => 'required|string',
+            'dni'     => 'required',
             'email'    => 'required|string|email|unique:users',
             'password' => 'required|string',
         ]);
-        
-        $validate = $request->validated();
         $user = User::create([
             'rol_id' => $request->rol_id,
             'name' => $request->name,
@@ -360,8 +341,8 @@ class UserController extends Controller
             'dni' => $request->dni,
             'email' => $request->email,
             'password' => bcrypt($request->password)
-        ]);
-
+            ]);
+            
         $metadata = $request->userdata;
         if($metadata != null){
             foreach($metadata as $key => $value){
@@ -372,11 +353,43 @@ class UserController extends Controller
                 ]);
             }
         }
+        if ($request->rol_id == 3) {
+            // Crear tiendas, y asignar vendedor.
+            $this->gestionCliente($user->id, $request->tiendas, $request->vendedor);
+        }
 
         return response()->json([
-            'tmp_user' => $user->id,
+            'response' => 'success',
+            'status' => 200,
             'message' => 'Usuario creado de manera correcta!'
         ], 201);
+    }
+
+    public function gestionCliente($user, $tiendas, $vendedor){
+        try {
+            // Crear tiendas.
+            foreach ($tiendas as $tienda) {
+                DB::table('tiendas')->insert([
+                    'nombre' => $tienda['nombre'],
+                    'lugar' => $tienda['lugar'],
+                    'local' => $tienda['local'],
+                    'direccion' => $tienda['direccion'],                
+                    'telefono' => $tienda['direccion'],
+                    'cliente' => $user
+                ]);
+            }
+                
+            // Asignar vendedor.
+            DB::table('vendedor_cliente')->insert([
+                'vendedor' => $vendedor,
+                'cliente' => $user
+            ]);
+
+        } catch (\Exception $e) {
+            return false;
+        }
+
+        return true;   
     }
 
     /**
@@ -387,6 +400,51 @@ class UserController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function updateUser(Request $request){
+        $request->validate([
+            'id' => 'required',
+            'rol_id' => 'required',
+            'name' => 'required',
+            'dni' => 'required',
+            'apellidos' => 'required',
+            'email' => 'required',
+            'user_data' => 'required'
+        ]);
+
+        //Actualizacion de la informacion basica del usuario.
+        $user = User::find($request['id']); 
+        $user->rol_id = $request['rol_id'];
+        $user->name = $request['name'];
+        $user->dni = $request['dni'];
+        $user->apellidos = $request['apellidos'];
+        $user->email = $request['email'];
+
+        if(!$user->save()){
+            $response = [
+                'response' => 'error',
+                'message' => 'Error en la actualizacion del usuario.',
+                'status' => 403
+            ];
+            return response()->json($response);
+        }
+
+        foreach ($request['user_data'] as $data) {
+            $user_data = UserData::find($data['id_field']);
+            $user_data->field_key = $data['field_key'];
+            $user_data->value_key = $data['value_key'];
+            $user_data->save();
+        }
+
+        $response = [
+            'response' => 'success',
+            'message' => 'Usuario actualizado con exito.',
+            'status' => 200
+        ];
+
+        return response()->json($response);
+    }
+
+
+    public function updateClient(Request $request){
         $request->validate([
             'id' => 'required',
             'rol_id' => 'required',

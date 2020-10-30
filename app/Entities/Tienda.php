@@ -8,12 +8,14 @@ class Tienda extends Model
 {
     protected $table = 'tiendas';
 
+    protected $primaryKey = 'id_tiendas';
+
     protected $fillable = [
-        'ciudad_id',
-        'name',
-        'place',
-        'address',
-        'phone',
-        'code',
+        'nombre',
+        'lugar',
+        'local',
+        'direccion',
+        'telefono',
+        'cliente'
     ];
 }

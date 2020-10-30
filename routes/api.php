@@ -61,6 +61,7 @@ Route::group(['middleware' => 'auth:api'], function() {
         // CLIENTES.
         Route::get('/clientes','UserController@getClientes');
         Route::get('/cliente/{id}','UserController@getCliente');
+        Route::get('/update-cliente','UserController@updateClient');
         Route::get('/searchVendedor', 'UserController@searchVendedor');
 
     // CATALOGOS.
@@ -83,4 +84,8 @@ Route::group(['middleware' => 'auth:api'], function() {
     Route::get('edit-pedido/{id}', 'PedidoController@edit');
     Route::post('update-pedido', 'PedidoController@update');
     Route::get('export-pedido', 'PedidoController@exportPedido');
+
+    // TIENDAS
+    Route::apiResource('tiendas', 'TiendaController', ['store', 'update']);
+    route::post('delete-tiendas', 'TiendaController@destroy'); 
 });
