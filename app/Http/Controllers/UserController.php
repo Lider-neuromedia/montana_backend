@@ -27,30 +27,16 @@ class UserController extends Controller
      */
     public function index(){
         return User::paginate(4);
-        // $user = User::all();
-        // // $rol = Rol::all();
-        // // $data = Arr::collapse([$user,$rol]);
-        // return $user;
     }
 
     /*
      * Traer usuarios por su tipo de rol
      */
     public function getForRole($rol){
-
         $userdata = DB::select('
             select * from users
             where rol_id = "'.$rol.'"
         ');
-   
-        // $userdata = DB::select('
-        //     select u.name, u.email, data1.value_key as "telefono", data2.value_key as "codigo"
-        //     from users as u, user_data as data1, user_data as data2
-        //     where data1.field_key = "telefono"
-        //     and data2.field_key = "codigo"
-        //     and u.rol_id = "'.$rol.'"
-        //     #GROUP BY "telefono"
-        // ');
 
         return $userdata;
     }
@@ -79,8 +65,16 @@ class UserController extends Controller
     // }
 
     
-    public function getUsers($rol_id){
-        $users = DB::table('users')->where('rol_id', $rol_id)->get();
+    public function getUsers($rol_id, $search = null){
+    
+        $users = DB::table('users')->where( function($query) use($search){
+                        $query->where('name', 'like', "%{$search}%");
+                        $query->orWhere('apellidos', 'like', "%{$search}%");
+                        $query->orWhere('dni', 'like', "%{$search}%");
+                        $query->orWhere('email', 'like', "%{$search}%");
+                    })
+                    ->where('rol_id', $rol_id)
+                    ->get();
 
         foreach ($users as $user) {
             $data_admin = DB::table('user_data')->where('user_id', $user->id)->get();
@@ -130,12 +124,22 @@ class UserController extends Controller
 
 
 
-    public function getVendedores(){
-        return $this->getUsers(2);
+    public function getVendedores(Request $request){
+        if (isset($request['search'])) {
+            $search = $request['search'];
+        }else{
+            $search = null;
+        }
+        return $this->getUsers(2, $search);
     }
 
-    public function getClientes(){
-        return $this->getUsers(3);
+    public function getClientes(Request $request){
+        if (isset($request['search'])) {
+            $search = $request['search'];
+        }else{
+            $search = null;
+        }
+        return $this->getUsers(3, $search);
     }
 
     public function getVendedor($id){
@@ -167,13 +171,19 @@ class UserController extends Controller
         $user->data_user = $filterData;
         // Buscar clientes.
         $clientes_vendedor = DB::table('vendedor_cliente')
-                            ->select('id_vendedor_cliente', 'id as id_cliente', 'rol_id', 'name', 'email')
+                            ->select('id_vendedor_cliente', 'id as id_cliente', 'rol_id', 'name', 'apellidos','email', 'dni')
                             ->join('users', 'cliente', '=', 'id')
                             ->where('vendedor', $id)
                             ->get();
-        
+
         // Setear clientes.
         $user->clientes = $clientes_vendedor;
+
+        // Buscar pedidos 
+        $pedidos_vendedor = DB::table('pedidos')->where('vendedor', $id)->get();
+        // Setear pedidos.
+        $user->pedidos = $pedidos_vendedor;
+
         return response()->json(
             $user
         );
@@ -256,7 +266,7 @@ class UserController extends Controller
         $request->validate([
             'rol_id'   => 'required',
             'name'     => 'required|string',
-            'apellidos'     => 'required|string',
+            'apellidos' => 'required|string',
             'email'    => 'required|string|email|unique:users',
             'password' => 'required|string',
         ]);
@@ -334,6 +344,7 @@ class UserController extends Controller
             'email'    => 'required|string|email|unique:users',
             'password' => 'required|string',
         ]);
+
         $user = User::create([
             'rol_id' => $request->rol_id,
             'name' => $request->name,
@@ -353,9 +364,22 @@ class UserController extends Controller
                 ]);
             }
         }
+        if ($request->rol_id == 2) {
+            // Crear tiendas, y asignar vendedor.
+            foreach ($request->clientes as $cliente) {
+                // Asignar cliente.
+                DB::table('vendedor_cliente')->insert([
+                    'vendedor' => $user->id,
+                    'cliente' => $cliente['id']
+                ]);
+            }
+        }
+        
         if ($request->rol_id == 3) {
             // Crear tiendas, y asignar vendedor.
-            $this->gestionCliente($user->id, $request->tiendas, $request->vendedor);
+            if (isset($request->vendedor)) {
+                $this->gestionCliente($user->id, $request->tiendas, $request->vendedor);
+            }
         }
 
         return response()->json([
@@ -496,10 +520,8 @@ class UserController extends Controller
      */
     // public function destroy(User $user)
     public function destroyUsers(Request $request){
-
         foreach ($request['usuarios'] as $key => $id) {
             $user = User::find($id);
-
             if ($user->rol_id == 1) {
                 DB::table('user_data')->where('user_id', $id)->delete();
                 $user->delete();
@@ -529,9 +551,11 @@ class UserController extends Controller
                     return response()->json($response);
                 }
             }else{
-                
+
                 $validate_cliente = DB::table('pedidos')->where('cliente', $id)->exists();
                 if (!$validate_cliente) {
+                    // dd($validate_cliente);
+                    DB::table('tiendas')->where('cliente', $id)->delete();
                     DB::table('vendedor_cliente')->where('cliente', $id)->delete();
                     DB::table('user_data')->where('user_id', $id)->delete();
                     $user->delete();
@@ -578,6 +602,151 @@ class UserController extends Controller
                 'vendedores' => null,
                 'status' => 403,
                 'message' => 'Sin busqueda.'
+            ];
+        }
+
+        return response()->json($response);
+    }
+
+    public function searchClientes(Request $request){
+        if (isset($request['search'])) {
+            $search = $request['search'];
+            if ($request['search'] == '') {
+                $clientes = User::where('rol_id', 3)
+                            ->leftJoin('vendedor_cliente', 'cliente', '=', 'id')
+                            ->where('vendedor_cliente.id_vendedor_cliente', null)
+                            ->get();
+            }else{
+                $clientes = User::where( function($query) use($search){
+                                $query->where('name', 'like', "%{$search}%");
+                                $query->orWhere('apellidos', 'like', "%{$search}%");
+                                $query->orWhere('dni', 'like', "%{$search}%");
+                            })->leftJoin('vendedor_cliente', 'cliente', '=', 'id')
+                            ->where('rol_id', '=' ,3)
+                            ->where('vendedor_cliente.id_vendedor_cliente', null)
+                            ->get();
+            }
+
+            $response = [
+                'response' => 'success',
+                'clientes' => $clientes,
+                'status' => 200
+            ];
+        }else{
+            $response = [
+                'response' => 'error',
+                'clientes' => null,
+                'status' => 403,
+                'message' => 'Sin busqueda.'
+            ];
+        }
+
+        return response()->json($response);
+    }
+
+    public function updateVendedor(Request $request, $id){
+        $request->validate([
+            'rol_id'   => 'required',
+            'name'     => 'required|string',
+            'apellidos' => 'required|string',
+            'email'    => 'required',
+            'dni'    => 'required',
+            'data_user'    => 'required',
+        ]);
+
+        $user = User::find($id);
+        $user->name = $request['name'];
+        $user->apellidos = $request['apellidos'];
+        $user->email = $request['email'];
+        $user->dni = $request['dni'];
+        
+        if (isset($request['password'])) {
+            $user->password = bcrypt($request['password']);
+        }
+
+        if($user->save()){
+            foreach ($request['data_user'] as $data) {
+                $user_data = UserData::find($data['id_field']);
+                $user_data->value_key = $data['value_key'];
+                $user_data->save();
+            }
+        }
+
+        $response = [
+            'response' => 'success',
+            'status' => 200
+        ];
+
+        return response()->json($response);
+    }
+
+    public function updateAsignClient($idClient, $idVendedor, $action){
+        // Validacion manual de los Id's
+        $validate_client = User::find($idClient)->exists();
+        $validate_vend = User::find($idVendedor)->exists();
+        
+        // Validar que accion se ejecuta. Crear asignacion o eliminarla.
+        if ($action == 'create') {
+            // Validar antes de cualquier operacion los Id's
+            if ($validate_client == true && $validate_vend == true) {
+                
+                $validate_asign = DB::table('vendedor_cliente')
+                ->where('vendedor', $idVendedor)
+                ->where('cliente', $idClient)
+                ->exists();
+
+                if (!$validate_asign) {
+                    DB::table('vendedor_cliente')->insert([
+                        'vendedor' => $idVendedor,
+                        'cliente' =>  $idClient
+                    ]);
+                    $response = [
+                        'response' => 'success',
+                        'status' => 200,
+                        'message' => 'Cliente asignado al vendedor correctamente.'
+                    ];
+                }else{
+                    $response = [
+                        'response' => 'error',
+                        'status' => 403,
+                        'message' => 'Ya tiene asignado el cliente.'
+                    ];
+                }
+
+            }else{
+                $response = [
+                    'response' => 'error',
+                    'status' => 403,
+                    'message' => 'Cliente o vendedor no existen.'
+                ];
+            }
+        }else if($action == 'delete'){
+
+            if ($validate_client == true && $validate_vend == true) {
+
+                DB::table('vendedor_cliente')
+                ->where('vendedor', $idVendedor)
+                ->where('cliente', $idClient)
+                ->delete();
+
+                $response = [
+                    'response' => 'success',
+                    'status' => 200,
+                    'message' => 'Cliente removido del vendedor de manera correcta.'
+                ];
+
+            }else{
+                $response = [
+                    'response' => 'error',
+                    'status' => 403,
+                    'message' => 'Cliente o vendedor no existen.'
+                ];
+            }
+        }else{
+            $response = [
+                'response' => 'error',
+                'status' => 403,
+                'message' => 'Acción no valida.'
             ];
         }
 

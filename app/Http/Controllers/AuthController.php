@@ -46,6 +46,15 @@ class AuthController extends Controller
 
         $user = auth()->user();
         $userdata = UserData::where('user_id',$user->id)->get();
+        if ($user->rol_id == 1) {
+            $accesos = ['all'];
+        }else if($user->rol_id == 2){
+            $accesos = ['catalogos', 'pedidos', 'showRoom', 'clientes', 'pqrs', 'ampliacion_cupo'];
+        }else if($user->rol_id == 3){
+            $accesos = [];
+        }
+
+
         $tokenResult = $user->createToken('Personal Access Token');
         $token = $tokenResult->token;
         if ($request->remember_me) {
@@ -63,7 +72,8 @@ class AuthController extends Controller
             'email' => $user->email,
             'name' => $user->name,
             'rol' => $user->rol_id,
-            'userdata' => $userdata
+            'userdata' => $userdata,
+            'permisos' => $accesos
         ]);
     }
 
