@@ -64,8 +64,10 @@ Route::group(['middleware' => 'auth:api'], function() {
         // CLIENTES.
         Route::get('/clientes','UserController@getClientes');
         Route::get('/cliente/{id}','UserController@getCliente');
-        Route::get('/update-cliente','UserController@updateClient');
+        Route::post('/update-cliente/{id}','UserController@updateClient');
         Route::get('/searchVendedor', 'UserController@searchVendedor');
+        Route::get('updateAsignVend/{cliente}/{vendedor}/{action}', 'UserController@updateAsignVend');
+        Route::post('newTienda/{cliente}', 'UserController@newTienda');
 
     // CATALOGOS.
     Route::apiResource('/catalogos', 'CatalogoController');

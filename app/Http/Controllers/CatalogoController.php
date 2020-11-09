@@ -14,8 +14,32 @@ class CatalogoController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(){
-        $catalogos = Catalogo::all();
+    public function index(Request $request){
+        
+        $catalogos = Catalogo::select('*');
+
+        if (isset($request['search'])) {
+            $search = json_decode($request['search'], true);
+
+            if ($search['general']) {
+                $catalogos->where('tipo', 'general');
+            }
+            if($search['show_room']){
+                $catalogos->orWhere('tipo', 'show room');
+            }
+            if($search['public']){
+                $catalogos->where('estado', 'activo');
+            } 
+            if($search['private']){
+                $catalogos->orWhere('estado', 'privado');
+            }
+
+            $catalogos = $catalogos->get();
+            
+        }else{
+            $catalogos = Catalogo::all();
+        }
+        
 
         // Setear la url de la imagen segun servidor.
         foreach ($catalogos as $catalogo) {

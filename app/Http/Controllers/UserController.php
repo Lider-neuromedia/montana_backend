@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Entities\Pedido;
 use App\Entities\User;
 use App\Entities\UserData;
+use App\Entities\Tienda;
 use App\Entities\VendedorCliente;
 use Illuminate\Http\Request;
 
@@ -234,13 +235,12 @@ class UserController extends Controller
                             ->join('users', 'vendedor', '=', 'id')
                             ->where('cliente', $id)
                             ->first();
-
+        
         if ($vendedor != null) {
             $data_vendedor = DB::table('user_data')->where('user_id', $vendedor->id_vendedor)->get();
             $vendedor->user_data = $data_vendedor;
-        }else{
-            $vendedor->user_data = [];
         }        
+
         // Setear el vendedor.
         $user->vendedor = $vendedor;
 
@@ -435,7 +435,7 @@ class UserController extends Controller
         ]);
 
         //Actualizacion de la informacion basica del usuario.
-        $user = User::find($request['id']); 
+        $user = User::find($id); 
         $user->rol_id = $request['rol_id'];
         $user->name = $request['name'];
         $user->dni = $request['dni'];
@@ -468,24 +468,26 @@ class UserController extends Controller
     }
 
 
-    public function updateClient(Request $request){
+    public function updateClient(Request $request, $id){
         $request->validate([
-            'id' => 'required',
-            'rol_id' => 'required',
-            'name' => 'required',
-            'dni' => 'required',
-            'apellidos' => 'required',
-            'email' => 'required',
-            'user_data' => 'required'
+            'rol_id'   => 'required',
+            'name'     => 'required|string',
+            'apellidos' => 'required|string',
+            'email'    => 'required',
+            'dni'    => 'required',
+            'data_user'    => 'required',
         ]);
 
         //Actualizacion de la informacion basica del usuario.
         $user = User::find($request['id']); 
-        $user->rol_id = $request['rol_id'];
         $user->name = $request['name'];
         $user->dni = $request['dni'];
         $user->apellidos = $request['apellidos'];
         $user->email = $request['email'];
+
+        if (isset($request['password'])) {
+            $user->password = bcrypt($request['password']);
+        }
 
         if(!$user->save()){
             $response = [
@@ -496,7 +498,7 @@ class UserController extends Controller
             return response()->json($response);
         }
 
-        foreach ($request['user_data'] as $data) {
+        foreach ($request['data_user'] as $data) {
             $user_data = UserData::find($data['id_field']);
             $user_data->field_key = $data['field_key'];
             $user_data->value_key = $data['value_key'];
@@ -753,4 +755,106 @@ class UserController extends Controller
         return response()->json($response);
     }
 
+    public function updateAsignVend($idClient, $idVendedor, $action){
+        // Validacion manual de los Id's
+        $validate_client = User::find($idClient)->exists();
+        $validate_vend = User::find($idVendedor)->exists();
+        
+        // Validar que accion se ejecuta. Crear asignacion o eliminarla.
+        if ($action == 'create') {
+            // Validar antes de cualquier operacion los Id's
+            if ($validate_client == true && $validate_vend == true) {
+                
+                $validate_asign = DB::table('vendedor_cliente')
+                ->where('cliente', $idClient)
+                ->exists();
+
+                if (!$validate_asign) {
+                    DB::table('vendedor_cliente')->insert([
+                        'vendedor' => $idVendedor,
+                        'cliente' =>  $idClient
+                    ]);
+                    $response = [
+                        'response' => 'success',
+                        'status' => 200,
+                        'message' => 'Vendedor asignado al cliente de manera correcta.'
+                    ];
+                }else{
+                    $response = [
+                        'response' => 'error',
+                        'status' => 403,
+                        'message' => 'Ya tiene asignado el vendedor.'
+                    ];
+                }
+
+            }else{
+                $response = [
+                    'response' => 'error',
+                    'status' => 403,
+                    'message' => 'Cliente o vendedor no existen.'
+                ];
+            }
+        }else if($action == 'delete'){
+
+            if ($validate_client == true && $validate_vend == true) {
+
+                DB::table('vendedor_cliente')
+                ->where('vendedor', $idVendedor)
+                ->where('cliente', $idClient)
+                ->delete();
+
+                $response = [
+                    'response' => 'success',
+                    'status' => 200,
+                    'message' => 'Vendedor removido del cliente de manera correcta.'
+                ];
+
+            }else{
+                $response = [
+                    'response' => 'error',
+                    'status' => 403,
+                    'message' => 'Cliente o vendedor no existen.'
+                ];
+            }
+        }else{
+            $response = [
+                'response' => 'error',
+                'status' => 403,
+                'message' => 'Acción no valida.'
+            ];
+        }
+
+        return response()->json($response);
+    }
+
+    public function newTienda(Request $request, $cliente){
+        $request->validate([
+            'nombre' => 'required',
+            'lugar' => 'required',
+            'direccion' => 'required',
+        ]);
+
+        $tienda = new Tienda;
+        $tienda->nombre = $request['nombre'];
+        $tienda->lugar = $request['lugar'];
+        $tienda->direccion = $request['direccion'];
+        $tienda->local = $request['local'];
+        $tienda->telefono = $request['telefono'];
+        $tienda->cliente = $cliente;
+
+        if($tienda->save()){
+            $response = [
+                'response' => 'success',
+                'status' => 200
+            ];
+        }else{
+            $response = [
+                'response' => 'error',
+                'status' => 403,
+                'message' => 'Error creando la tienda.'
+            ];
+        }
+
+        return response()->json($response);
+    }
 }
