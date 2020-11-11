@@ -71,6 +71,7 @@ Route::group(['middleware' => 'auth:api'], function() {
 
     // CATALOGOS.
     Route::apiResource('/catalogos', 'CatalogoController');
+    Route::get('consumerCatalogos', 'CatalogoController@consumerCatalogos');
     
     // PRODUCTO.
     Route::get('/productos/{catalogo}', 'ProductoController@index');
@@ -93,4 +94,10 @@ Route::group(['middleware' => 'auth:api'], function() {
     // TIENDAS
     Route::apiResource('tiendas', 'TiendaController', ['store', 'update']);
     route::post('delete-tiendas', 'TiendaController@destroy'); 
+
+    // ENCUESTAS
+    Route::apiResource('encuestas', 'EncuestaController', ['index', 'store', 'update']);
+        // Integracion encuestas - productos.
+        Route::get('getPreguntas/{catalogo}', 'EncuestaController@getPreguntas');
+        Route::post('storeRespuestas', 'EncuestaController@storePreguntas');
 });

@@ -8,7 +8,13 @@ class Encuesta extends Model
 {
     protected $table = 'encuestas';
 
+    protected $primaryKey = 'id_form';
+
     protected $fillable = [
-        'encuesta',
+        'codigo',
+        'fecha_creacion',
+        'catalogo',
+        'tipo',
+        'estado',
     ];
 }

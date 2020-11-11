@@ -184,4 +184,18 @@ class CatalogoController extends Controller
         }
         return response()->json($response);
     }
+
+    public function consumerCatalogos(){
+        $catalogos = Catalogo::where('estado', 'activo')->where('cantidad', '!=', 0)->get();
+        foreach ($catalogos as $catalogo) {
+            $catalogo->imagen = url($catalogo->imagen);
+        }
+        $response = [
+            'response' => 'success',
+            'status' => 200,
+            'catalogos' => $catalogos
+        ];
+
+        return response()->json($response);
+    }
 }
