@@ -6,7 +6,9 @@ use App\Entities\Encuesta;
 use App\Entities\Preguntas;
 use App\Entities\Valoracion;
 use App\Entities\Catalogo;
+use App\Entities\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use DB;
 
 class EncuestaController extends Controller
@@ -17,8 +19,19 @@ class EncuestaController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function index(Request $request){
+
+        if (isset($request['search'])) {
+            $search = $request['search'];
+        }else{
+            $search = "";
+        }
+        
         $encuestas = Encuesta::select('encuestas.*', 'catalogos.titulo')
                     ->join('catalogos', 'catalogo', '=', 'id_catalogo')
+                    ->where('codigo',  'like', "%$search%")
+                    ->orWhere('catalogos.titulo',  'like', "%$search%")
+                    ->orWhere('encuestas.tipo',  'like', "%$search%")
+                    ->orWhere('encuestas.estado',  'like', "%$search%")
                     ->get();
 
         $response = [
@@ -163,6 +176,36 @@ class EncuestaController extends Controller
         return response()->json($response);
     }
 
+    public function destroyPregunta($id_pregunta){
+        
+        $validate_pregunta = Valoracion::where('pregunta', $id_pregunta)->exists();
+
+        if ($validate_pregunta) {
+            $response = [
+                'response' => 'error',
+                'status' => 403,
+                'message' => 'La pregunta tiene respuestas diligenciadas. No se puede eliminar.'
+            ];
+        }else{
+            $pregunta = Preguntas::find($id_pregunta);
+            if ($pregunta) {
+                $pregunta->delete();
+                $response = [
+                    'response' => 'success',
+                    'status' => 200
+                ];
+            }else{
+                $response = [
+                    'response' => 'error',
+                    'status' => 403,
+                    'message' => 'La pregunta enviada no existe.'
+                ];
+            }
+        }
+
+        return response()->json($response);
+    }
+
     /**
      * Display the specified resource.
      *
@@ -176,16 +219,93 @@ class EncuestaController extends Controller
                     ->where('encuesta', $id)
                     ->groupBy('id_pregunta', 'preguntas.pregunta')
                     ->get();
+
+        if (count($preguntas) == 0) {
+            # code...
+            $preguntas = DB::table('preguntas')
+            ->select('id_pregunta', 'preguntas.pregunta')
+            ->where('encuesta', $id)
+            ->groupBy('id_pregunta', 'preguntas.pregunta')
+            ->get();
+        }
+        
+        // Estadistica de Dona - cantidad de usuarios.
+        $usuarios_diligenciados = DB::table('preguntas')
+                                ->select('usuario')
+                                ->join('valoraciones', 'valoraciones.pregunta', '=', 'id_pregunta')
+                                ->where('encuesta', $id)
+                                ->groupBy('usuario')
+                                ->get();
+                                
+        // Solo usuarios tipo cliente.
+        $usuarios_totales = User::where('rol_id', '3')->count();
+
+        $porcentaje_diligenciado = (count($usuarios_diligenciados) / $usuarios_totales) * 100;
+        
+        foreach ($preguntas as $key => $pregunta) {
+            // Estadistica de barras - promedio de respuesta.
+            $promedio_respuesta = DB::table('preguntas')
+                                ->select('id_pregunta', 'respuesta', DB::raw('round(AVG(respuesta)) AS promedio'))
+                                ->join('valoraciones', 'valoraciones.pregunta', '=', 'preguntas.id_pregunta')
+                                ->where('id_pregunta', $pregunta->id_pregunta)
+                                ->groupBy('respuesta', 'id_pregunta')
+                                ->get();
+
+            if (count($promedio_respuesta) < 5) {
+                for ($i=1; $i <= 5; $i++) { 
+                    $exists = false;
+                    foreach ($promedio_respuesta as $key => $respuesta) {
+                        if ($i == $respuesta->respuesta) {
+                            $exists = true;
+                        }
+                    }
+
+                    if (!$exists) {
+                        $data = new \stdClass;
+                        $data->id_pregunta = $pregunta->id_pregunta; 
+                        $data->respuesta = $i; 
+                        $data->promedio = 0;
+                        $promedio_respuesta->push($data);
+                    }
+
+                }
+                $pregunta->promedio_respuestas = $promedio_respuesta;
+            }
+        }
         
         $response = [
             'response' => 'success',
             'status' => 200,
-            'preguntas' => $preguntas
+            'preguntas' => $preguntas,
+            'porcentaje_diligenciados' => $porcentaje_diligenciado
         ];
         
         return response()->json($response);
     }
 
+
+    public function edit($id){
+        $encuesta = Encuesta::select('encuestas.*', 'catalogos.titulo')
+        ->join('catalogos', 'catalogo', '=', 'id_catalogo')
+        ->where('id_form', $id)
+        ->first();
+
+        $encuesta->preguntas = Encuesta::select('id_form','catalogo','preguntas.*')
+                                    ->where('catalogo', $encuesta->catalogo)
+                                    ->where('preguntas.encuesta', $id)
+                                    ->join('preguntas', 'encuesta', '=', 'id_form')
+                                    ->get();
+
+        $response = [
+        'response' => 'success',
+        'status' => 200,
+        'encuesta' => $encuesta
+        ];
+        
+        return response()->json($response);
+    }
+
+   
     /**
      * Update the specified resource in storage.
      *
@@ -193,10 +313,45 @@ class EncuestaController extends Controller
      * @param  \App\Entities\Encuesta  $encuesta
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Encuesta $encuesta)
-    {
-        $encuesta->update($request->all());
-        return $encuesta;
+    public function update(Request $request, Encuesta $encuesta){
+        $request->validate([
+            'codigo' => 'required',
+            'catalogo' => 'required',
+            'tipo' => 'required',
+            'estado' => 'required',
+            'preguntas' => 'required|array'
+        ]); 
+
+        $encuesta->tipo = $request['tipo'];
+        $encuesta->estado = $request['estado'];
+        $encuesta->catalogo = $request['catalogo'];
+        if($encuesta->save()){
+
+            foreach ($request['preguntas'] as $data) {
+                if (isset($data['id_pregunta'])) {
+                    $pregunta = Preguntas::find($data['id_pregunta']);
+                }else{
+                    $pregunta = new Preguntas;
+                }
+                $pregunta->pregunta = $data['pregunta'];
+                $pregunta->encuesta = $encuesta->id_form;
+                $pregunta->save();
+            }
+
+            $response = [
+                'response' => 'success',
+                'status' => 200,
+            ];
+        }else{
+            $response = [
+                'response' => 'error',
+                'status' => 403,
+                'message' => 'Error en la actualización',
+            ];
+        }
+        
+        return response()->json($response);
+
     }
 
 }

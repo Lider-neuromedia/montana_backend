@@ -97,7 +97,10 @@ Route::group(['middleware' => 'auth:api'], function() {
 
     // ENCUESTAS
     Route::apiResource('encuestas', 'EncuestaController', ['index', 'store', 'update']);
+    Route::get('editEncuesta/{id}', 'EncuestaController@edit');
         // Integracion encuestas - productos.
         Route::get('getPreguntas/{catalogo}', 'EncuestaController@getPreguntas');
         Route::post('storeRespuestas', 'EncuestaController@storePreguntas');
+        Route::get('eliminarPregunta/{pregunta}', 'EncuestaController@destroyPregunta');
+
 });
