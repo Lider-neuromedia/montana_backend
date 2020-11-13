@@ -62,6 +62,13 @@ return [
             'visibility' => 'public',
         ],
         
+        'solicitudes' => [
+            'driver' => 'local',
+            'root' => storage_path('app/public/solicitudes'),
+            'url' => env('APP_URL').'/storage',
+            'visibility' => 'public',
+        ],
+        
         'productos' => [
             'driver' => 'local',
             'root' => storage_path('app/public/productos'),

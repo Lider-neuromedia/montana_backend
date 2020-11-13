@@ -103,4 +103,8 @@ Route::group(['middleware' => 'auth:api'], function() {
         Route::post('storeRespuestas', 'EncuestaController@storePreguntas');
         Route::get('eliminarPregunta/{pregunta}', 'EncuestaController@destroyPregunta');
 
+    // AMPLIACION CUPO
+    Route::apiResource('ampliacion-cupo', 'AmpliacionCupoController', ['index', 'store', 'update']);
+    Route::get('getUserSmall/{rol_id}', 'AmpliacionCupoController@getUserSmall');
+    Route::get('cambiar-estado/{solicitud}/{estado}', 'AmpliacionCupoController@changeState');
 });
