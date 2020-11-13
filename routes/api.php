@@ -107,4 +107,8 @@ Route::group(['middleware' => 'auth:api'], function() {
     Route::apiResource('ampliacion-cupo', 'AmpliacionCupoController', ['index', 'store', 'update']);
     Route::get('getUserSmall/{rol_id}', 'AmpliacionCupoController@getUserSmall');
     Route::get('cambiar-estado/{solicitud}/{estado}', 'AmpliacionCupoController@changeState');
+
+    // PQRS
+    Route::apiResource('pqrs', 'PqrsController');
+
 });
