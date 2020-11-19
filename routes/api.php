@@ -18,6 +18,14 @@ Route::apiResource('/roles', 'RolController');
 // Route::post('/userdata', 'UserController@userData');
 
 Route::apiResource('/asignar-cliente', 'VendedorClienteController');
+Route::get('/unauthenticated', function(){
+    $response = [
+        'response' => 'error',
+        'status' => 403,
+        'message' => 'Token vencido o invalido.'
+    ];
+    return response()->json($response, $response['status']);
+})->name('unauthenticated');
 
 Route::group( [ 'middleware' => ['role:administrador'] ], function() {
     // Route::apiResource('/users', 'UserController');
@@ -37,6 +45,7 @@ Route::group(['prefix' => 'auth'], function () {
     Route::group(['middleware' => 'auth:api'], function() {
         Route::get('logout', 'AuthController@logout');
         Route::get('user', 'AuthController@user');
+        Route::get('/getUserSesion','AuthController@getUserSesion');
     });
 });
 
@@ -49,11 +58,11 @@ Route::group(['middleware' => 'auth:api'], function() {
     Route::get('/user-rol/{id}','UserController@getForRole');
     // Route::post('/delete-user', 'UserController@destroyUsers');
         
-        // ADMINISTRADORES.
+        // ADMINISTRADORES
         Route::get('/admins', 'UserController@getAdmins');
         Route::get('/admin/{id}', 'UserController@getAdmin');
     
-        //VENDEDORES. 
+        //VENDEDORES 
         Route::get('/vendedores','UserController@getVendedores');
         Route::get('/vendedor/{id}','UserController@getVendedor');
         Route::get('/clientes-asignados/{id}', 'UserController@assignedCustomers');
@@ -61,7 +70,7 @@ Route::group(['middleware' => 'auth:api'], function() {
         Route::post('/update-vendedor/{id}', 'UserController@updateVendedor');
         Route::get('updateAsignClient/{cliente}/{vendedor}/{action}', 'UserController@updateAsignClient');
         
-        // CLIENTES.
+        // CLIENTES
         Route::get('/clientes','UserController@getClientes');
         Route::get('/cliente/{id}','UserController@getCliente');
         Route::post('/update-cliente/{id}','UserController@updateClient');
@@ -69,11 +78,11 @@ Route::group(['middleware' => 'auth:api'], function() {
         Route::get('updateAsignVend/{cliente}/{vendedor}/{action}', 'UserController@updateAsignVend');
         Route::post('newTienda/{cliente}', 'UserController@newTienda');
 
-    // CATALOGOS.
+    // CATALOGOS
     Route::apiResource('/catalogos', 'CatalogoController');
     Route::get('consumerCatalogos', 'CatalogoController@consumerCatalogos');
     
-    // PRODUCTO.
+    // PRODUCTO
     Route::get('/productos/{catalogo}', 'ProductoController@index');
     Route::post('/productos', 'ProductoController@store');
     Route::get('/producto/{id}', 'ProductoController@detalleProducto');
@@ -110,5 +119,7 @@ Route::group(['middleware' => 'auth:api'], function() {
 
     // PQRS
     Route::apiResource('pqrs', 'PqrsController');
+    Route::post('newMessage', 'PqrsController@NewMessage');
+    Route::get('changeState/{id}/{state}', 'PqrsController@changeState');
 
 });

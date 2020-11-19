@@ -87,4 +87,33 @@ class AuthController extends Controller
         return response()->json($request->user());
     }
 
+    public function getUserSesion(){
+        if(auth()->user() != null){
+            $user = auth()->user();
+            $userdata = UserData::where('user_id',$user->id)->get();
+            if ($user->rol_id == 1) {
+                $accesos = ['all'];
+            }else if($user->rol_id == 2){
+                $accesos = ['catalogos', 'pedidos', 'showRoom', 'clientes', 'pqrs', 'ampliacion_cupo'];
+            }else if($user->rol_id == 3){
+                $accesos = [];
+            }
+            $response = [
+                'response' => 'success',
+                'status' => 200,
+                'user' => $user,
+                'userdata' => $userdata,
+                'accesos' => $accesos
+            ];
+        }else{
+            $response = [
+                'response' => 'error',
+                'status' => 403,
+                'message' => 'Token vencido o invalido.'
+            ];
+        }
+
+        return response()->json($response);
+    }
+
 }

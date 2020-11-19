@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Entities\Pqrs;
+use App\Entities\SeguimientoPqrs;
 use DB;
 
 class PqrsController extends Controller
@@ -82,42 +83,161 @@ class PqrsController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
-    {
-        //
+    public function show($id){
+        $pqrs = Pqrs::select('id_pqrs', 'codigo', 'fecha_registro', 'pqrs.vendedor', 'pqrs.cliente', 'ven.name AS name_vendedor', 
+            'ven.apellidos AS apellidos_vendedor', 'cli.name AS name_cliente', 'cli.apellidos AS apellidos_cliente', 'estado')
+            ->join('users AS ven', 'vendedor', '=','ven.id')
+            ->join('users AS cli', 'cliente', '=','cli.id')
+            ->where('id_pqrs', $id)
+            ->first();
+        
+        $messages_pqrs = DB::table('seguimiento_pqrs')
+                        ->select('seguimiento_pqrs.*','users.name', 'users.apellidos', 'users.rol_id')
+                        ->join('users', 'usuario', '=', 'id')
+                        ->where('pqrs', $id)
+                        ->orderBy('seguimiento_pqrs.created_at', 'ASC')
+                        ->get();
+    
+
+        foreach ($messages_pqrs as $messages) {
+            $val_rol_user = auth()->user()->rol_id;
+            $messages->iniciales = substr($messages->name, 0, 1);
+            $messages->iniciales .= substr($messages->apellidos, 0, 1);
+            $messages->hora = substr($messages->hora, 0, -3);
+
+            if ($messages->rol_id == 2) {
+                // Si el usuario autenticado es admin o vendedor. Se pone como destinatario o addressee al vendedor.
+                if ($val_rol_user == 1 || $val_rol_user == 2) {
+                    $messages->addressee = true;
+                }else{
+                    $messages->addressee = false;
+                }
+            }else if($messages->rol_id == 3){
+                // Si el usuario autenticado es admin o vendedor. pero el mensaje lo diligencio un cliente
+                if ($val_rol_user == 1 || $val_rol_user == 2) {
+                    $messages->addressee = false;
+                }else{
+                    $messages->addressee = true;
+                }
+            }else{
+                if ($val_rol_user == 1 || $val_rol_user == 2) {
+                    $messages->addressee = true;
+                }else{
+                    $messages->addressee = false;
+                }
+            }
+        }
+        $pqrs->messages_pqrs = $messages_pqrs;
+        
+        // Busqueda de los pedidos en base al vendedor y cliente registrados en la pqrs.
+        $pedidos = DB::table('pedidos')
+                    ->select('pedidos.*', 'users.name', 'users.apellidos', 'users.rol_id')
+                    ->join('users', 'cliente', '=', 'id')
+                    ->where('vendedor', $pqrs->vendedor)
+                    ->where('cliente', $pqrs->cliente)
+                    ->get();
+        foreach ($pedidos as $pedido) {
+            $pedido->iniciales = substr($pedido->name, 0, 1);
+            $pedido->iniciales .= substr($pedido->apellidos, 0, 1);
+        }
+
+        $pqrs->pedidos = $pedidos;
+
+        $response = [
+            'response' => 'success',
+            'status' => 200,
+            'pqrs' => $pqrs
+        ];
+
+        return response()->json($response);
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Nuevo mensaje
      *
-     * @param  int  $id
+     * @param  Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
-    {
-        //
+    public function NewMessage(Request $request){
+        $request->validate([
+            'mensaje' => 'required',
+            'usuario' => 'exists:App\Entities\User,id|required',
+            'pqrs' => 'exists:App\Entities\Pqrs,id_pqrs|required', 
+        ]);
+        $seguimiento = new SeguimientoPqrs;
+        $seguimiento->usuario = $request['usuario'];
+        $seguimiento->pqrs = $request['pqrs'];
+        $seguimiento->mensaje = $request['mensaje'];
+        $seguimiento->hora = date('H:i');
+        
+        if($seguimiento->save()){
+            $message_pqrs = SeguimientoPqrs::select('seguimiento_pqrs.*','users.name', 'users.apellidos', 'users.rol_id')
+                        ->join('users', 'usuario', '=', 'id')
+                        ->where('id_seguimiento', $seguimiento->id_seguimiento)
+                        ->first();
+                        
+            $val_rol_user = auth()->user()->rol_id;
+            $message_pqrs->iniciales = substr($message_pqrs->name, 0, 1);
+            $message_pqrs->iniciales .= substr($message_pqrs->apellidos, 0, 1);
+            $message_pqrs->hora = substr($message_pqrs->hora, 0, -3);
+
+            if ($message_pqrs->rol_id == 2) {
+                // Si el usuario autenticado es admin o vendedor. Se pone como destinatario o addressee al vendedor.
+                if ($val_rol_user == 1 || $val_rol_user == 2) {
+                    $message_pqrs->addressee = true;
+                }else{
+                    $message_pqrs->addressee = false;
+                }
+            }else if($message_pqrs->rol_id == 3){
+                // Si el usuario autenticado es admin o vendedor. pero el mensaje lo diligencio un cliente
+                if ($val_rol_user == 1 || $val_rol_user == 2) {
+                    $message_pqrs->addressee = false;
+                }else{
+                    $message_pqrs->addressee = true;
+                }
+            }else{
+                if ($val_rol_user == 1 || $val_rol_user == 2) {
+                    $message_pqrs->addressee = true;
+                }else{
+                    $message_pqrs->addressee = false;
+                }
+            }
+
+            $response = [
+                'response' => 'success',
+                'status' => 200,
+                'mensaje' => $message_pqrs
+            ];
+        }else{
+            
+            $response = [
+                'response' => 'error',
+                'status' => 403,
+                'message' => 'Error creando el mensaje.'
+            ];
+        }
+
+        return response()->json($response);
+
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        //
-    }
+    public function changeState($id, $state){
+        $pqrs = Pqrs::find($id);
+        $pqrs->estado = $state;
+        if($pqrs->save()){
+            $response = [
+                'response' => 'success',
+                'status' => 200,
+                'message' => 'Estado asignado de manera correcta.'
+            ];
+        }else{
+            $response = [
+                'response' => 'error',
+                'status' => 403,
+                'message' => 'Error en el cambio de estado.'
+            ];
+        }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        //
+        return response()->json($response);
     }
 }

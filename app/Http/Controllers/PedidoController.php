@@ -26,10 +26,11 @@ class PedidoController extends Controller
         $date = $request['date'];
 
         $pedidos = Pedido::select('id_pedido', 'fecha', 'codigo', 'total', 'ven.name AS name_vendedor', 
-                    'ven.apellidos AS apellido_vendedor', 'cli.name AS name_cliente', 'cli.apellidos AS apellido_cliente', 'estado')
+                    'ven.apellidos AS apellido_vendedor', 'cli.name AS name_cliente', 'cli.apellidos AS apellido_cliente', 'estados.estado', 'estados.id_estado')
+                    ->join('estados', 'pedidos.estado', '=', 'estados.id_estado')
                     ->join('users AS ven', 'vendedor', '=','ven.id')
                     ->join('users AS cli', 'cliente', '=','cli.id');
-      
+
         if ($date == 'hoy') {
             // Seteamos la zona horaria en caso de que no funcione la configuracion del servidor.
             date_default_timezone_set('America/Bogota');
@@ -179,6 +180,9 @@ class PedidoController extends Controller
         
         // Consulta del cliente asignado.
         $cliente = User::find($pedido->cliente);
+        $data_admin = DB::table('user_data')->where('user_id', $pedido->cliente)->first();
+        $cliente->nit = $data_admin->value_key;
+
         $pedido->info_cliente = $cliente;
 
         // Consulta de productos.
