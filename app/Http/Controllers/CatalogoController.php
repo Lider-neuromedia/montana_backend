@@ -73,7 +73,26 @@ class CatalogoController extends Controller
 
         $catalogo = new Catalogo();
         $catalogo->titulo = $request['nombre'];
-        $catalogo->estado = $request['estado'];
+
+        if ($request['tipo'] == 'show room' && $request['estado'] == 'activo') {
+            $validate_show_room = Catalogo::where('tipo', 'show room')->where('estado', 'activo')->exists();
+            if (!$validate_show_room) {
+                // Si no existe un catalogo show room activo sigue normal.
+                $catalogo->estado = $request['estado'];
+            }else{
+                // Si existe. No se crea el catalogo y se devuelve al front.
+                $response = [
+                    'response' => 'warning',
+                    'status' => 200,
+                    'message' => 'Solo debe existir un catalogo show room activo. Por favor inactive el anterior catalogo antes de activar uno nuevo.'
+                ];
+                
+                return response()->json($response);
+            }   
+        }else{
+            $catalogo->estado = $request['estado'];
+        }
+
         $catalogo->tipo = $request['tipo'];
         $catalogo->cantidad = 0;
         $catalogo->save();
@@ -138,10 +157,38 @@ class CatalogoController extends Controller
 
         $catalogo = Catalogo::find($request['id_catalogo']);
         $catalogo->titulo = $request['titulo'];
-        $catalogo->estado = $request['estado'];
+        
+        if ($request['tipo'] == 'show room' && $request['estado'] == 'activo') {
+            $validate_show_room = Catalogo::where('tipo', 'show room')->where('estado', 'activo');
+            if (!$validate_show_room->exists()) {
+                // Si no existe un catalogo show room activo sigue normal.
+                $catalogo->estado = $request['estado'];
+            }else{
+                // Validar que el catalogo no sea el mismo.
+                if ($validate_show_room->first()->id_catalogo == $request['id_catalogo']) {
+                    $catalogo->estado = $request['estado'];
+                }else{
+                    // Si existe. Actualiza lo demas y retorna una advertencia.
+                    $catalogo->tipo = $request['tipo'];
+                    $catalogo->descuento = (isset($request['descuento'])) ? $request['descuento'] : $catalogo->descuento;
+                    $catalogo->save();
+    
+                    $response = [
+                        'response' => 'warning',
+                        'status' => 200,
+                        'message' => 'Solo debe existir un catalogo show room activo. Por favor inactive el anterior catalogo antes de activar uno nuevo.'
+                    ];
+                    
+                    return response()->json($response);
+                }
+            }   
+
+        }else{
+            $catalogo->estado = $request['estado'];
+        }
+        
         $catalogo->tipo = $request['tipo'];
         $catalogo->descuento = (isset($request['descuento'])) ? $request['descuento'] : $catalogo->descuento;
-        $catalogo->cantidad = 0;
         $catalogo->save();
         if ($validate_image) {
             $filename = $this->saveImage($request['imagen'], $catalogo->id_catalogo);

@@ -339,4 +339,55 @@ class PedidoController extends Controller
         return Excel::download(new PedidoExport(), 'pedido.xlsx');
     }
 
+    public function getPedidoWithCode($code){
+        $pedido = Pedido::where('codigo', $code);
+        if ($pedido->exists()) {
+            $pedido = $pedido->select('id_pedido', 'fecha', 'codigo', 'descuento', 'total', 'ven.name AS name_vendedor', 'cliente', 'vendedor',
+                    'ven.apellidos AS apellido_vendedor', 'cli.name AS name_cliente', 'cli.apellidos AS apellido_cliente', 'estado')
+                    ->join('users AS ven', 'vendedor', '=','ven.id')
+                    ->join('users AS cli', 'cliente', '=','cli.id')
+                    ->first();
+            
+            $response = [
+                'response' => 'success',
+                'status' => 200,
+                'pedido' => $pedido
+            ];
+
+        }else{
+            $response = [
+                'response' => 'error',
+                'status' => 403,
+                'message' => 'El pedido ingresado no existe en base de datos.'
+            ];
+        }
+
+        return response()->json($response);
+    }
+
+    public function changeDescuentoPedido($pedido, $descuento){
+        $validate_pedido = Pedido::where('id_pedido', $pedido);
+        if($validate_pedido->exists()){
+
+            $pedido = Pedido::find($pedido);
+            $pedido->descuento = $descuento;
+            $pedido->total = $pedido->sub_total - ($pedido->sub_total * ($descuento / 100));
+            $pedido->save();
+            
+            $response = [
+                'response' => 'success',
+                'status' => 200,
+            ];
+
+        }else{
+            $response = [
+                'response' => 'error',
+                'status' => 403,
+                'message' => 'El pedido ingresado no existe en base de datos.'
+            ];
+        }
+
+        return response()->json($response);
+    }
+
 }

@@ -122,4 +122,11 @@ Route::group(['middleware' => 'auth:api'], function() {
     Route::post('newMessage', 'PqrsController@NewMessage');
     Route::get('changeState/{id}/{state}', 'PqrsController@changeState');
 
+    // DESCUENTOS
+    Route::get('getPedidoWithCode/{code}', 'PedidoController@getPedidoWithCode');
+    Route::get('changeDescuentoPedido/{pedido}/{descuento}', 'PedidoController@changeDescuentoPedido');
+
+    // SHOW ROOM
+    Route::get('getProductsShowRoom', 'ProductoController@getProductsShowRoom');
+
 });

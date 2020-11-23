@@ -16,12 +16,20 @@ class ProductoController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function index($catalogo){
-        $productos = Producto::where('catalogo', $catalogo)
+        $productos = Producto::select('productos.*', 'image', 'nombre_marca')
                     ->join('galeria_productos', 'id_producto', '=', 'producto')
                     ->join('marcas', 'marca', '=', 'id_marca')
+                    ->where('catalogo', $catalogo)
                     ->where('destacada', 1)
                     ->get();
         
+        $catalogo = Catalogo::find($catalogo);
+        if ($catalogo->tipo == 'show room') {
+            $show_room = true;
+        }else{
+            $show_room = false;
+        }
+
         if(count($productos) == 0){
             return response()->json(['response' => 'error', 'status' => 404, 'message' => 'El catalogo no tiene productos registrados.']);
         }else{
@@ -34,7 +42,8 @@ class ProductoController extends Controller
                 'response' => 'success',
                 'message' => '',
                 'status' => 200,
-                'productos' => $productos
+                'productos' => $productos,
+                'show_room' => $show_room
             ];
     
             return response()->json($response);
@@ -296,6 +305,36 @@ class ProductoController extends Controller
                 ];  
             }
         }
+        return response()->json($response);
+    }
+
+    public function getProductsShowRoom(){
+        $validate_catalogo = Catalogo::where('tipo', 'show room')->where('estado', 'activo');
+        if ($validate_catalogo->exists()) {
+            $catalogo = $validate_catalogo->first();
+            $productos = Producto::where('catalogo', $catalogo->id_catalogo)
+            ->join('galeria_productos', 'id_producto', '=', 'producto')
+            ->join('marcas', 'marca', '=', 'id_marca')
+            ->where('destacada', 1)
+            ->get();
+
+            foreach ($productos as $producto) {
+                $producto->image = url($producto->image);
+            }
+
+            $response = [
+                'response' => 'success',
+                'status' => 200,
+                'productos' => $productos
+            ];
+        }else{
+            $response = [
+                'response' => 'error',
+                'status' => 403,
+                'message' => 'No existe catalogo show room disponible.'
+            ];
+        }
+
         return response()->json($response);
     }
 }

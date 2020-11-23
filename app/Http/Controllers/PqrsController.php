@@ -15,10 +15,17 @@ class PqrsController extends Controller
      */
     public function index(Request $request){
        
+        $search = $request['search'];
+
         $pqrs = Pqrs::select('id_pqrs', 'codigo', 'fecha_registro', 'ven.name AS name_vendedor', 
         'ven.apellidos AS apellidos_vendedor', 'cli.name AS name_cliente', 'cli.apellidos AS apellidos_cliente', 'estado')
         ->join('users AS ven', 'vendedor', '=','ven.id')
         ->join('users AS cli', 'cliente', '=','cli.id')
+        ->where('codigo', 'like', "%$search%")
+        ->orWhere('ven.name', 'like', "%$search%")
+        ->orWhere('ven.apellidos', 'like', "%$search%")
+        ->orWhere('cli.name', 'like', "%$search%")
+        ->orWhere('cli.apellidos', 'like', "%$search%")
         ->get();
         
         $response = [
