@@ -84,8 +84,9 @@ Route::group(['middleware' => 'auth:api'], function() {
     
     // PRODUCTO
     Route::get('/productos/{catalogo}', 'ProductoController@index');
-    Route::post('/productos', 'ProductoController@store');
     Route::get('/producto/{id}', 'ProductoController@detalleProducto');
+    Route::get('/marcas', 'ProductoController@getMarcas');
+    Route::post('/productos', 'ProductoController@store');
     Route::put('/producto/{id}', 'ProductoController@update');
     Route::delete('/producto/{id}', 'ProductoController@destroy');
     
@@ -121,6 +122,7 @@ Route::group(['middleware' => 'auth:api'], function() {
     Route::apiResource('pqrs', 'PqrsController');
     Route::post('newMessage', 'PqrsController@NewMessage');
     Route::get('changeState/{id}/{state}', 'PqrsController@changeState');
+    Route::get('getPqrsUser', 'PqrsController@getPqrsUserSesion');
 
     // DESCUENTOS
     Route::get('getPedidoWithCode/{code}', 'PedidoController@getPedidoWithCode');

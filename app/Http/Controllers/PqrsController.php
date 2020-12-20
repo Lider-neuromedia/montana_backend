@@ -38,6 +38,34 @@ class PqrsController extends Controller
         
     }
 
+    public function getPqrsUserSesion(){
+        $user = auth()->user();
+        if ($user != null) {
+            $pqrs = Pqrs::select('id_pqrs', 'codigo', 'fecha_registro', 'ven.name AS name_vendedor', 
+            'ven.apellidos AS apellidos_vendedor', 'cli.name AS name_cliente', 'cli.apellidos AS apellidos_cliente', 'estado')
+            ->join('users AS ven', 'vendedor', '=','ven.id')
+            ->join('users AS cli', 'cliente', '=','cli.id')
+            ->where('vendedor', '=', $user->id)
+            ->get();
+            
+            $response = [
+                'response' => 'success',
+                'status' => 200,
+                'pqrs' => $pqrs
+            ];
+        }else{
+            $response = [
+                'response' => 'error',
+                'status' => 403,
+                'message' => 'La sesión del usuario a finalizado.'
+            ];
+        }
+        
+        
+        return response()->json($response, $response['status']);
+        
+    }
+
 
     /**
      * Store a newly created resource in storage.
@@ -230,7 +258,17 @@ class PqrsController extends Controller
 
     public function changeState($id, $state){
         $pqrs = Pqrs::find($id);
-        $pqrs->estado = $state;
+        if ($state == 'abierto' || $state == 'cerrado') {
+            $pqrs->estado = $state;
+        }else{
+            $response = [
+                'response' => 'error',
+                'status' => 403,
+                'message' => 'El estado enviado no es valido.'
+            ];
+            return response()->json($response, $response['status']);
+        }
+
         if($pqrs->save()){
             $response = [
                 'response' => 'success',

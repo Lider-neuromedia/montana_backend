@@ -553,14 +553,23 @@ class UserController extends Controller
                     return response()->json($response);
                 }
             }else{
-
                 $validate_cliente = DB::table('pedidos')->where('cliente', $id)->exists();
                 if (!$validate_cliente) {
                     // dd($validate_cliente);
                     DB::table('tiendas')->where('cliente', $id)->delete();
                     DB::table('vendedor_cliente')->where('cliente', $id)->delete();
                     DB::table('user_data')->where('user_id', $id)->delete();
-                    $user->delete();
+                    DB::table('valoraciones')->where('usuario', $id)->delete();
+                    try {
+                        $user->delete();
+                    } catch (\Throwable $e) {
+                        $response = [
+                            'response' => 'error', 
+                            'message' => "El usuario {$user->name} {$user->apellido} no se puede eliminar, porque tiene información registrada.", 
+                            'status' => 403
+                        ];
+                        return response()->json($response);
+                    }
                     $response = [
                         'response' => 'success', 
                         'message' => "Usuario eliminado correctamente", 
@@ -570,7 +579,7 @@ class UserController extends Controller
                     $response = [
                         'response' => 'error', 
                         'message' => "El usuario {$user->name} {$user->apellido} no se puede eliminar, porque tiene pedidos registrados.", 
-                        'status' => 200
+                        'status' => 403
                     ];
                     return response()->json($response);
                 }

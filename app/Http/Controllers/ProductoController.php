@@ -337,4 +337,17 @@ class ProductoController extends Controller
 
         return response()->json($response);
     }
+
+    public function getMarcas(){
+        $marcas = DB::table('marcas')->get();
+        
+        $response = [
+            'response' => 'success',
+            'status' => 200,
+            'marcas' => $marcas
+        ];
+
+        return response()->json($response);
+    }
+
 }
