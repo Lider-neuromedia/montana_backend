@@ -110,7 +110,7 @@ class CatalogoController extends Controller
         $image = str_replace($replace, '', $image); 
         $image = str_replace(' ', '+', $image); 
         $filename = $id_catalogo.'.'.$extension;
-        \Storage::disk('catalogos')->put($filename, base64_decode($image));
+        \Storage::disk('catalogos')->put($filename, $image);
 
         return $filename;
     }

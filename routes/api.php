@@ -18,7 +18,7 @@ Route::apiResource('/roles', 'RolController');
 // Route::post('/userdata', 'UserController@userData');
 
 Route::apiResource('/asignar-cliente', 'VendedorClienteController');
-Route::get('/unauthenticated', function(){
+Route::get('/unauthenticated', function() {
     $response = [
         'response' => 'error',
         'status' => 403,
@@ -41,7 +41,7 @@ Route::post('/update-user', 'UserController@updateUser');
 Route::group(['prefix' => 'auth'], function () {
     Route::post('login', 'AuthController@login');
     Route::post('signup', 'AuthController@signup');
-    
+
     Route::group(['middleware' => 'auth:api'], function() {
         Route::get('logout', 'AuthController@logout');
         Route::get('user', 'AuthController@user');
@@ -50,38 +50,36 @@ Route::group(['prefix' => 'auth'], function () {
 });
 
 Route::group(['middleware' => 'auth:api'], function() {
-    
-    /*
-        USUARIOS
-    */ 
+
+    // USUARIOS
     Route::post('/delete-users', 'UserController@destroyUsers');
     Route::get('/user-rol/{id}','UserController@getForRole');
     // Route::post('/delete-user', 'UserController@destroyUsers');
-        
-        // ADMINISTRADORES
-        Route::get('/admins', 'UserController@getAdmins');
-        Route::get('/admin/{id}', 'UserController@getAdmin');
-    
-        //VENDEDORES 
-        Route::get('/vendedores','UserController@getVendedores');
-        Route::get('/vendedor/{id}','UserController@getVendedor');
-        Route::get('/clientes-asignados/{id}', 'UserController@assignedCustomers');
-        Route::get('/searchClientes', 'UserController@searchClientes');
-        Route::post('/update-vendedor/{id}', 'UserController@updateVendedor');
-        Route::get('updateAsignClient/{cliente}/{vendedor}/{action}', 'UserController@updateAsignClient');
-        
-        // CLIENTES
-        Route::get('/clientes','UserController@getClientes');
-        Route::get('/cliente/{id}','UserController@getCliente');
-        Route::post('/update-cliente/{id}','UserController@updateClient');
-        Route::get('/searchVendedor', 'UserController@searchVendedor');
-        Route::get('updateAsignVend/{cliente}/{vendedor}/{action}', 'UserController@updateAsignVend');
-        Route::post('newTienda/{cliente}', 'UserController@newTienda');
+
+    // ADMINISTRADORES
+    Route::get('/admins', 'UserController@getAdmins');
+    Route::get('/admin/{id}', 'UserController@getAdmin');
+
+    //VENDEDORES
+    Route::get('/vendedores','UserController@getVendedores');
+    Route::get('/vendedor/{id}','UserController@getVendedor');
+    Route::get('/clientes-asignados/{id}', 'UserController@assignedCustomers');
+    Route::get('/searchClientes', 'UserController@searchClientes');
+    Route::post('/update-vendedor/{id}', 'UserController@updateVendedor');
+    Route::get('updateAsignClient/{cliente}/{vendedor}/{action}', 'UserController@updateAsignClient');
+
+    // CLIENTES
+    Route::get('/clientes','UserController@getClientes');
+    Route::get('/cliente/{id}','UserController@getCliente');
+    Route::post('/update-cliente/{id}','UserController@updateClient');
+    Route::get('/searchVendedor', 'UserController@searchVendedor');
+    Route::get('updateAsignVend/{cliente}/{vendedor}/{action}', 'UserController@updateAsignVend');
+    Route::post('newTienda/{cliente}', 'UserController@newTienda');
 
     // CATALOGOS
     Route::apiResource('/catalogos', 'CatalogoController');
     Route::get('consumerCatalogos', 'CatalogoController@consumerCatalogos');
-    
+
     // PRODUCTO
     Route::get('/productos/{catalogo}', 'ProductoController@index');
     Route::get('/producto/{id}', 'ProductoController@detalleProducto');
@@ -89,7 +87,7 @@ Route::group(['middleware' => 'auth:api'], function() {
     Route::post('/productos', 'ProductoController@store');
     Route::put('/producto/{id}', 'ProductoController@update');
     Route::delete('/producto/{id}', 'ProductoController@destroy');
-    
+
     // PEDIDOS
     Route::apiResource('/pedidos', 'PedidoController');
     Route::get('/recursos-crear-pedido', 'PedidoController@resourcesCreate');
@@ -103,15 +101,18 @@ Route::group(['middleware' => 'auth:api'], function() {
 
     // TIENDAS
     Route::apiResource('tiendas', 'TiendaController', ['store', 'update']);
-    route::post('delete-tiendas', 'TiendaController@destroy'); 
+    route::post('delete-tiendas', 'TiendaController@destroy');
 
     // ENCUESTAS
     Route::apiResource('encuestas', 'EncuestaController', ['index', 'store', 'update']);
     Route::get('editEncuesta/{id}', 'EncuestaController@edit');
-        // Integracion encuestas - productos.
-        Route::get('getPreguntas/{catalogo}', 'EncuestaController@getPreguntas');
-        Route::post('storeRespuestas', 'EncuestaController@storePreguntas');
-        Route::get('eliminarPregunta/{pregunta}', 'EncuestaController@destroyPregunta');
+
+    // INTEGRACIÓN ENCUESTAS - PRODUCTOS
+    Route::get('getPreguntas/{catalogo}', 'EncuestaController@getPreguntas');
+    Route::get('getValoraciones/{catalogo}', 'EncuestaController@getValoraciones');
+
+    Route::post('storeRespuestas', 'EncuestaController@storePreguntas');
+    Route::get('eliminarPregunta/{pregunta}', 'EncuestaController@destroyPregunta');
 
     // AMPLIACION CUPO
     Route::apiResource('ampliacion-cupo', 'AmpliacionCupoController', ['index', 'store', 'update']);

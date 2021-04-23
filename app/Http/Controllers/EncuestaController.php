@@ -114,7 +114,7 @@ class EncuestaController extends Controller
                                     ->where('estado', 'activo')
                                     ->join('preguntas', 'encuesta', '=', 'id_form')
                                     ->get();
-            
+
             $validate_user = Encuesta::select('id_form','catalogo','preguntas.*')
                             ->join('preguntas', 'encuesta', '=', 'id_form')
                             ->join('valoraciones', 'valoraciones.pregunta', '=', 'id_pregunta')
@@ -144,6 +144,46 @@ class EncuestaController extends Controller
 
     }
 
+
+    public function getValoraciones($catalogo){
+       $validate_catalogo = Catalogo::find($catalogo);
+        if ($validate_catalogo) {
+            $usuario = auth()->user();
+            $encuesta_preguntas = Encuesta::select('id_form','catalogo','preguntas.*', 'valoraciones.respuesta')
+                                    ->where('catalogo', $catalogo)
+                                    ->where('estado', 'activo')
+                                    ->join('preguntas', 'encuesta', '=', 'id_form')
+                                    ->join('valoraciones', 'valoraciones.pregunta', '=', 'preguntas.id_pregunta')
+                                    ->get();
+
+            $validate_user = Encuesta::select('id_form','catalogo','preguntas.*')
+                            ->join('preguntas', 'encuesta', '=', 'id_form')
+                            ->join('valoraciones', 'valoraciones.pregunta', '=', 'id_pregunta')
+                            ->where('catalogo', $catalogo)
+                            ->where('estado', 'activo')
+                            ->where('usuario', $usuario->id)
+                            ->exists();
+
+            // foreach ($encuesta_preguntas as $pregunta) {
+            //     $pregunta->respuesta = 0;
+            // }
+            $response = [
+                'response' => 'success',
+                'status' => 200,
+                'preguntas' => $encuesta_preguntas,
+                'respuesta_usuario' => $validate_user 
+            ];
+        }else{
+            $response = [
+                'response' => 'error',
+                'status' => 403,
+                'preguntas' => 'Catalogo no existe en base de datos.'
+            ];
+        }
+
+        return response()->json($response);
+
+    }
     /**
      * Crear las valoraciones de los clientes o vendedores segun el producto.
      *

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Entities\Pqrs;
 use App\Entities\SeguimientoPqrs;
+use Illuminate\Support\Facades\Validator;
 use DB;
 
 class PqrsController extends Controller
@@ -194,11 +195,16 @@ class PqrsController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function NewMessage(Request $request){
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'mensaje' => 'required',
             'usuario' => 'exists:App\Entities\User,id|required',
             'pqrs' => 'exists:App\Entities\Pqrs,id_pqrs|required', 
-        ]);
+       ]);
+        
+        if($validator->fails()){
+            return response()->json($validator->messages(), 403);
+        }
+        
         $seguimiento = new SeguimientoPqrs;
         $seguimiento->usuario = $request['usuario'];
         $seguimiento->pqrs = $request['pqrs'];
