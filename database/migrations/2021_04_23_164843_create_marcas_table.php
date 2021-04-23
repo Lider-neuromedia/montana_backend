@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateCamposTable extends Migration
+class CreateMarcasTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,9 +13,9 @@ class CreateCamposTable extends Migration
      */
     public function up()
     {
-        Schema::create('campos', function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->timestamps();
+        Schema::create('marcas', function (Blueprint $table) {
+            $table->increments('id_marca');
+            $table->string('nombre_marca', 45)->nullable();
         });
     }
 
@@ -26,6 +26,6 @@ class CreateCamposTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('campos');
+        Schema::dropIfExists('marcas');
     }
 }

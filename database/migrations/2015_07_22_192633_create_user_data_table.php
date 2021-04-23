@@ -15,15 +15,10 @@ class CreateUserDataTable extends Migration
     {
         Schema::create('user_data', function (Blueprint $table) {
             $table->bigIncrements('id');
-
             $table->bigInteger('user_id')->unsigned();
-            $table->string('field_key');
-            $table->string('value_key');
-
-            $table->foreign('user_id')->references('id')->on('users')
-                ->onDelete('cascade')
-                ->onUpdate('cascade');
-
+            $table->string('field_key')->nullable();
+            $table->string('value_key')->nullable();
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade')->onUpdate('cascade');
             $table->timestamps();
         });
     }
