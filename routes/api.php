@@ -35,9 +35,6 @@ Route::group( [ 'middleware' => ['permission:create user'] ], function() {
     #Route::apiResource('/users', 'UserController');
 });
 
-Route::apiResource('/users', 'UserController');
-Route::post('/update-user', 'UserController@updateUser');
-
 Route::group(['prefix' => 'auth'], function () {
     Route::post('login', 'AuthController@login');
     Route::post('signup', 'AuthController@signup');
@@ -52,6 +49,8 @@ Route::group(['prefix' => 'auth'], function () {
 Route::group(['middleware' => 'auth:api'], function() {
 
     // USUARIOS
+    Route::apiResource('/users', 'UserController');
+    Route::post('/update-user', 'UserController@updateUser');
     Route::post('/delete-users', 'UserController@destroyUsers');
     Route::get('/user-rol/{id}','UserController@getForRole');
     // Route::post('/delete-user', 'UserController@destroyUsers');
