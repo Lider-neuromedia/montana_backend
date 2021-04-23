@@ -1,2 +1,5 @@
 *
 !.gitignore
+!catalogos/
+!productos/
+!solicitudes/
