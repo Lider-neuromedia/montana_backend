@@ -20,7 +20,7 @@ use Auth;
 
 class UserController extends Controller
 {
-    
+
     /**
      * Display a listing of the resource.
      *
@@ -52,7 +52,7 @@ class UserController extends Controller
     //         // $admin = DB::table('users')->join('user_data','users.id', '=','user_data.user_id' )
     //         //                            ->select('users.*','user_data.field_key','user_data.value_key')
     //         //                            ->get();
-           
+
 
     //     } else {
     //         //$admin = User::where('rol_id',1)->get();
@@ -65,9 +65,9 @@ class UserController extends Controller
     //     return $admin;
     // }
 
-    
+
     public function getUsers($rol_id, $search = null){
-    
+
         $users = DB::table('users')->where( function($query) use($search){
                         $query->where('name', 'like', "%{$search}%");
                         $query->orWhere('apellidos', 'like', "%{$search}%");
@@ -90,7 +90,7 @@ class UserController extends Controller
                 $user->vendedor = $vendedor;
             }
         }
-        
+
         $admin_ramdom = DB::table('users')->where('rol_id', $rol_id)->first();
         $fields_db = DB::table('user_data')->where('user_id', $admin_ramdom->id)->get();
         $fields = [];
@@ -119,7 +119,7 @@ class UserController extends Controller
 
         $data_admin = DB::table('user_data')->where('user_id', $id)->get();
         $admin->user_data = $data_admin;
-    
+
         return response()->json($admin);
     }
 
@@ -180,7 +180,7 @@ class UserController extends Controller
         // Setear clientes.
         $user->clientes = $clientes_vendedor;
 
-        // Buscar pedidos 
+        // Buscar pedidos
         $pedidos_vendedor = DB::table('pedidos')->where('vendedor', $id)->get();
         // Setear pedidos.
         $user->pedidos = $pedidos_vendedor;
@@ -201,7 +201,7 @@ class UserController extends Controller
     }
 
     public function getCliente($id){
-    
+
         // Buscar el cliente.
         $user = User::where('rol_id', 3)->find($id);
         // validar que sea un cliente.
@@ -235,11 +235,11 @@ class UserController extends Controller
                             ->join('users', 'vendedor', '=', 'id')
                             ->where('cliente', $id)
                             ->first();
-        
+
         if ($vendedor != null) {
             $data_vendedor = DB::table('user_data')->where('user_id', $vendedor->id_vendedor)->get();
             $vendedor->user_data = $data_vendedor;
-        }        
+        }
 
         // Setear el vendedor.
         $user->vendedor = $vendedor;
@@ -250,7 +250,7 @@ class UserController extends Controller
                     ->where('cliente', $id)
                     ->get();
         $user->tiendas = $tiendas;
-        
+
         // Pedidos
         $pedidos = DB::table('pedidos')->where('cliente', $id)->get();
         $user->pedidos = $pedidos;
@@ -353,7 +353,7 @@ class UserController extends Controller
             'email' => $request->email,
             'password' => bcrypt($request->password)
             ]);
-            
+
         $metadata = $request->userdata;
         if($metadata != null){
             foreach($metadata as $key => $value){
@@ -374,7 +374,7 @@ class UserController extends Controller
                 ]);
             }
         }
-        
+
         if ($request->rol_id == 3) {
             // Crear tiendas, y asignar vendedor.
             if (isset($request->vendedor)) {
@@ -397,12 +397,12 @@ class UserController extends Controller
                     'nombre' => $tienda['nombre'],
                     'lugar' => $tienda['lugar'],
                     'local' => $tienda['local'],
-                    'direccion' => $tienda['direccion'],                
+                    'direccion' => $tienda['direccion'],
                     'telefono' => $tienda['direccion'],
                     'cliente' => $user
                 ]);
             }
-                
+
             // Asignar vendedor.
             DB::table('vendedor_cliente')->insert([
                 'vendedor' => $vendedor,
@@ -413,7 +413,7 @@ class UserController extends Controller
             return false;
         }
 
-        return true;   
+        return true;
     }
 
     /**
@@ -425,22 +425,30 @@ class UserController extends Controller
      */
     public function updateUser(Request $request){
         $request->validate([
-            'id' => 'required',
+            'id' => 'required|exists:users,id',
             'rol_id' => 'required',
             'name' => 'required',
             'dni' => 'required',
             'apellidos' => 'required',
             'email' => 'required',
-            'user_data' => 'required'
+            'user_data' => 'required|array',
+            'user_data.*.id_field' => 'required|exists:user_data,id',
+            'user_data.*.field_key' => 'required|string|max:250',
+            'user_data.*.value_key' => 'required|string|max:250',
+            'password' => 'nullable|confirmed|min:6|max:20',
         ]);
 
         //Actualizacion de la informacion basica del usuario.
-        $user = User::find($id); 
+        $user = User::findOrFail($request['id']);
         $user->rol_id = $request['rol_id'];
         $user->name = $request['name'];
         $user->dni = $request['dni'];
         $user->apellidos = $request['apellidos'];
         $user->email = $request['email'];
+
+        if ($request->has('password') && $request->get('password')) {
+            $user->password = bcrypt($request['password']);
+        }
 
         if(!$user->save()){
             $response = [
@@ -452,7 +460,7 @@ class UserController extends Controller
         }
 
         foreach ($request['user_data'] as $data) {
-            $user_data = UserData::find($data['id_field']);
+            $user_data = UserData::findOrFail($data['id_field']);
             $user_data->field_key = $data['field_key'];
             $user_data->value_key = $data['value_key'];
             $user_data->save();
@@ -479,7 +487,7 @@ class UserController extends Controller
         ]);
 
         //Actualizacion de la informacion basica del usuario.
-        $user = User::find($request['id']); 
+        $user = User::find($request['id']);
         $user->name = $request['name'];
         $user->dni = $request['dni'];
         $user->apellidos = $request['apellidos'];
@@ -528,8 +536,8 @@ class UserController extends Controller
                 DB::table('user_data')->where('user_id', $id)->delete();
                 $user->delete();
                 $response = [
-                    'response' => 'success', 
-                    'message' => "Usuario eliminado correctamente", 
+                    'response' => 'success',
+                    'message' => "Usuario eliminado correctamente",
                     'status' => 200
                 ];
 
@@ -539,15 +547,15 @@ class UserController extends Controller
                     DB::table('user_data')->where('user_id', $id)->delete();
                     $user->delete();
                     $response = [
-                        'response' => 'success', 
-                        'message' => "Usuario eliminado correctamente", 
+                        'response' => 'success',
+                        'message' => "Usuario eliminado correctamente",
                         'status' => 200
                     ];
 
                 }else{
                     $response = [
-                        'response' => 'error', 
-                        'message' => "El usuario {$user->name} {$user->apellido} no se puede eliminar, porque tiene clientes asignados.", 
+                        'response' => 'error',
+                        'message' => "El usuario {$user->name} {$user->apellido} no se puede eliminar, porque tiene clientes asignados.",
                         'status' => 200
                     ];
                     return response()->json($response);
@@ -564,21 +572,21 @@ class UserController extends Controller
                         $user->delete();
                     } catch (\Throwable $e) {
                         $response = [
-                            'response' => 'error', 
-                            'message' => "El usuario {$user->name} {$user->apellido} no se puede eliminar, porque tiene información registrada.", 
+                            'response' => 'error',
+                            'message' => "El usuario {$user->name} {$user->apellido} no se puede eliminar, porque tiene información registrada.",
                             'status' => 403
                         ];
                         return response()->json($response);
                     }
                     $response = [
-                        'response' => 'success', 
-                        'message' => "Usuario eliminado correctamente", 
+                        'response' => 'success',
+                        'message' => "Usuario eliminado correctamente",
                         'status' => 200
                     ];
                 }else{
                     $response = [
-                        'response' => 'error', 
-                        'message' => "El usuario {$user->name} {$user->apellido} no se puede eliminar, porque tiene pedidos registrados.", 
+                        'response' => 'error',
+                        'message' => "El usuario {$user->name} {$user->apellido} no se puede eliminar, porque tiene pedidos registrados.",
                         'status' => 403
                     ];
                     return response()->json($response);
@@ -670,7 +678,7 @@ class UserController extends Controller
         $user->apellidos = $request['apellidos'];
         $user->email = $request['email'];
         $user->dni = $request['dni'];
-        
+
         if (isset($request['password'])) {
             $user->password = bcrypt($request['password']);
         }
@@ -695,12 +703,12 @@ class UserController extends Controller
         // Validacion manual de los Id's
         $validate_client = User::find($idClient)->exists();
         $validate_vend = User::find($idVendedor)->exists();
-        
+
         // Validar que accion se ejecuta. Crear asignacion o eliminarla.
         if ($action == 'create') {
             // Validar antes de cualquier operacion los Id's
             if ($validate_client == true && $validate_vend == true) {
-                
+
                 $validate_asign = DB::table('vendedor_cliente')
                 ->where('vendedor', $idVendedor)
                 ->where('cliente', $idClient)
@@ -768,12 +776,12 @@ class UserController extends Controller
         // Validacion manual de los Id's
         $validate_client = User::find($idClient)->exists();
         $validate_vend = User::find($idVendedor)->exists();
-        
+
         // Validar que accion se ejecuta. Crear asignacion o eliminarla.
         if ($action == 'create') {
             // Validar antes de cualquier operacion los Id's
             if ($validate_client == true && $validate_vend == true) {
-                
+
                 $validate_asign = DB::table('vendedor_cliente')
                 ->where('cliente', $idClient)
                 ->exists();
