@@ -29,6 +29,13 @@ Route::group( [ 'middleware' => ['permission:create user'] ], function() {
     #Route::apiResource('/users', 'UserController');
 });
 
+Route::group(['namespace' => 'Auth'], function () {
+
+    Route::post('password/email', 'PasswordController@sendResetLinkEmail');
+    Route::post('password/reset/{token}', 'PasswordController@reset');
+
+});
+
 Route::group(['prefix' => 'auth'], function () {
     Route::post('login', 'AuthController@login');
     Route::post('signup', 'AuthController@signup');
