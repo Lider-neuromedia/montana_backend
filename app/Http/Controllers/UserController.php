@@ -33,13 +33,13 @@ class UserController extends Controller
     /*
      * Traer usuarios por su tipo de rol
      */
-    public function getForRole($rol){
-        $userdata = DB::select('
-            select * from users
-            where rol_id = "'.$rol.'"
-        ');
+    public function getForRole($rol)
+    {
+        $userdata = DB::table('users')
+            ->where('rol_id', $rol)
+            ->get();
 
-        return $userdata;
+        return response()->json($userdata);
     }
 
     /*
