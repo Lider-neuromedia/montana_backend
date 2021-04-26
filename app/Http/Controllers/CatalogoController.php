@@ -102,7 +102,11 @@ class CatalogoController extends Controller
         $catalogo->imagen = "storage/catalogos/{$filename}";
         $catalogo->save();
 
-        return response()->json(['response' => 'success', 'status' => 200]);
+        return response()->json([
+            'catalogo' => $catalogo,
+            'response' => 'success',
+            'status' => 200
+        ]);
     }
 
     public function saveImage($image, $id_catalogo)
@@ -197,7 +201,11 @@ class CatalogoController extends Controller
             $catalogo->save();
         }
 
-        return response()->json(['response' => 'success', 'status' => 200]);
+        return response()->json([
+            'catalogo' => $catalogo,
+            'response' => 'success',
+            'status' => 200
+        ]);
     }
 
     public function validateLinkImage($image){
