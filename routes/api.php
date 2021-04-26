@@ -104,6 +104,10 @@ Route::group(['middleware' => 'auth:api'], function() {
     Route::post('update-pedido', 'PedidoController@update');
     Route::get('export-pedido', 'PedidoController@exportPedido');
 
+    // DESCUENTOS
+    Route::get('getPedidoWithCode/{code}', 'PedidoController@getPedidoWithCode');
+    Route::get('changeDescuentoPedido/{pedido}/{descuento}', 'PedidoController@changeDescuentoPedido');
+
     // TIENDAS
     Route::apiResource('tiendas', 'TiendaController', ['store', 'update']);
     route::post('delete-tiendas', 'TiendaController@destroy');
@@ -120,7 +124,7 @@ Route::group(['middleware' => 'auth:api'], function() {
     Route::get('eliminarPregunta/{pregunta}', 'EncuestaController@destroyPregunta');
 
     // AMPLIACION CUPO
-    Route::apiResource('ampliacion-cupo', 'AmpliacionCupoController', ['index', 'store', 'update']);
+    Route::apiResource('ampliacion-cupo', 'AmpliacionCupoController', ['only' => ['index', 'store', 'update']]);
     Route::get('getUserSmall/{rol_id}', 'AmpliacionCupoController@getUserSmall');
     Route::get('cambiar-estado/{solicitud}/{estado}', 'AmpliacionCupoController@changeState');
 
@@ -129,10 +133,6 @@ Route::group(['middleware' => 'auth:api'], function() {
     Route::post('newMessage', 'PqrsController@NewMessage');
     Route::get('changeState/{id}/{state}', 'PqrsController@changeState');
     Route::get('getPqrsUser', 'PqrsController@getPqrsUserSesion');
-
-    // DESCUENTOS
-    Route::get('getPedidoWithCode/{code}', 'PedidoController@getPedidoWithCode');
-    Route::get('changeDescuentoPedido/{pedido}/{descuento}', 'PedidoController@changeDescuentoPedido');
 
     // SHOW ROOM
     Route::get('getProductsShowRoom', 'ProductoController@getProductsShowRoom');
