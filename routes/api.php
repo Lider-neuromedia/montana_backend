@@ -12,12 +12,6 @@
 |
 */
 
-
-Route::apiResource('/roles', 'RolController');
-// Route::apiResource('/users', 'UserController');
-// Route::post('/userdata', 'UserController@userData');
-
-Route::apiResource('/asignar-cliente', 'VendedorClienteController');
 Route::get('/unauthenticated', function() {
     $response = [
         'response' => 'error',
@@ -47,6 +41,11 @@ Route::group(['prefix' => 'auth'], function () {
 });
 
 Route::group(['middleware' => 'auth:api'], function() {
+
+    Route::apiResource('/roles', 'RolController');
+    // Route::post('/userdata', 'UserController@userData');
+
+    Route::apiResource('/asignar-cliente', 'VendedorClienteController');
 
     // USUARIOS
     Route::apiResource('/users', 'UserController');
