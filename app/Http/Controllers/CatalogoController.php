@@ -15,7 +15,7 @@ class CatalogoController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function index(Request $request){
-        
+
         $catalogos = Catalogo::select('*');
 
         if (isset($request['search'])) {
@@ -29,17 +29,17 @@ class CatalogoController extends Controller
             }
             if($search['public']){
                 $catalogos->where('estado', 'activo');
-            } 
+            }
             if($search['private']){
                 $catalogos->orWhere('estado', 'privado');
             }
 
             $catalogos = $catalogos->get();
-            
+
         }else{
             $catalogos = Catalogo::all();
         }
-        
+
 
         // Setear la url de la imagen segun servidor.
         foreach ($catalogos as $catalogo) {
@@ -86,9 +86,9 @@ class CatalogoController extends Controller
                     'status' => 200,
                     'message' => 'Solo debe existir un catalogo show room activo. Por favor inactive el anterior catalogo antes de activar uno nuevo.'
                 ];
-                
+
                 return response()->json($response);
-            }   
+            }
         }else{
             $catalogo->estado = $request['estado'];
         }
@@ -96,22 +96,19 @@ class CatalogoController extends Controller
         $catalogo->tipo = $request['tipo'];
         $catalogo->cantidad = 0;
         $catalogo->save();
-        $filename = $this->saveImage($request['image'], $catalogo->id_catalogo);
+        $filename = $this->saveImage($request->file('image'), $catalogo->id_catalogo);
         $catalogo->imagen = "storage/catalogos/{$filename}";
         $catalogo->save();
 
         return response()->json(['response' => 'success', 'status' => 200]);
     }
 
-    public function saveImage($image, $id_catalogo){
-        $extension = explode('/', explode(':', substr($image, 0, strpos($image, ';')))[1])[1];   // .jpg .png .pdf
-        $replace = substr($image, 0, strpos($image, ',')+1); 
-
-        $image = str_replace($replace, '', $image); 
-        $image = str_replace(' ', '+', $image); 
-        $filename = $id_catalogo.'.'.$extension;
-        \Storage::disk('catalogos')->put($filename, $image);
-
+    public function saveImage($image, $id_catalogo)
+    {
+        $extension = array_reverse(explode(".", $image->getClientOriginalName()))[0];
+        $filecontent = file_get_contents($image->getRealPath());
+        $filename = "$id_catalogo.$extension";
+        \Storage::disk('catalogos')->put($filename, $filecontent);
         return $filename;
     }
 
@@ -145,9 +142,10 @@ class CatalogoController extends Controller
      * @param  \App\Entities\Catalogo  $catalogo
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request){
+    public function update(Request $request)
+    {
         $request->validate([
-            'id_catalogo' => 'required',
+            'id_catalogo' => 'required|exists:catalogos,id_catalogo',
             'titulo' => 'required',
             'estado' => 'required',
             'tipo' => 'required',
@@ -157,7 +155,7 @@ class CatalogoController extends Controller
 
         $catalogo = Catalogo::find($request['id_catalogo']);
         $catalogo->titulo = $request['titulo'];
-        
+
         if ($request['tipo'] == 'show room' && $request['estado'] == 'activo') {
             $validate_show_room = Catalogo::where('tipo', 'show room')->where('estado', 'activo');
             if (!$validate_show_room->exists()) {
@@ -172,33 +170,33 @@ class CatalogoController extends Controller
                     $catalogo->tipo = $request['tipo'];
                     $catalogo->descuento = (isset($request['descuento'])) ? $request['descuento'] : $catalogo->descuento;
                     $catalogo->save();
-    
+
                     $response = [
                         'response' => 'warning',
                         'status' => 200,
                         'message' => 'Solo debe existir un catalogo show room activo. Por favor inactive el anterior catalogo antes de activar uno nuevo.'
                     ];
-                    
+
                     return response()->json($response);
                 }
-            }   
+            }
 
         }else{
             $catalogo->estado = $request['estado'];
         }
-        
+
         $catalogo->tipo = $request['tipo'];
         $catalogo->descuento = (isset($request['descuento'])) ? $request['descuento'] : $catalogo->descuento;
         $catalogo->save();
         if ($validate_image) {
-            $filename = $this->saveImage($request['imagen'], $catalogo->id_catalogo);
+            $filename = $this->saveImage($request->file('imagen'), $catalogo->id_catalogo);
             $catalogo->imagen = "storage/catalogos/{$filename}";
             $catalogo->save();
         }
 
         return response()->json(['response' => 'success', 'status' => 200]);
     }
-    
+
     public function validateLinkImage($image){
         $substr_image = substr($image, 0, 4);
         if ($substr_image == 'http') {
