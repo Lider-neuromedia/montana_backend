@@ -69,6 +69,7 @@ class CatalogoController extends Controller
             'estado' => 'required',
             'tipo' => 'required',
             'image' => 'required',
+            'descuento' => 'nullable|integer|min:0|max:99',
         ]);
 
         $catalogo = new Catalogo();
@@ -95,6 +96,7 @@ class CatalogoController extends Controller
 
         $catalogo->tipo = $request['tipo'];
         $catalogo->cantidad = 0;
+        $catalogo->descuento = $request->get('descuento') ? $request->get('descuento') : null;
         $catalogo->save();
         $filename = $this->saveImage($request->file('image'), $catalogo->id_catalogo);
         $catalogo->imagen = "storage/catalogos/{$filename}";
@@ -150,6 +152,7 @@ class CatalogoController extends Controller
             'estado' => 'required',
             'tipo' => 'required',
             'imagen' => 'required',
+            'descuento' => 'nullable|integer|min:0|max:99',
         ]);
         $validate_image = $this->validateLinkImage($request['imagen']);
 
@@ -168,7 +171,7 @@ class CatalogoController extends Controller
                 }else{
                     // Si existe. Actualiza lo demas y retorna una advertencia.
                     $catalogo->tipo = $request['tipo'];
-                    $catalogo->descuento = (isset($request['descuento'])) ? $request['descuento'] : $catalogo->descuento;
+                    $catalogo->descuento = $request->get('descuento') ? $request->get('descuento') : $catalogo->descuento;
                     $catalogo->save();
 
                     $response = [
