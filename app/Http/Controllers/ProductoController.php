@@ -22,7 +22,7 @@ class ProductoController extends Controller
                     ->where('catalogo', $catalogo)
                     ->where('destacada', 1)
                     ->get();
-        
+
         $catalogo = Catalogo::find($catalogo);
         if ($catalogo->tipo == 'show room') {
             $show_room = true;
@@ -33,7 +33,7 @@ class ProductoController extends Controller
         if(count($productos) == 0){
             return response()->json(['response' => 'error', 'status' => 404, 'message' => 'El catalogo no tiene productos registrados.']);
         }else{
-            
+
             foreach ($productos as $producto) {
                 $producto->image = url($producto->image);
             }
@@ -45,11 +45,9 @@ class ProductoController extends Controller
                 'productos' => $productos,
                 'show_room' => $show_room
             ];
-    
+
             return response()->json($response);
         }
-
-        
     }
 
     /**
@@ -58,7 +56,8 @@ class ProductoController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request){
+    public function store(Request $request)
+    {
         $request->validate([
             'nombre' => 'required',
             'codigo' => 'required',
@@ -67,10 +66,12 @@ class ProductoController extends Controller
             'marca' => 'required',
             'descripcion' => 'required',
             'precio' => 'required|numeric',
-            'imagenes' => 'required',
             'catalogo' => 'required',
+            'imagenes' => 'required|array|min:1',
+            'imagenes.*.image' => 'required|image',
+            'imagenes.*.destacada' => 'in:0,1',
         ]);
-        
+
         $producto = new Producto();
         $producto->nombre = $request['nombre'];
         $producto->codigo = $request['codigo'];
@@ -84,16 +85,16 @@ class ProductoController extends Controller
         $producto->iva = 19;
         $producto->catalogo = $request['catalogo'];
         $producto->marca = $request['marca'];
-        
+
         if ($producto->save()) {
             // Update cantidad catalogo.
             $catalogo = Catalogo::find($request['catalogo']);
             $catalogo->cantidad++;
             $catalogo->save();
             // Save images.
-            foreach ($request['imagenes'] as $key => $imagen) {
-                $name = "{$producto->referencia}-{$key}";
-                $filename = $this->saveImage($imagen['image'], $name, $producto->catalogo, $producto->referencia);
+            foreach ($request->get('imagenes') as $index => $imagen) {
+                $name = "{$producto->referencia}-{$index}";
+                $filename = $this->saveImage($request->file('imagenes')[$index]['image'], $name, $producto->catalogo, $producto->referencia);
                 $galeria = new GaleriaProducto();
                 $galeria->image = "storage/productos/{$producto->catalogo}/{$producto->referencia}/{$filename}";
                 $galeria->name_img = $name;
@@ -102,20 +103,19 @@ class ProductoController extends Controller
                 $galeria->save();
             }
         }
+
         $response = ['response' => 'success', 'status' => 200];
         return response()->json($response);
     }
 
     // Store image.
-    public function saveImage($image, $name, $id_catalogo, $referencia){
-        $extension = explode('/', explode(':', substr($image, 0, strpos($image, ';')))[1])[1];// .jpg .png .pdf
-        $replace = substr($image, 0, strpos($image, ',')+1);
-
-        $image = str_replace($replace, '', $image);
-        $image = str_replace(' ', '+', $image);
+    public function saveImage($image, $name, $id_catalogo, $referencia)
+    {
+        $extension = array_reverse(explode(".", $image->getClientOriginalName()))[0];
+        $filecontent = file_get_contents($image->getRealPath());
         $filename = $name.'.'.$extension;
+        $path = public_path("storage/productos/{$id_catalogo}");
 
-        $path = public_path("storage/productos/{$id_catalogo}"); 
         if (!is_dir($path)) {
             mkdir($path);
             if (!is_dir("{$path}/{$referencia}")) {
@@ -123,8 +123,7 @@ class ProductoController extends Controller
             }
         }
 
-        \Storage::disk('productos')->put("/{$id_catalogo}/{$referencia}/$filename", base64_decode($image));
-
+        \Storage::disk('productos')->put("/{$id_catalogo}/{$referencia}/$filename", $filecontent);
         return $filename;
     }
 
@@ -133,9 +132,9 @@ class ProductoController extends Controller
         $producto = Producto::where('id_producto', $id)
                     ->join('marcas', 'marca', '=', 'id_marca')
                     ->first();
-        
+
         $imagenes = GaleriaProducto::where('producto', $id)->get();
-        
+
         foreach ($imagenes as $imagen) {
             if($imagen->destacada){
                 $producto->destacada = url($imagen->image);
@@ -145,7 +144,7 @@ class ProductoController extends Controller
 
         $producto->imagenes = $imagenes;
         $response = [
-            'response' => 'success', 
+            'response' => 'success',
             'status' => 200,
             'producto' => $producto
         ];
@@ -160,9 +159,10 @@ class ProductoController extends Controller
      * @param  \App\Entities\Producto  $producto
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id){
+    public function update(Request $request, $id)
+    {
         $request->validate([
-            'id_producto' => 'required',
+            'id_producto' => 'required|exists:productos,id_producto',
             'nombre' => 'required',
             'codigo' => 'required',
             'referencia' => 'required',
@@ -171,6 +171,10 @@ class ProductoController extends Controller
             'descripcion' => 'required',
             'precio' => 'required|numeric',
             'catalogo' => 'required',
+            'imagenes' => 'nullable|array|min:1',
+            'imagenes.*.image' => 'required|image',
+            'imagenes.*.destacada' => 'in:0,1',
+            'imagenes.*.id_galeria_prod' => 'nullable|exists:galeria_productos,id_galeria_prod',
         ]);
 
         $producto = Producto::find($request['id_producto']);
@@ -182,34 +186,37 @@ class ProductoController extends Controller
         $producto->precio = $request['precio'];
         $producto->total = $request['precio'];
         $producto->descripcion = $request['descripcion'];
-        
-        
+
         // Update images.
-        if (isset($request['imagenes'])) {
-            foreach ($request['imagenes'] as $key => $image) {
+        if ($request->has('imagenes') && $request->get('imagenes')) {
+            foreach ($request->get('imagenes') as $index => $image) {
                 if (isset($image['id_galeria_prod'])) {
+
                     $validate_new_image = substr($image['image'], 0, 4);
                     if ($validate_new_image == 'data') {
                         $image_store = GaleriaProducto::find($image['id_galeria_prod']);
-                        // Consultamos el nombre para renombrar la imagen de la misma manera. 
+                        // Consultamos el nombre para renombrar la imagen de la misma manera.
                         $name = $image_store->name_img;
                         // Elimina la imagen anterior.
                         $path_image = public_path($image_store->image);
                         unlink($path_image);
                         // Guardamos la imagen nueva.
-                        $filename = $this->saveImage($image['image'], $name, $producto->catalogo, $producto->referencia);
+                        $filename = $this->saveImage($request->file('imagenes')[$index]['image'], $name, $producto->catalogo, $producto->referencia);
                         $image_store->image = "storage/productos/{$producto->catalogo}/{$producto->referencia}/{$filename}";
                         $image_store->save();
                     }
-                }else{
-                    $name = "{$producto->referencia}-{$key}";
-                    $filename = $this->saveImage($image['image'], $name, $producto->catalogo, $producto->referencia);
+
+                } else {
+
+                    $name = "{$producto->referencia}-{$index}";
+                    $filename = $this->saveImage($request->file('imagenes')[$index]['image'], $name, $producto->catalogo, $producto->referencia);
                     $galeria = new GaleriaProducto();
                     $galeria->image = "storage/productos/{$producto->catalogo}/{$producto->referencia}/{$filename}";
                     $galeria->name_img = $name;
                     $galeria->destacada = $image['destacada'];
                     $galeria->producto = $producto->id_producto;
                     $galeria->save();
+
                 }
             }
         }
@@ -223,7 +230,7 @@ class ProductoController extends Controller
             ];
         } catch (\Exception $e) {
             $response = [
-                'response' => 'error', 
+                'response' => 'error',
                 'status' => 403,
                 'message' => $e->getMessage()
             ];
@@ -255,54 +262,54 @@ class ProductoController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function destroy($id){
-        
+
         $validate_producto = DB::table('pedido_productos')->where('producto', $id)->exists();
 
         if ($validate_producto) {
             $response = [
-                'response' => 'error', 
+                'response' => 'error',
                 'status' => 403,
                 'message' => "El producto tiene registro de pagos. No es posible que se elimine."
             ];
         }else{
 
-            
+
             $delete_files = $this->deleteImages($id);
             if ($delete_files) {
                 $delete_images = GaleriaProducto::where('producto', $id)->delete();
                 if ($delete_images) {
                     $producto = Producto::find($id);
-    
+
                     // Update cantidad catalogo.
                     $catalogo = Catalogo::find($producto->catalogo);
                     $catalogo->cantidad--;
                     if($catalogo->save()){
-                        $producto->delete();  
+                        $producto->delete();
                         $response = [
-                            'response' => 'success', 
+                            'response' => 'success',
                             'status' => 200,
                             'message' => "Producto eliminado."
-                        ];  
+                        ];
                     }else{
                         $response = [
-                            'response' => 'error', 
+                            'response' => 'error',
                             'status' => 403,
                             'message' => "No se pudo eliminar el producto."
-                        ];  
+                        ];
                     }
                 }else{
                     $response = [
-                        'response' => 'error', 
+                        'response' => 'error',
                         'status' => 403,
                         'message' => "No se pudo eliminar el producto."
-                    ];  
+                    ];
                 }
             }else{
                 $response = [
-                    'response' => 'error', 
+                    'response' => 'error',
                     'status' => 403,
                     'message' => "No se pudo eliminar el producto."
-                ];  
+                ];
             }
         }
         return response()->json($response);
@@ -340,7 +347,7 @@ class ProductoController extends Controller
 
     public function getMarcas(){
         $marcas = DB::table('marcas')->get();
-        
+
         $response = [
             'response' => 'success',
             'status' => 200,

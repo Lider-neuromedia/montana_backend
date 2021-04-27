@@ -93,6 +93,9 @@ Route::group(['middleware' => 'auth:api'], function() {
     Route::put('/producto/{id}', 'ProductoController@update');
     Route::delete('/producto/{id}', 'ProductoController@destroy');
 
+    // SHOW ROOM
+    Route::get('getProductsShowRoom', 'ProductoController@getProductsShowRoom');
+
     // PEDIDOS
     Route::apiResource('/pedidos', 'PedidoController');
     Route::get('/recursos-crear-pedido', 'PedidoController@resourcesCreate');
@@ -133,8 +136,5 @@ Route::group(['middleware' => 'auth:api'], function() {
     Route::post('newMessage', 'PqrsController@NewMessage');
     Route::get('changeState/{id}/{state}', 'PqrsController@changeState');
     Route::get('getPqrsUser', 'PqrsController@getPqrsUserSesion');
-
-    // SHOW ROOM
-    Route::get('getProductsShowRoom', 'ProductoController@getProductsShowRoom');
 
 });
