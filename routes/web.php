@@ -15,6 +15,16 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+if (env('COMMANDS', null) === true) {
+
+    Route::get('/setup-db', function() {
+        $exitCode = Artisan::call('migrate --seed --no-interaction');
+        \Log::info("Migración Resultado: $exitCode");
+        return 'Ok';
+    });
+
+}
+
 
 //Route::get('administradores', 'AdministradorController');
 
