@@ -15,7 +15,8 @@ class ProductoController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index($catalogo){
+    public function index($catalogo)
+    {
         $productos = Producto::select('productos.*', 'image', 'nombre_marca')
                     ->join('galeria_productos', 'id_producto', '=', 'producto')
                     ->join('marcas', 'marca', '=', 'id_marca')
@@ -23,7 +24,7 @@ class ProductoController extends Controller
                     ->where('destacada', 1)
                     ->get();
 
-        $catalogo = Catalogo::find($catalogo);
+        $catalogo = Catalogo::findOrFail($catalogo);
         if ($catalogo->tipo == 'show room') {
             $show_room = true;
         }else{
@@ -128,7 +129,10 @@ class ProductoController extends Controller
     }
 
 
-    public function detalleProducto($id){
+    public function detalleProducto($id)
+    {
+        Producto::findOrFail($id);
+
         $producto = Producto::where('id_producto', $id)
                     ->join('marcas', 'marca', '=', 'id_marca')
                     ->first();
@@ -177,7 +181,7 @@ class ProductoController extends Controller
             'imagenes.*.id_galeria_prod' => 'nullable|exists:galeria_productos,id_galeria_prod',
         ]);
 
-        $producto = Producto::find($request['id_producto']);
+        $producto = Producto::findOrFail($request['id_producto']);
         $producto->nombre = $request['nombre'];
         $producto->codigo = $request['codigo'];
         $producto->referencia = $request['referencia'];
@@ -255,64 +259,23 @@ class ProductoController extends Controller
         return true;
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Entities\Producto  $producto
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id){
+    public function destroy($id)
+    {
+        $producto = Producto::findOrFail($id);
+        $catalogo = Catalogo::find($producto->catalogo);
 
-        $validate_producto = DB::table('pedido_productos')->where('producto', $id)->exists();
-
-        if ($validate_producto) {
-            $response = [
-                'response' => 'error',
-                'status' => 403,
-                'message' => "El producto tiene registro de pagos. No es posible que se elimine."
-            ];
-        }else{
-
-
-            $delete_files = $this->deleteImages($id);
-            if ($delete_files) {
-                $delete_images = GaleriaProducto::where('producto', $id)->delete();
-                if ($delete_images) {
-                    $producto = Producto::find($id);
-
-                    // Update cantidad catalogo.
-                    $catalogo = Catalogo::find($producto->catalogo);
-                    $catalogo->cantidad--;
-                    if($catalogo->save()){
-                        $producto->delete();
-                        $response = [
-                            'response' => 'success',
-                            'status' => 200,
-                            'message' => "Producto eliminado."
-                        ];
-                    }else{
-                        $response = [
-                            'response' => 'error',
-                            'status' => 403,
-                            'message' => "No se pudo eliminar el producto."
-                        ];
-                    }
-                }else{
-                    $response = [
-                        'response' => 'error',
-                        'status' => 403,
-                        'message' => "No se pudo eliminar el producto."
-                    ];
-                }
-            }else{
-                $response = [
-                    'response' => 'error',
-                    'status' => 403,
-                    'message' => "No se pudo eliminar el producto."
-                ];
-            }
+        if ($catalogo) {
+            $catalogo->cantidad--;
+            $catalogo->save();
         }
-        return response()->json($response);
+
+        $producto->delete();
+
+        return response()->json([
+            'response' => 'success',
+            'status' => 200,
+            'message' => "Producto eliminado."
+        ]);
     }
 
     public function getProductsShowRoom(){

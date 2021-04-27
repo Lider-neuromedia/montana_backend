@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Entities\Catalogo;
+use App\Entities\Producto;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use DB;
@@ -126,7 +127,7 @@ class CatalogoController extends Controller
      */
     public function show($id)
     {
-        $catalogo = Catalogo::find($id);
+        $catalogo = Catalogo::findOrFail($id);
         return $catalogo;
     }
 
@@ -160,7 +161,7 @@ class CatalogoController extends Controller
         ]);
         $validate_image = $this->validateLinkImage($request['imagen']);
 
-        $catalogo = Catalogo::find($request['id_catalogo']);
+        $catalogo = Catalogo::findOrFail($request['id_catalogo']);
         $catalogo->titulo = $request['titulo'];
 
         if ($request['tipo'] == 'show room' && $request['estado'] == 'activo') {
@@ -224,7 +225,10 @@ class CatalogoController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function destroy($id){
-        $catalogo = Catalogo::find($id);
+        $catalogo = Catalogo::findOrFail($id);
+        $catalogo->cantidad = Producto::where('catalogo', $id)->count();
+        $catalogo->save();
+
         if ($catalogo->cantidad == 0) {
             $catalogo->delete();
             $response = [

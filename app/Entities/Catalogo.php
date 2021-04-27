@@ -3,9 +3,11 @@
 namespace App\Entities;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Catalogo extends Model
 {
+    use SoftDeletes;
 
     protected $table = 'catalogos';
 
@@ -22,5 +24,4 @@ class Catalogo extends Model
     public function descuento(){
         return $this->hasOne(Descuento::class);
     }
-
 }
