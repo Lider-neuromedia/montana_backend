@@ -32,7 +32,7 @@ Route::group( [ 'middleware' => ['permission:create user'] ], function() {
 Route::group(['namespace' => 'Auth'], function () {
 
     Route::post('password/email', 'PasswordController@sendResetLinkEmail');
-    Route::post('password/reset/{token}', 'PasswordController@reset');
+    Route::post('password/reset', 'PasswordController@reset');
 
 });
 
