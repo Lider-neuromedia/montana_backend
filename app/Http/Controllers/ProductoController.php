@@ -87,9 +87,10 @@ class ProductoController extends Controller
         $producto->catalogo = $request['catalogo'];
         $producto->marca = $request['marca'];
 
+        $catalogo = Catalogo::findOrFail($request['catalogo']);
+
         if ($producto->save()) {
             // Update cantidad catalogo.
-            $catalogo = Catalogo::find($request['catalogo']);
             $catalogo->cantidad++;
             $catalogo->save();
             // Save images.
