@@ -18,7 +18,7 @@ Route::get('/', function () {
 if (env('COMMANDS', null) === true) {
 
     Route::get('/setup-db', function() {
-        $exitCode = Artisan::call('migrate --seed --no-interaction');
+        $exitCode = Artisan::call('migrate --seed --no-interaction --force');
         \Log::info("Migración Resultado: $exitCode");
         return 'Ok';
     });

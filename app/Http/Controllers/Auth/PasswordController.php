@@ -21,6 +21,9 @@ class PasswordController extends Controller
 
         $to = $request->get('email');
         $token = \Str::random(self::TOKEN_LENGTH);
+        $minutes = self::TIME_LIMIT;
+        $user = User::where('email', $to)->firstOrFail();
+        $nombre = "{$user->name} {$user->apellidos}";
 
         \DB::table('password_resets')
             ->where('email', $to)
@@ -32,13 +35,15 @@ class PasswordController extends Controller
             'created_at' => Carbon::now(),
         ]);
 
-        Mail::send('emails.password', compact('to', 'token'), function ($message) use($to) {
+        Mail::send('emails.password', compact('to', 'token', 'minutes', 'nombre'), function($message) use($to) {
 
-            $message->to($to)->subject('Montana - Reinicio de Contraseña');
+            $message->to($to)->subject('Athletic Air - Reinicio de Contraseña');
 
         });
 
-        return response()->json([ 'message' => 'Correo con token de reinicio de contraseña enviado.' ]);
+        return response()->json([
+            'message' => 'Correo con token de reinicio de contraseña enviado.'
+        ]);
     }
 
     public function reset(Request $request)
