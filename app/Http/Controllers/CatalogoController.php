@@ -5,8 +5,6 @@ namespace App\Http\Controllers;
 use App\Entities\Catalogo;
 use App\Entities\Producto;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
-use DB;
 
 class CatalogoController extends Controller
 {
@@ -15,7 +13,8 @@ class CatalogoController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(Request $request){
+    public function index(Request $request)
+    {
 
         $catalogos = Catalogo::select('*');
 
@@ -25,22 +24,21 @@ class CatalogoController extends Controller
             if ($search['general']) {
                 $catalogos->where('tipo', 'general');
             }
-            if($search['show_room']){
+            if ($search['show_room']) {
                 $catalogos->orWhere('tipo', 'show room');
             }
-            if($search['public']){
+            if ($search['public']) {
                 $catalogos->where('estado', 'activo');
             }
-            if($search['private']){
+            if ($search['private']) {
                 $catalogos->orWhere('estado', 'privado');
             }
 
             $catalogos = $catalogos->get();
 
-        }else{
+        } else {
             $catalogos = Catalogo::all();
         }
-
 
         // Setear la url de la imagen segun servidor.
         foreach ($catalogos as $catalogo) {
@@ -51,12 +49,11 @@ class CatalogoController extends Controller
             'response' => 'success',
             'message' => '',
             'status' => 200,
-            'catalogos' => $catalogos
+            'catalogos' => $catalogos,
         ];
 
         return response()->json($response);
     }
-
 
     /**
      * Crear un nuevo catalogo.
@@ -64,7 +61,8 @@ class CatalogoController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request){
+    public function store(Request $request)
+    {
         $request->validate([
             'nombre' => 'required',
             'estado' => 'required',
@@ -81,17 +79,17 @@ class CatalogoController extends Controller
             if (!$validate_show_room) {
                 // Si no existe un catalogo show room activo sigue normal.
                 $catalogo->estado = $request['estado'];
-            }else{
+            } else {
                 // Si existe. No se crea el catalogo y se devuelve al front.
                 $response = [
                     'response' => 'warning',
                     'status' => 200,
-                    'message' => 'Solo debe existir un catalogo show room activo. Por favor inactive el anterior catalogo antes de activar uno nuevo.'
+                    'message' => 'Solo debe existir un catalogo show room activo. Por favor inactive el anterior catalogo antes de activar uno nuevo.',
                 ];
 
                 return response()->json($response);
             }
-        }else{
+        } else {
             $catalogo->estado = $request['estado'];
         }
 
@@ -106,7 +104,7 @@ class CatalogoController extends Controller
         return response()->json([
             'catalogo' => $catalogo,
             'response' => 'success',
-            'status' => 200
+            'status' => 200,
         ]);
     }
 
@@ -156,10 +154,9 @@ class CatalogoController extends Controller
             'titulo' => 'required',
             'estado' => 'required',
             'tipo' => 'required',
-            'imagen' => 'required',
+            'imagen' => 'nullable|image',
             'descuento' => 'nullable|integer|min:0|max:99',
         ]);
-        $validate_image = $this->validateLinkImage($request['imagen']);
 
         $catalogo = Catalogo::findOrFail($request['id_catalogo']);
         $catalogo->titulo = $request['titulo'];
@@ -169,11 +166,11 @@ class CatalogoController extends Controller
             if (!$validate_show_room->exists()) {
                 // Si no existe un catalogo show room activo sigue normal.
                 $catalogo->estado = $request['estado'];
-            }else{
+            } else {
                 // Validar que el catalogo no sea el mismo.
                 if ($validate_show_room->first()->id_catalogo == $request['id_catalogo']) {
                     $catalogo->estado = $request['estado'];
-                }else{
+                } else {
                     // Si existe. Actualiza lo demas y retorna una advertencia.
                     $catalogo->tipo = $request['tipo'];
                     $catalogo->descuento = $request->get('descuento') ? $request->get('descuento') : $catalogo->descuento;
@@ -182,21 +179,22 @@ class CatalogoController extends Controller
                     $response = [
                         'response' => 'warning',
                         'status' => 200,
-                        'message' => 'Solo debe existir un catalogo show room activo. Por favor inactive el anterior catalogo antes de activar uno nuevo.'
+                        'message' => 'Solo debe existir un catalogo show room activo. Por favor inactive el anterior catalogo antes de activar uno nuevo.',
                     ];
 
                     return response()->json($response);
                 }
             }
 
-        }else{
+        } else {
             $catalogo->estado = $request['estado'];
         }
 
         $catalogo->tipo = $request['tipo'];
         $catalogo->descuento = (isset($request['descuento'])) ? $request['descuento'] : $catalogo->descuento;
         $catalogo->save();
-        if ($validate_image) {
+
+        if ($request->hasFile('imagen')) {
             $filename = $this->saveImage($request->file('imagen'), $catalogo->id_catalogo);
             $catalogo->imagen = "storage/catalogos/{$filename}";
             $catalogo->save();
@@ -205,17 +203,8 @@ class CatalogoController extends Controller
         return response()->json([
             'catalogo' => $catalogo,
             'response' => 'success',
-            'status' => 200
+            'status' => 200,
         ]);
-    }
-
-    public function validateLinkImage($image){
-        $substr_image = substr($image, 0, 4);
-        if ($substr_image == 'http') {
-            return false;
-        }else{
-            return true;
-        }
     }
 
     /**
@@ -224,7 +213,8 @@ class CatalogoController extends Controller
      * @param  \App\Entities\Catalogo  $catalogo
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id){
+    public function destroy($id)
+    {
         $catalogo = Catalogo::findOrFail($id);
         $catalogo->cantidad = Producto::where('catalogo', $id)->count();
         $catalogo->save();
@@ -233,19 +223,20 @@ class CatalogoController extends Controller
             $catalogo->delete();
             $response = [
                 'response' => 'success',
-                'status' => 200
+                'status' => 200,
             ];
-        }else{
+        } else {
             $response = [
                 'response' => 'error',
                 'status' => 401,
-                'message' => 'El catalogo tiene productos registrados. No se puede eliminar.'
+                'message' => 'El catalogo tiene productos registrados. No se puede eliminar.',
             ];
         }
         return response()->json($response);
     }
 
-    public function consumerCatalogos(){
+    public function consumerCatalogos()
+    {
         $catalogos = Catalogo::where('estado', 'activo')->where('cantidad', '!=', 0)->get();
         foreach ($catalogos as $catalogo) {
             $catalogo->imagen = url($catalogo->imagen);
@@ -253,7 +244,7 @@ class CatalogoController extends Controller
         $response = [
             'response' => 'success',
             'status' => 200,
-            'catalogos' => $catalogos
+            'catalogos' => $catalogos,
         ];
 
         return response()->json($response);
