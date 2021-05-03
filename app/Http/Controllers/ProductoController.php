@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Entities\Catalogo;
-use App\Entities\Producto;
-use Illuminate\Http\Request;
 use App\Entities\GaleriaProducto;
+use App\Entities\Producto;
 use DB;
+use Illuminate\Http\Request;
 
 class ProductoController extends Controller
 {
@@ -18,22 +18,22 @@ class ProductoController extends Controller
     public function index($catalogo)
     {
         $productos = Producto::select('productos.*', 'image', 'nombre_marca')
-                    ->join('galeria_productos', 'id_producto', '=', 'producto')
-                    ->join('marcas', 'marca', '=', 'id_marca')
-                    ->where('catalogo', $catalogo)
-                    ->where('destacada', 1)
-                    ->get();
+            ->join('galeria_productos', 'id_producto', '=', 'producto')
+            ->join('marcas', 'marca', '=', 'id_marca')
+            ->where('catalogo', $catalogo)
+            ->where('destacada', 1)
+            ->get();
 
         $catalogo = Catalogo::findOrFail($catalogo);
         if ($catalogo->tipo == 'show room') {
             $show_room = true;
-        }else{
+        } else {
             $show_room = false;
         }
 
-        if(count($productos) == 0){
+        if (count($productos) == 0) {
             return response()->json(['response' => 'error', 'status' => 404, 'message' => 'El catalogo no tiene productos registrados.']);
-        }else{
+        } else {
 
             foreach ($productos as $producto) {
                 $producto->image = url($producto->image);
@@ -44,7 +44,7 @@ class ProductoController extends Controller
                 'message' => '',
                 'status' => 200,
                 'productos' => $productos,
-                'show_room' => $show_room
+                'show_room' => $show_room,
             ];
 
             return response()->json($response);
@@ -115,7 +115,7 @@ class ProductoController extends Controller
     {
         $extension = array_reverse(explode(".", $image->getClientOriginalName()))[0];
         $filecontent = file_get_contents($image->getRealPath());
-        $filename = $name.'.'.$extension;
+        $filename = $name . '.' . $extension;
         $path = public_path("storage/productos/{$id_catalogo}");
 
         if (!is_dir($path)) {
@@ -129,19 +129,18 @@ class ProductoController extends Controller
         return $filename;
     }
 
-
     public function detalleProducto($id)
     {
         Producto::findOrFail($id);
 
         $producto = Producto::where('id_producto', $id)
-                    ->join('marcas', 'marca', '=', 'id_marca')
-                    ->first();
+            ->join('marcas', 'marca', '=', 'id_marca')
+            ->first();
 
         $imagenes = GaleriaProducto::where('producto', $id)->get();
 
         foreach ($imagenes as $imagen) {
-            if($imagen->destacada){
+            if ($imagen->destacada) {
                 $producto->destacada = url($imagen->image);
             }
             $imagen->image = url($imagen->image);
@@ -151,11 +150,10 @@ class ProductoController extends Controller
         $response = [
             'response' => 'success',
             'status' => 200,
-            'producto' => $producto
+            'producto' => $producto,
         ];
         return response()->json($response);
     }
-
 
     /**
      * Update the specified resource in storage.
@@ -177,7 +175,7 @@ class ProductoController extends Controller
             'precio' => 'required|numeric',
             'catalogo' => 'required',
             'imagenes' => 'nullable|array|min:1',
-            'imagenes.*.image' => 'required|image',
+            'imagenes.*.image' => 'nullable|image',
             'imagenes.*.destacada' => 'in:0,1',
             'imagenes.*.id_galeria_prod' => 'nullable|exists:galeria_productos,id_galeria_prod',
         ]);
@@ -195,33 +193,38 @@ class ProductoController extends Controller
         // Update images.
         if ($request->has('imagenes') && $request->get('imagenes')) {
             foreach ($request->get('imagenes') as $index => $image) {
-                if (isset($image['id_galeria_prod'])) {
+                if (isset($request->file('imagenes')[$index]) && isset($request->file('imagenes')[$index]['image'])) {
+                    $imagen = $request->file('imagenes')[$index]['image'];
 
-                    $validate_new_image = substr($image['image'], 0, 4);
-                    if ($validate_new_image == 'data') {
-                        $image_store = GaleriaProducto::find($image['id_galeria_prod']);
-                        // Consultamos el nombre para renombrar la imagen de la misma manera.
-                        $name = $image_store->name_img;
-                        // Elimina la imagen anterior.
-                        $path_image = public_path($image_store->image);
-                        unlink($path_image);
-                        // Guardamos la imagen nueva.
-                        $filename = $this->saveImage($request->file('imagenes')[$index]['image'], $name, $producto->catalogo, $producto->referencia);
-                        $image_store->image = "storage/productos/{$producto->catalogo}/{$producto->referencia}/{$filename}";
-                        $image_store->save();
+                    if ($imagen != null) {
+                        if (isset($image['id_galeria_prod'])) {
+
+                            $image_store = GaleriaProducto::find($image['id_galeria_prod']);
+                            $name = $image_store->name_img;
+                            // Elimina la imagen anterior.
+                            $path_image = public_path($image_store->image);
+                            if (file_exists($path_image)) {
+                                unlink($path_image);
+                            }
+                            // Guardamos la imagen nueva.
+                            $filename = $this->saveImage($imagen, $name, $producto->catalogo, $producto->referencia);
+                            $image_store->image = "storage/productos/{$producto->catalogo}/{$producto->referencia}/{$filename}";
+                            $image_store->destacada = $image['destacada'];
+                            $image_store->save();
+
+                        } else {
+
+                            $name = "{$producto->referencia}-{$index}";
+                            $filename = $this->saveImage($imagen, $name, $producto->catalogo, $producto->referencia);
+                            $image_store = new GaleriaProducto();
+                            $image_store->name_img = $name;
+                            $image_store->producto = $producto->id_producto;
+                            $image_store->image = "storage/productos/{$producto->catalogo}/{$producto->referencia}/{$filename}";
+                            $image_store->destacada = $image['destacada'];
+                            $image_store->save();
+
+                        }
                     }
-
-                } else {
-
-                    $name = "{$producto->referencia}-{$index}";
-                    $filename = $this->saveImage($request->file('imagenes')[$index]['image'], $name, $producto->catalogo, $producto->referencia);
-                    $galeria = new GaleriaProducto();
-                    $galeria->image = "storage/productos/{$producto->catalogo}/{$producto->referencia}/{$filename}";
-                    $galeria->name_img = $name;
-                    $galeria->destacada = $image['destacada'];
-                    $galeria->producto = $producto->id_producto;
-                    $galeria->save();
-
                 }
             }
         }
@@ -231,20 +234,21 @@ class ProductoController extends Controller
             $response = [
                 'response' => 'success',
                 'status' => 200,
-                'message' => "Producto actualizado correctamente."
+                'message' => "Producto actualizado correctamente.",
             ];
         } catch (\Exception $e) {
             $response = [
                 'response' => 'error',
                 'status' => 403,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ];
         }
 
         return response()->json($response);
     }
 
-    public function deleteImages($id_producto){
+    public function deleteImages($id_producto)
+    {
         $info_product = Producto::find($id_producto);
         $images_prod = GaleriaProducto::where('producto', $id_producto)->get();
         foreach ($images_prod as $image) {
@@ -275,19 +279,20 @@ class ProductoController extends Controller
         return response()->json([
             'response' => 'success',
             'status' => 200,
-            'message' => "Producto eliminado."
+            'message' => "Producto eliminado.",
         ]);
     }
 
-    public function getProductsShowRoom(){
+    public function getProductsShowRoom()
+    {
         $validate_catalogo = Catalogo::where('tipo', 'show room')->where('estado', 'activo');
         if ($validate_catalogo->exists()) {
             $catalogo = $validate_catalogo->first();
             $productos = Producto::where('catalogo', $catalogo->id_catalogo)
-            ->join('galeria_productos', 'id_producto', '=', 'producto')
-            ->join('marcas', 'marca', '=', 'id_marca')
-            ->where('destacada', 1)
-            ->get();
+                ->join('galeria_productos', 'id_producto', '=', 'producto')
+                ->join('marcas', 'marca', '=', 'id_marca')
+                ->where('destacada', 1)
+                ->get();
 
             foreach ($productos as $producto) {
                 $producto->image = url($producto->image);
@@ -296,26 +301,27 @@ class ProductoController extends Controller
             $response = [
                 'response' => 'success',
                 'status' => 200,
-                'productos' => $productos
+                'productos' => $productos,
             ];
-        }else{
+        } else {
             $response = [
                 'response' => 'error',
                 'status' => 403,
-                'message' => 'No existe catalogo show room disponible.'
+                'message' => 'No existe catalogo show room disponible.',
             ];
         }
 
         return response()->json($response);
     }
 
-    public function getMarcas(){
+    public function getMarcas()
+    {
         $marcas = DB::table('marcas')->get();
 
         $response = [
             'response' => 'success',
             'status' => 200,
-            'marcas' => $marcas
+            'marcas' => $marcas,
         ];
 
         return response()->json($response);
