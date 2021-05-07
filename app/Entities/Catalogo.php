@@ -19,9 +19,11 @@ class Catalogo extends Model
         'tipo',
         'imagen',
         'titulo',
+        'etiqueta',
     ];
 
-    public function descuento(){
+    public function descuento()
+    {
         return $this->hasOne(Descuento::class);
     }
 }

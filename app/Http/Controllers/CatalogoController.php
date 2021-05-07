@@ -15,7 +15,6 @@ class CatalogoController extends Controller
      */
     public function index(Request $request)
     {
-
         $catalogos = Catalogo::select('*');
 
         if (isset($request['search'])) {
@@ -68,11 +67,13 @@ class CatalogoController extends Controller
             'estado' => 'required',
             'tipo' => 'required',
             'image' => 'required',
+            'etiqueta' => 'required|string|max:100|in:adultos,niños',
             'descuento' => 'nullable|integer|min:0|max:99',
         ]);
 
         $catalogo = new Catalogo();
         $catalogo->titulo = $request['nombre'];
+        $catalogo->etiqueta = $request['etiqueta'];
 
         if ($request['tipo'] == 'show room' && $request['estado'] == 'activo') {
             $validate_show_room = Catalogo::where('tipo', 'show room')->where('estado', 'activo')->exists();
@@ -155,11 +156,13 @@ class CatalogoController extends Controller
             'estado' => 'required',
             'tipo' => 'required',
             'imagen' => 'nullable|image',
+            'etiqueta' => 'required|string|max:100|in:adultos,niños',
             'descuento' => 'nullable|integer|min:0|max:99',
         ]);
 
         $catalogo = Catalogo::findOrFail($request['id_catalogo']);
         $catalogo->titulo = $request['titulo'];
+        $catalogo->etiqueta = $request['etiqueta'];
 
         if ($request['tipo'] == 'show room' && $request['estado'] == 'activo') {
             $validate_show_room = Catalogo::where('tipo', 'show room')->where('estado', 'activo');
