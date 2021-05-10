@@ -21,7 +21,7 @@ class PedidoController extends Controller
         $search = $request['search'];
         $date = $request['date'];
 
-        $pedidos = Pedido::select('id_pedido', 'fecha', 'codigo', 'total', 'ven.name AS name_vendedor',
+        $pedidos = Pedido::select('id_pedido', 'fecha', 'firma', 'codigo', 'total', 'ven.name AS name_vendedor',
             'ven.apellidos AS apellido_vendedor', 'cli.name AS name_cliente', 'cli.apellidos AS apellido_cliente', 'estados.estado', 'estados.id_estado')
             ->join('estados', 'pedidos.estado', '=', 'estados.id_estado')
             ->join('users AS ven', 'vendedor', '=', 'ven.id')
@@ -209,7 +209,7 @@ class PedidoController extends Controller
 
     public function show($id)
     {
-        $pedido = Pedido::select('id_pedido', 'fecha', 'codigo', 'metodo_pago', 'sub_total', 'total',
+        $pedido = Pedido::select('id_pedido', 'fecha', 'firma', 'codigo', 'metodo_pago', 'sub_total', 'total',
             'descuento', 'notas', 'vendedor', 'estados.estado', 'id_estado', 'cliente')
             ->join('estados', 'pedidos.estado', '=', 'id_estado')
             ->where('id_pedido', $id)
@@ -307,7 +307,7 @@ class PedidoController extends Controller
 
     public function edit($id)
     {
-        $pedido = Pedido::select('id_pedido', 'fecha', 'codigo', 'metodo_pago', 'sub_total', 'total',
+        $pedido = Pedido::select('id_pedido', 'fecha', 'firma', 'codigo', 'metodo_pago', 'sub_total', 'total',
             'descuento', 'notas', 'vendedor', 'estados.estado', 'id_estado', 'cliente')
             ->join('estados', 'pedidos.estado', '=', 'id_estado')
             ->where('id_pedido', $id)
