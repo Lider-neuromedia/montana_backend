@@ -191,7 +191,7 @@ class PedidoController extends Controller
                 'status' => 200,
                 'response' => 'success',
                 'message' => 'Pedido creado.',
-            ]);
+            ], 200);
 
         } catch (\Exception $ex) {
 
@@ -203,7 +203,7 @@ class PedidoController extends Controller
                 'status' => 500,
                 'response' => 'error',
                 'message' => 'Error interno del servidor, no se pudo guardar el pedido.',
-            ]);
+            ], 500);
         }
     }
 
@@ -341,35 +341,79 @@ class PedidoController extends Controller
     public function update(Request $request)
     {
         $request->validate([
-            'id_pedido' => 'required',
-            'metodo_pago' => 'required',
+            'id_pedido' => 'required|exists:pedidos,id_pedido',
+            'metodo_pago' => 'required|string|max:100|in:contado,credito',
+            'total' => 'required|numeric',
+            'firma' => 'nullable|image',
+
+            'productos' => 'required|array',
+            'productos.*.producto' => [
+                'required',
+                Rule::exists('productos', 'id_producto')->whereNull('deleted_at'),
+            ],
+            'productos.*.stock' => 'required|integer|min:1',
+            'productos.*.tiendas' => 'required|array',
+            'productos.*.tiendas.*.cantidad_producto' => 'required|integer|min:1',
+            'productos.*.tiendas.*.id_pedido_prod' => 'required|exists:pedido_productos,id_pedido_prod',
         ]);
 
-        $pedido = Pedido::find($request['id_pedido']);
-        $pedido->metodo_pago = $request['metodo_pago'];
-        $pedido->sub_total = $request['total'];
-        $pedido->total = $request['total'];
-        $pedido->save();
+        try {
 
-        foreach ($request['productos'] as $producto) {
-            $update_producto = Producto::find($producto['producto']);
-            $update_producto->stock = $producto['stock'];
-            $update_producto->save();
-            foreach ($producto['tiendas'] as $tiendas) {
-                $pedido_prod = PedidoProduct::find($tiendas['id_pedido_prod']);
-                $pedido_prod->cantidad_producto = $tiendas['cantidad_producto'];
-                $pedido_prod->save();
+            \DB::beginTransaction();
+
+            $pedido = Pedido::findOrFail($request['id_pedido']);
+            $pedido->metodo_pago = $request['metodo_pago'];
+            $pedido->sub_total = $request['total'];
+            $pedido->total = $request['total'];
+
+            // Guardar firma.
+            if ($request->hasFile('firma')) {
+                // Borrar firma actual.
+                $firma_actual = $pedido->firma;
+                if ($firma_actual) {
+                    $file = array_reverse(explode('/', $firma_actual))[0];
+                    \Storage::delete("public/firmas/$file");
+                }
+
+                $path = $request->file('firma')->store('public/firmas');
+                $public_path = str_replace('public/firmas', 'storage/firmas', $path);
+                $pedido->firma = $public_path;
             }
+
+            $pedido->save();
+
+            foreach ($request['productos'] as $producto) {
+                $update_producto = Producto::findOrFail($producto['producto']);
+                $update_producto->stock = $producto['stock'];
+                $update_producto->save();
+                foreach ($producto['tiendas'] as $tiendas) {
+                    $pedido_prod = PedidoProduct::findOrFail($tiendas['id_pedido_prod']);
+                    $pedido_prod->cantidad_producto = $tiendas['cantidad_producto'];
+                    $pedido_prod->save();
+                }
+            }
+
+            \DB::commit();
+
+            return response()->json([
+                'status' => 200,
+                'response' => 'success',
+                'message' => 'Pedido actualizado.',
+            ], 200);
+
+        } catch (\Exception $ex) {
+
+            \Log::info($ex->getMessage());
+            \Log::info($ex->getTraceAsString());
+            \DB::rollBack();
+
+            return response()->json([
+                'status' => 500,
+                'response' => 'success',
+                'message' => 'Error interno del servidor, no se pudo actualizar el pedido.',
+            ], 500);
+
         }
-
-        $response = [
-            'status' => 200,
-            'response' => 'success',
-            'message' => 'Pedido actualizado.',
-        ];
-
-        return response()->json($response);
-
     }
 
     public function exportPedido()
