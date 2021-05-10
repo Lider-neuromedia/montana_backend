@@ -18,13 +18,14 @@ class Pedido extends Model
         'metodo_pago',
         'descuento',
         'notas',
+        'firma',
         'vendedor',
         'cliente',
         'estado',
     ];
-    
-    public function products(){
+
+    public function products()
+    {
         return $this->belongsToMany('App\Entities\Producto', 'pedido_productos', 'pedido', 'producto');
     }
-
 }

@@ -12,6 +12,7 @@ use App\Exports\PedidoExport;
 use DB;
 use Excel;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class PedidoController extends Controller
 {
@@ -113,66 +114,97 @@ class PedidoController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'cliente' => 'required',
-            'vendedor' => 'required',
-            'catalogo' => 'required',
-            'codigo_pedido' => 'required',
-            'productos' => 'required',
+            'cliente' => 'required|integer|exists:users,id',
+            'vendedor' => 'required|integer|exists:users,id',
+            'codigo_pedido' => 'required|unique:pedidos,codigo',
             'total_pedido' => 'required|numeric',
             'descuento' => 'required|numeric',
-            'forma_pago' => 'required',
+            'forma_pago' => 'required|string|max:100|in:contado,credito',
+            'notas' => 'string',
+            'firma' => 'required|image',
+            'productos' => 'required|array',
+            'productos.*.id_producto' => [
+                'required',
+                Rule::exists('productos', 'id_producto')->whereNull('deleted_at'),
+            ],
+            'productos.*.tiendas' => 'required|array',
+            'productos.*.tiendas.*.cantidad' => 'required|integer|min:1',
+            'productos.*.tiendas.*.id_tienda' => 'required|exists:tiendas,id_tiendas',
         ]);
 
-        $pedido = new Pedido();
-        $pedido->fecha = date('Y-m-d');
-        $pedido->codigo = $request['codigo_pedido'];
-        $pedido->metodo_pago = $request['forma_pago'];
-        $pedido->sub_total = $request['total_pedido'];
-        $pedido->descuento = $request['descuento'];
+        try {
 
-        // Sacamos el descuento si lo tiene.
-        if ($request['descuento'] != 0) {
+            \DB::beginTransaction();
 
-            $descuento = $request['total_pedido'] * ($request['descuento'] / 100);
-            $total = $request['total_pedido'] - $descuento;
+            $pedido = new Pedido();
+            $pedido->fecha = date('Y-m-d');
+            $pedido->codigo = $request['codigo_pedido'];
+            $pedido->metodo_pago = $request['forma_pago'];
+            $pedido->sub_total = $request['total_pedido'];
+            $pedido->descuento = $request['descuento'];
 
-        } else {
+            // Guardar firma.
+            if ($request->hasFile('firma')) {
+                $path = $request->file('firma')->store('public/firmas');
+                $public_path = str_replace('public/firmas', 'storage/firmas', $path);
+                $pedido->firma = $public_path;
+            }
 
-            $total = $request['total_pedido'];
+            // Sacamos el descuento si lo tiene.
+            if ($request['descuento'] != 0) {
+                $descuento = $request['total_pedido'] * ($request['descuento'] / 100);
+                $total = $request['total_pedido'] - $descuento;
+            } else {
+                $total = $request['total_pedido'];
+            }
 
-        }
+            $pedido->total = $total;
+            $pedido->notas = $request['notas'];
+            $pedido->vendedor = $request['vendedor'];
+            $pedido->cliente = $request['cliente'];
+            $pedido->estado = 2;
+            $pedido->save();
 
-        $pedido->total = $total;
-        $pedido->notas = $request['notas'];
-        $pedido->vendedor = $request['vendedor'];
-        $pedido->cliente = $request['cliente'];
-        $pedido->estado = 2;
+            // Creamos la relacion con productos.
 
-        // Creamos la relacion con productos.
-        if ($pedido->save()) {
             foreach ($request['productos'] as $product) {
                 foreach ($product['tiendas'] as $tienda) {
+
                     $pedido_product = new PedidoProduct();
                     $pedido_product->pedido = $pedido->id_pedido;
                     $pedido_product->producto = $product['id_producto'];
                     $pedido_product->cantidad_producto = $tienda['cantidad'];
                     $pedido_product->tienda = $tienda['id_tienda'];
-                    if ($pedido_product->save()) {
-                        $producto = Producto::find($product['id_producto']);
-                        $producto->stock = $producto->stock - $tienda['cantidad'];
-                        $producto->save();
-                    }
+                    $pedido_product->save();
+
+                    // Reducir stock
+                    $producto = Producto::findOrFail($product['id_producto']);
+                    $producto->stock = $producto->stock - $tienda['cantidad'];
+                    $producto->save();
+
                 }
             }
+
+            \DB::commit();
+
+            return response()->json([
+                'status' => 200,
+                'response' => 'success',
+                'message' => 'Pedido creado.',
+            ]);
+
+        } catch (\Exception $ex) {
+
+            \Log::info($ex->getMessage());
+            \Log::info($ex->getTraceAsString());
+            \DB::rollBack();
+
+            return response()->json([
+                'status' => 500,
+                'response' => 'error',
+                'message' => 'Error interno del servidor, no se pudo guardar el pedido.',
+            ]);
         }
-
-        $response = [
-            'status' => 200,
-            'response' => 'success',
-            'message' => 'Pedido creado.',
-        ];
-
-        return response()->json($response);
     }
 
     public function show($id)
