@@ -192,6 +192,12 @@ class ProductoController extends Controller
 
         // Update images.
         if ($request->has('imagenes') && $request->get('imagenes')) {
+
+            // Borrar imágenes actuales.
+            \DB::table('galeria_productos')
+                ->where('producto', $producto->id_producto)
+                ->delete();
+
             foreach ($request->get('imagenes') as $index => $image) {
                 if (isset($request->file('imagenes')[$index]) && isset($request->file('imagenes')[$index]['image'])) {
                     $imagen = $request->file('imagenes')[$index]['image'];
