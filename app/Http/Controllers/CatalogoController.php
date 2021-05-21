@@ -20,17 +20,37 @@ class CatalogoController extends Controller
         if (isset($request['search'])) {
             $search = json_decode($request['search'], true);
 
-            if ($search['general']) {
-                $catalogos->where('tipo', 'general');
+            $filtro_catalogos = [];
+            $filtro_publico = [];
+            $filtro_etiquetas = [];
+
+            if (isset($search['general']) && $search['general'] === true) {
+                $filtro_catalogos[] = 'general';
             }
-            if ($search['show_room']) {
-                $catalogos->orWhere('tipo', 'show room');
+            if (isset($search['show_room']) && $search['show_room'] === true) {
+                $filtro_catalogos[] = 'show room';
             }
-            if ($search['public']) {
-                $catalogos->where('estado', 'activo');
+            if (isset($search['public']) && $search['public'] === true) {
+                $filtro_publico[] = 'activo';
             }
-            if ($search['private']) {
-                $catalogos->orWhere('estado', 'privado');
+            if (isset($search['private']) && $search['private'] === true) {
+                $filtro_publico[] = 'privado';
+            }
+            if (isset($search['ninos']) && $search['ninos'] === true) {
+                $filtro_etiquetas[] = 'niños';
+            }
+            if (isset($search['adultos']) && $search['adultos'] === true) {
+                $filtro_etiquetas[] = 'adultos';
+            }
+
+            if (count($filtro_catalogos) > 0) {
+                $catalogos->whereIn('tipo', $filtro_catalogos);
+            }
+            if (count($filtro_publico) > 0) {
+                $catalogos->whereIn('estado', $filtro_publico);
+            }
+            if (count($filtro_etiquetas) > 0) {
+                $catalogos->whereIn('etiqueta', $filtro_etiquetas);
             }
 
             $catalogos = $catalogos->get();
