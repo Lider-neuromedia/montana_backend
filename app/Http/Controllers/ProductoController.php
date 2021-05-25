@@ -10,11 +10,6 @@ use Illuminate\Http\Request;
 
 class ProductoController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function index($catalogo)
     {
         $productos = Producto::select('productos.*', 'image', 'nombre_marca')
@@ -32,31 +27,28 @@ class ProductoController extends Controller
         }
 
         if (count($productos) == 0) {
-            return response()->json(['response' => 'error', 'status' => 404, 'message' => 'El catalogo no tiene productos registrados.']);
-        } else {
 
-            foreach ($productos as $producto) {
-                $producto->image = url($producto->image);
-            }
+            return response()->json([
+                'response' => 'error',
+                'status' => 404,
+                'message' => 'El catalogo no tiene productos registrados.',
+            ], 404);
 
-            $response = [
-                'response' => 'success',
-                'message' => '',
-                'status' => 200,
-                'productos' => $productos,
-                'show_room' => $show_room,
-            ];
-
-            return response()->json($response);
         }
+
+        foreach ($productos as $producto) {
+            $producto->image = url($producto->image);
+        }
+
+        return response()->json([
+            'response' => 'success',
+            'message' => '',
+            'status' => 200,
+            'productos' => $productos,
+            'show_room' => $show_room,
+        ], 200);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
     public function store(Request $request)
     {
         $request->validate([
@@ -106,11 +98,12 @@ class ProductoController extends Controller
             }
         }
 
-        $response = ['response' => 'success', 'status' => 200];
-        return response()->json($response);
+        return response()->json([
+            'response' => 'success',
+            'status' => 200,
+        ], 200);
     }
 
-    // Store image.
     public function saveImage($image, $name, $id_catalogo, $referencia)
     {
         $extension = array_reverse(explode(".", $image->getClientOriginalName()))[0];
@@ -147,21 +140,14 @@ class ProductoController extends Controller
         }
 
         $producto->imagenes = $imagenes;
-        $response = [
+
+        return response()->json([
             'response' => 'success',
             'status' => 200,
             'producto' => $producto,
-        ];
-        return response()->json($response);
+        ], 200);
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Entities\Producto  $producto
-     * @return \Illuminate\Http\Response
-     */
     public function update(Request $request, $id)
     {
         $request->validate([
@@ -236,38 +222,42 @@ class ProductoController extends Controller
         }
 
         try {
+
             $producto->save();
-            $response = [
+
+            return response()->json([
                 'response' => 'success',
                 'status' => 200,
                 'message' => "Producto actualizado correctamente.",
-            ];
+            ], 200);
+
         } catch (\Exception $e) {
-            $response = [
+
+            return response()->json([
                 'response' => 'error',
                 'status' => 403,
                 'message' => $e->getMessage(),
-            ];
-        }
+            ], 403);
 
-        return response()->json($response);
+        }
     }
 
     public function deleteImages($id_producto)
     {
         $info_product = Producto::find($id_producto);
         $images_prod = GaleriaProducto::where('producto', $id_producto)->get();
+
         foreach ($images_prod as $image) {
             $path = public_path($image->image);
             unlink($path);
         }
+
         try {
             rmdir(public_path("storage/productos/{$info_product->catalogo}/{$info_product->referencia}"));
+            return true;
         } catch (\Exception $e) {
             return false;
         }
-
-        return true;
     }
 
     public function destroy($id)
@@ -286,13 +276,15 @@ class ProductoController extends Controller
             'response' => 'success',
             'status' => 200,
             'message' => "Producto eliminado.",
-        ]);
+        ], 200);
     }
 
     public function getProductsShowRoom()
     {
         $validate_catalogo = Catalogo::where('tipo', 'show room')->where('estado', 'activo');
+
         if ($validate_catalogo->exists()) {
+
             $catalogo = $validate_catalogo->first();
             $productos = Producto::where('catalogo', $catalogo->id_catalogo)
                 ->join('galeria_productos', 'id_producto', '=', 'producto')
@@ -304,33 +296,29 @@ class ProductoController extends Controller
                 $producto->image = url($producto->image);
             }
 
-            $response = [
+            return response()->json([
                 'response' => 'success',
                 'status' => 200,
                 'productos' => $productos,
-            ];
-        } else {
-            $response = [
-                'response' => 'error',
-                'status' => 403,
-                'message' => 'No existe catalogo show room disponible.',
-            ];
+            ], 200);
+
         }
 
-        return response()->json($response);
+        return response()->json([
+            'response' => 'error',
+            'status' => 403,
+            'message' => 'No existe catalogo show room disponible.',
+        ], 403);
     }
 
     public function getMarcas()
     {
         $marcas = DB::table('marcas')->get();
 
-        $response = [
+        return response()->json([
             'response' => 'success',
             'status' => 200,
             'marcas' => $marcas,
-        ];
-
-        return response()->json($response);
+        ], 200);
     }
-
 }
