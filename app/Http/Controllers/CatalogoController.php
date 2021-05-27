@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Entities\Catalogo;
 use App\Entities\Producto;
+use App\Utils\Utils;
 use Illuminate\Http\Request;
 
 class CatalogoController extends Controller
@@ -15,6 +16,7 @@ class CatalogoController extends Controller
      */
     public function index(Request $request)
     {
+        Utils::corregirCantidadDeProductosEnCatalogos();
         $catalogos = Catalogo::select('*');
 
         if (isset($request['search'])) {

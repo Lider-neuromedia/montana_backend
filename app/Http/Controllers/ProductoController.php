@@ -12,32 +12,35 @@ class ProductoController extends Controller
 {
     public function index($catalogo)
     {
-        $productos = Producto::select('productos.*', 'image', 'nombre_marca')
-            ->join('galeria_productos', 'id_producto', '=', 'producto')
-            ->join('marcas', 'marca', '=', 'id_marca')
+        $cat = Catalogo::findOrFail($catalogo);
+        $show_room = $cat->tipo == 'show room';
+
+        $productos = Producto::query()
             ->where('catalogo', $catalogo)
-            ->where('destacada', 1)
-            ->get();
+            ->whereNull('deleted_at')
+            ->get()
+            ->map(function ($producto) {
+                $marca = \DB::table('marcas')
+                    ->where('id_marca', $producto->marca)
+                    ->first();
 
-        $catalogo = Catalogo::findOrFail($catalogo);
-        if ($catalogo->tipo == 'show room') {
-            $show_room = true;
-        } else {
-            $show_room = false;
-        }
+                $imagen = \DB::table('galeria_productos')
+                    ->where('producto', $producto->id_producto)
+                    ->where('destacada', 1)
+                    ->first();
 
-        if (count($productos) == 0) {
+                $producto->nombre_marca = $marca == null ? null : $marca->nombre_marca;
+                $producto->image = $imagen == null ? null : url($imagen->image);
 
+                return $producto;
+            });
+
+        if ($productos->count() == 0) {
             return response()->json([
                 'response' => 'error',
                 'status' => 404,
                 'message' => 'El catalogo no tiene productos registrados.',
             ], 404);
-
-        }
-
-        foreach ($productos as $producto) {
-            $producto->image = url($producto->image);
         }
 
         return response()->json([
