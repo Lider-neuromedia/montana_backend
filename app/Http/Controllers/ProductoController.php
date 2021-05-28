@@ -167,59 +167,77 @@ class ProductoController extends Controller
             'imagenes.*.image' => 'nullable|image',
             'imagenes.*.destacada' => 'in:0,1',
             'imagenes.*.id_galeria_prod' => 'nullable|exists:galeria_productos,id_galeria_prod',
+            'imagenes.*.delete' => 'nullable|integer|in:0,1',
         ]);
 
-        $producto = Producto::findOrFail($request['id_producto']);
-        $producto->nombre = $request['nombre'];
-        $producto->codigo = $request['codigo'];
-        $producto->referencia = $request['referencia'];
-        $producto->stock = $request['stock'];
-        $producto->marca = $request['marca'];
-        $producto->precio = $request['precio'];
-        $producto->total = $request['precio'];
-        $producto->descripcion = $request['descripcion'];
+        try {
 
-        // Update images.
-        if ($request->has('imagenes') && $request->get('imagenes')) {
+            $producto = Producto::findOrFail($request['id_producto']);
+            $producto->nombre = $request['nombre'];
+            $producto->codigo = $request['codigo'];
+            $producto->referencia = $request['referencia'];
+            $producto->stock = $request['stock'];
+            $producto->marca = $request['marca'];
+            $producto->precio = $request['precio'];
+            $producto->total = $request['precio'];
+            $producto->descripcion = $request['descripcion'];
 
-            foreach ($request->get('imagenes') as $index => $image) {
-                if (isset($request->file('imagenes')[$index]) && isset($request->file('imagenes')[$index]['image'])) {
-                    $imagen = $request->file('imagenes')[$index]['image'];
+            // Update images.
+            if ($request->has('imagenes') && $request->get('imagenes')) {
+                foreach ($request->get('imagenes') as $index => $image) {
 
-                    if ($imagen != null) {
-                        if (isset($image['id_galeria_prod'])) {
+                    // Borrar imagen.
+                    if (isset($image['id_galeria_prod']) && isset($image['delete']) && $image['delete'] == 1) {
+                        $image_store = GaleriaProducto::find($image['id_galeria_prod']);
+                        $path_image = public_path($image_store->image);
 
-                            $image_store = GaleriaProducto::find($image['id_galeria_prod']);
-                            $name = $image_store->name_img;
-                            // Elimina la imagen anterior.
-                            $path_image = public_path($image_store->image);
-                            if (file_exists($path_image)) {
-                                unlink($path_image);
+                        if (file_exists($path_image)) {
+                            unlink($path_image);
+                        }
+
+                        $image_store->delete();
+                    }
+
+                    // Guardar imagen
+                    if (isset($request->file('imagenes')[$index])
+                        && isset($request->file('imagenes')[$index]['image'])) {
+                        $imagen = $request->file('imagenes')[$index]['image'];
+
+                        if ($imagen != null) {
+                            if (isset($image['id_galeria_prod'])) {
+                                // Actualizar imagen.
+                                $image_store = GaleriaProducto::find($image['id_galeria_prod']);
+                                $name = $image_store->name_img;
+
+                                // Elimina la imagen anterior.
+                                $path_image = public_path($image_store->image);
+
+                                if (file_exists($path_image)) {
+                                    unlink($path_image);
+                                }
+
+                                // Guardamos la imagen nueva.
+                                $filename = $this->saveImage($imagen, $name, $producto->catalogo, $producto->referencia);
+                                $image_store->image = "storage/productos/{$producto->catalogo}/{$producto->referencia}/{$filename}";
+                                $image_store->destacada = $image['destacada'];
+                                $image_store->save();
+
+                            } else {
+
+                                $name = "{$producto->referencia}-{$index}";
+                                $filename = $this->saveImage($imagen, $name, $producto->catalogo, $producto->referencia);
+                                $image_store = new GaleriaProducto();
+                                $image_store->name_img = $name;
+                                $image_store->producto = $producto->id_producto;
+                                $image_store->image = "storage/productos/{$producto->catalogo}/{$producto->referencia}/{$filename}";
+                                $image_store->destacada = $image['destacada'];
+                                $image_store->save();
+
                             }
-                            // Guardamos la imagen nueva.
-                            $filename = $this->saveImage($imagen, $name, $producto->catalogo, $producto->referencia);
-                            $image_store->image = "storage/productos/{$producto->catalogo}/{$producto->referencia}/{$filename}";
-                            $image_store->destacada = $image['destacada'];
-                            $image_store->save();
-
-                        } else {
-
-                            $name = "{$producto->referencia}-{$index}";
-                            $filename = $this->saveImage($imagen, $name, $producto->catalogo, $producto->referencia);
-                            $image_store = new GaleriaProducto();
-                            $image_store->name_img = $name;
-                            $image_store->producto = $producto->id_producto;
-                            $image_store->image = "storage/productos/{$producto->catalogo}/{$producto->referencia}/{$filename}";
-                            $image_store->destacada = $image['destacada'];
-                            $image_store->save();
-
                         }
                     }
                 }
             }
-        }
-
-        try {
 
             $producto->save();
 
@@ -229,12 +247,15 @@ class ProductoController extends Controller
                 'message' => "Producto actualizado correctamente.",
             ], 200);
 
-        } catch (\Exception $e) {
+        } catch (\Exception $ex) {
+
+            \Log::info($ex->getMessage());
+            \Log::info($ex->getTraceAsString());
 
             return response()->json([
                 'response' => 'error',
                 'status' => 403,
-                'message' => $e->getMessage(),
+                'message' => $ex->getMessage(),
             ], 403);
 
         }
