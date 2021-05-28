@@ -144,10 +144,16 @@ class EncuestaController extends Controller
 
     public function getProductoValoraciones($producto)
     {
+        $prd = \DB::table('productos')
+            ->where('id_producto', $producto)
+            ->first();
+
         $data = \DB::table('valoraciones as v')
             ->select(['p.id_pregunta', 'p.pregunta', 'v.respuesta', 'v.usuario'])
             ->leftJoin('preguntas as p', 'v.pregunta', '=', 'p.id_pregunta')
+            ->leftJoin('encuestas as e', 'p.encuesta', '=', 'e.id_form')
             ->where('v.producto', $producto)
+            ->where('e.catalogo', $prd->catalogo)
             ->orderBy('p.pregunta')
             ->orderBy('v.usuario')
             ->get();
