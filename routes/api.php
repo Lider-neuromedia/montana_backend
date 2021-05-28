@@ -64,7 +64,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::get('/admins', 'UserController@getAdmins');
     Route::get('/admin/{id}', 'UserController@getAdmin');
 
-    //VENDEDORES
+    // VENDEDORES
     Route::get('/vendedores', 'UserController@getVendedores');
     Route::get('/vendedor/{id}', 'UserController@getVendedor');
     Route::get('/clientes-asignados/{id}', 'UserController@assignedCustomers');
@@ -121,6 +121,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     // INTEGRACIÓN ENCUESTAS - PRODUCTOS
     Route::get('getPreguntas/{catalogo}', 'EncuestaController@getPreguntas');
     Route::get('getValoraciones/{catalogo}', 'EncuestaController@getValoraciones');
+    Route::get('getProductoValoraciones/{producto}', 'EncuestaController@getProductoValoraciones');
 
     Route::post('storeRespuestas', 'EncuestaController@storePreguntas');
     Route::get('eliminarPregunta/{pregunta}', 'EncuestaController@destroyPregunta');
