@@ -1,14 +1,11 @@
 <?php
 
 namespace App\Entities;
-// namespace App\Rol;
 
-use Illuminate\Notifications\Notifiable;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-
-use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Notifications\Notifiable;
 use Laravel\Passport\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
@@ -28,6 +25,7 @@ class User extends Authenticatable
         'email',
         'dni',
         'password',
+        'device_token',
     ];
 
     /**
@@ -48,14 +46,15 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
-
-    public function vendedor_clientes(){
+    public function vendedor_clientes()
+    {
         /* Argumentos = (Entidad,tabla pivot, llave dentro de la tabla, id de la entidad) */
-        return $this->belongsToMany(User::class,'vendedor_cliente','vendedor','cliente');
+        return $this->belongsToMany(User::class, 'vendedor_cliente', 'vendedor', 'cliente');
     }
 
-    public function cliente_vendedor(){
+    public function cliente_vendedor()
+    {
         /* Argumentos = (Entidad,tabla pivot, llave dentro de la tabla, id de la entidad) */
-        return $this->belongsToMany(User::class,'vendedor_cliente','cliente','vendedor');
+        return $this->belongsToMany(User::class, 'vendedor_cliente', 'cliente', 'vendedor');
     }
 }

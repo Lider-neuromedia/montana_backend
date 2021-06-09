@@ -48,6 +48,8 @@ Route::group(['prefix' => 'auth'], function () {
 
 Route::group(['middleware' => 'auth:api'], function () {
 
+    Route::post('devices', 'DevicesController@post');
+
     Route::apiResource('/roles', 'RolController');
     // Route::post('/userdata', 'UserController@userData');
 

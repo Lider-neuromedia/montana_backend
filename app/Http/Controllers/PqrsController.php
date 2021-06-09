@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Entities\Pqrs;
 use App\Entities\SeguimientoPqrs;
+use App\Entities\User;
+use App\Utils\Notifications;
 use Carbon\Carbon;
 use DB;
 use Illuminate\Http\Request;
@@ -11,14 +13,8 @@ use Illuminate\Support\Facades\Validator;
 
 class PqrsController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function index(Request $request)
     {
-
         $search = $request['search'];
 
         $pqrs = Pqrs::select('id_pqrs', 'codigo', 'fecha_registro', 'ven.name AS name_vendedor',
@@ -39,12 +35,12 @@ class PqrsController extends Controller
         ];
 
         return response()->json($response);
-
     }
 
     public function getPqrsUserSesion()
     {
         $user = auth()->user();
+
         if ($user != null) {
             $pqrs = Pqrs::select('id_pqrs', 'codigo', 'fecha_registro', 'ven.name AS name_vendedor',
                 'ven.apellidos AS apellidos_vendedor', 'cli.name AS name_cliente', 'cli.apellidos AS apellidos_cliente', 'estado')
@@ -67,7 +63,6 @@ class PqrsController extends Controller
         }
 
         return response()->json($response, $response['status']);
-
     }
 
     public function store(Request $request)
@@ -122,12 +117,6 @@ class PqrsController extends Controller
         }
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function show($id)
     {
         $pqrs = Pqrs::select('id_pqrs', 'codigo', 'fecha_registro', 'pqrs.vendedor', 'pqrs.cliente', 'ven.name AS name_vendedor',
@@ -172,6 +161,7 @@ class PqrsController extends Controller
                 }
             }
         }
+
         $pqrs->messages_pqrs = $messages_pqrs;
 
         // Busqueda de los pedidos en base al vendedor y cliente registrados en la pqrs.
@@ -181,6 +171,7 @@ class PqrsController extends Controller
             ->where('vendedor', $pqrs->vendedor)
             ->where('cliente', $pqrs->cliente)
             ->get();
+
         foreach ($pedidos as $pedido) {
             $pedido->iniciales = substr($pedido->name, 0, 1);
             $pedido->iniciales .= substr($pedido->apellidos, 0, 1);
@@ -197,12 +188,6 @@ class PqrsController extends Controller
         return response()->json($response);
     }
 
-    /**
-     * Nuevo mensaje
-     *
-     * @param  Request  $request
-     * @return \Illuminate\Http\Response
-     */
     public function NewMessage(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -215,13 +200,17 @@ class PqrsController extends Controller
             return response()->json($validator->messages(), 403);
         }
 
-        $seguimiento = new SeguimientoPqrs;
-        $seguimiento->usuario = $request['usuario'];
-        $seguimiento->pqrs = $request['pqrs'];
-        $seguimiento->mensaje = $request['mensaje'];
-        $seguimiento->hora = Carbon::now()->format('H:i');
+        try {
 
-        if ($seguimiento->save()) {
+            \DB::beginTransaction();
+
+            $seguimiento = new SeguimientoPqrs;
+            $seguimiento->usuario = $request['usuario'];
+            $seguimiento->pqrs = $request['pqrs'];
+            $seguimiento->mensaje = $request['mensaje'];
+            $seguimiento->hora = Carbon::now()->format('H:i');
+            $seguimiento->save();
+
             $message_pqrs = SeguimientoPqrs::select('seguimiento_pqrs.*', 'users.name', 'users.apellidos', 'users.rol_id')
                 ->join('users', 'usuario', '=', 'id')
                 ->where('id_seguimiento', $seguimiento->id_seguimiento)
@@ -254,27 +243,74 @@ class PqrsController extends Controller
                 }
             }
 
-            $response = [
+            \DB::commit();
+
+            // Enviar notificaciones push a usuarios.
+            $this->sendNewMessageNotification($request);
+
+            return response()->json([
                 'response' => 'success',
                 'status' => 200,
                 'mensaje' => $message_pqrs,
-            ];
-        } else {
+            ], 200);
 
-            $response = [
+        } catch (\Exception $ex) {
+
+            \Log::info($ex->getMessage());
+            \Log::info($ex->getTraceAsString());
+            \DB::rollBack();
+
+            return response()->json([
                 'response' => 'error',
                 'status' => 403,
                 'message' => 'Error creando el mensaje.',
-            ];
+            ], 500);
+
         }
+    }
 
-        return response()->json($response);
+    private function sendNewMessageNotification(Request $request)
+    {
+        try {
 
+            $pqrs_id = $request['pqrs'];
+            $user_from = $request['usuario'];
+            $message = substr($request['mensaje'], 0, 100) . '...';
+
+            $usuarios = \DB::table('seguimiento_pqrs')
+                ->select('usuario')
+                ->where('pqrs', $pqrs_id)
+                ->where('usuario', '!=', $user_from)
+                ->groupBy('usuario')
+                ->get()
+                ->pluck('usuario')
+                ->all();
+
+            $usuarios = User::query()
+                ->whereIn('id', $usuarios)
+                ->whereNotNull('device_token')
+                ->get();
+
+            foreach ($usuarios as $usuario) {
+                (new Notifications)->sendNotification($usuario, [
+                    "title" => 'Nuevo mensaje',
+                    "body" => $message,
+                ], [
+                    'type' => 'pqrs-message',
+                    'id_pqrs' => $request['pqrs'],
+                ]);
+            }
+
+        } catch (\Exception $ex) {
+            \Log::info($ex->getMessage());
+            \Log::info($ex->getTraceAsString());
+        }
     }
 
     public function changeState($id, $state)
     {
         $pqrs = Pqrs::find($id);
+
         if ($state == 'abierto' || $state == 'cerrado') {
             $pqrs->estado = $state;
         } else {
