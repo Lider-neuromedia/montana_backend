@@ -277,7 +277,11 @@ class PqrsController extends Controller
             $user_from = $request['usuario'];
             $message = substr($request['mensaje'], 0, 100) . '...';
 
-            $usuarios = \DB::table('seguimiento_pqrs')
+            $pqrs = \DB::table('pqrs')
+                ->where('id_pqrs', $pqrs_id)
+                ->first();
+
+            $usuarios_ids = \DB::table('seguimiento_pqrs')
                 ->select('usuario')
                 ->where('pqrs', $pqrs_id)
                 ->where('usuario', '!=', $user_from)
@@ -286,8 +290,17 @@ class PqrsController extends Controller
                 ->pluck('usuario')
                 ->all();
 
+            if ($pqrs->cliente != $user_from) {
+                $usuarios_ids[] = $pqrs->cliente;
+            }
+            if ($pqrs->vendedor != $user_from) {
+                $usuarios_ids[] = $pqrs->vendedor;
+            }
+
+            $usuarios_ids = array_unique($usuarios_ids);
+
             $usuarios = User::query()
-                ->whereIn('id', $usuarios)
+                ->whereIn('id', $usuarios_ids)
                 ->whereNotNull('device_token')
                 ->get();
 
