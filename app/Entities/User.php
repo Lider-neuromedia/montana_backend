@@ -24,6 +24,7 @@ class User extends Authenticatable
         'apellidos',
         'email',
         'dni',
+        'tipo_identificacion',
         'password',
         'device_token',
     ];

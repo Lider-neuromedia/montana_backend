@@ -73,6 +73,7 @@ class AuthController extends Controller
             'apellidos' => $user->apellidos,
             'rol' => $user->rol_id,
             'dni' => $user->dni,
+            'tipo_identificacion' => $user->tipo_identificacion,
             'userdata' => $userdata,
             'permisos' => $accesos,
         ], 200);
