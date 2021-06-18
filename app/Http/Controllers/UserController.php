@@ -263,7 +263,7 @@ class UserController extends Controller
                 'message' => 'El id del usuario no es un vendedor.',
                 'status' => 403,
             ];
-            return response()->json($response);
+            return response()->json($response, 403);
         }
 
         $clientes_vendedor = DB::table('vendedor_cliente')
