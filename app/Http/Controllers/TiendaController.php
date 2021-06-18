@@ -3,140 +3,156 @@
 namespace App\Http\Controllers;
 
 use App\Entities\Tienda;
-use Illuminate\Http\Request;
 use DB;
+use Illuminate\Http\Request;
 
-class TiendaController extends Controller{
-    
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request){
+class TiendaController extends Controller
+{
+    public function store(Request $request)
+    {
         $request->validate([
-            'cliente' => 'required',
-            'tiendas' => 'required'
+            'cliente' => ['required', 'exists:users,id'],
+            'tiendas' => ['required', 'array', 'min:1'],
+            'tiendas.*.nombre' => ['required', 'string', 'max:45'],
+            'tiendas.*.lugar' => ['required', 'string', 'max:45'],
+            'tiendas.*.local' => ['nullable', 'string', 'max:20'],
+            'tiendas.*.direccion' => ['nullable', 'string', 'max:50'],
+            'tiendas.*.telefono' => ['nullable', 'string', 'max:20'],
         ]);
 
-        foreach ($request['tiendas'] as $tienda) {
-            $result = DB::table('tiendas')->insert([
-                'nombre' => $tienda['nombre'],
-                'lugar' => $tienda['lugar'],
-                'local' => $tienda['local'],
-                'direccion' => $tienda['direccion'],                
-                'telefono' => $tienda['direccion'],
-                'cliente' => $request['cliente']
-            ]);
-            if (!$result) {
-                $response = [
-                    'response' => 'success',
-                    'status' => 200,
-                    'message' => 'error con la data'
-                ];
-                return response()->json($response);
+        try {
+
+            \DB::beginTransaction();
+
+            foreach ($request['tiendas'] as $tienda) {
+                \DB::table('tiendas')->insert([
+                    'nombre' => $tienda['nombre'],
+                    'lugar' => $tienda['lugar'],
+                    'local' => $tienda['local'],
+                    'direccion' => $tienda['direccion'],
+                    'telefono' => $tienda['telefono'],
+                    'cliente' => $request['cliente'],
+                ]);
+            }
+
+            \DB::commit();
+
+            return response()->json([
+                'response' => 'success',
+                'status' => 200,
+            ], 200);
+
+        } catch (\Exception $ex) {
+
+            \Log::info($ex->getMessage());
+            \Log::info($ex->getTraceAsString());
+            \DB::rollBack();
+
+            return response()->json([
+                'response' => 'success',
+                'status' => 500,
+                'message' => 'Error al guardar la(s) tienda(s).',
+            ], 500);
+
+        }
+    }
+
+    public function show($id)
+    {
+        $user = auth()->user();
+        $tienda = Tienda::query()
+            ->where('id_tiendas', $id)
+            ->when($user->rol_id == 3, function ($q) use ($user) {
+                $q->where('cliente', $user->id);
+            })
+            ->first();
+        return response()->json($tienda);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'nombre' => ['required', 'string', 'max:45'],
+            'direccion' => ['required', 'string', 'max:50'],
+            'lugar' => ['required', 'string', 'max:45'],
+            'local' => ['nullable', 'string', 'max:20'],
+            'direccion' => ['nullable', 'string', 'max:20'],
+            'telefono' => ['nullable', 'string', 'max:20'],
+        ]);
+
+        $user = auth()->user();
+
+        if ($user->rol_id == 3) {
+            $tiene_tienda = \DB::table('tiendas')
+                ->where('id_tiendas', $id)
+                ->where('cliente', $user->id)
+                ->exists();
+
+            if (!$tiene_tienda) {
+                throw new \Exception("No tiene permiso para actualizar la tienda seleccionada.", 403);
             }
         }
 
-        $response = [
-            'response' => 'success',
-            'status' => 200
-        ];
-
-        return response()->json($response);
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Entities\Tienda  $tienda
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        $tienda = Tienda::find($id);
-        return $tienda;
-    }
-
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Entities\Tienda  $tienda
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id){
-        $request->validate([
-            'nombre' => 'required',
-            'lugar' => 'required',
-            'direccion' => 'required'
-        ]);
-
-        $tienda = Tienda::find($id);
+        $tienda = Tienda::findOrFail($id);
         $tienda->nombre = $request['nombre'];
         $tienda->lugar = $request['lugar'];
         $tienda->local = $request['local'];
         $tienda->direccion = $request['direccion'];
         $tienda->telefono = $request['telefono'];
+        $tienda->save();
 
-        if ($tienda->save()) {
-            $response = [
-                'response' => 'success',
-                'status' => 200
-            ];
-        }else{
-            $response = [
-                'response' => 'success',
-                'status' => 200,
-                'message' => 'error en la edición.'
-            ];
-        }
-
-        return response()->json($response);
-
+        return response()->json([
+            'response' => 'success',
+            'status' => 200,
+        ]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Entities\Tienda  $tienda
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(Request $request){
-        if (isset($request['tiendas'])) {
-            foreach ($request['tiendas'] as $tienda) {
-                // Validar si la tienda tiene pedidos.
-                $pedido = DB::table('pedido_productos')->where('tienda', $tienda)->exists();
-                if ($pedido) {
-                    $response = [
-                        'response' => 'error',
-                        'status' => 403,
-                        'message' => "La tienda #{$tienda} no se puede eliminar ya que tiene un pedido anclado."
-                    ];
-                    return response()->json($response);
-                }else{
+    public function destroy(Request $request)
+    {
+        $request->validate([
+            'tiendas' => ['required', 'array', 'min:1'],
+            'tiendas.*' => ['required', 'exists:tiendas,id'],
+        ]);
 
-                    $tienda = Tienda::find($tienda);
-                    if (!$tienda->delete()) {
-                        $response = [
-                            'response' => 'error',
-                            'status' => 403,
-                            'message' => "No se puedele eliminar la tienda #{$tienda}."
-                        ];
-                        return response()->json($response);
-                    }else{
-                        $response = [
-                            'response' => 'success',
-                            'status' => 200,
-                            'message' => "Tienda eliminada."
-                        ];
-                    }
+        try {
+
+            \DB::beginTransaction();
+
+            foreach ($request['tiendas'] as $tienda) {
+
+                $pedido = DB::table('pedido_productos')
+                    ->where('tienda', $tienda)
+                    ->exists();
+
+                if ($pedido) {
+                    throw new \Exception("La tienda #{$tienda} no se puede eliminar ya que tiene un pedido anclado.", 403);
                 }
+
+                $tienda = Tienda::findOrFail($tienda);
+                $tienda->delete();
+
             }
 
-            return response()->json($response);
+            \DB::commit();
+
+            return response()->json([
+                'response' => 'success',
+                'status' => 200,
+                'message' => "Tienda(s) eliminada(s).",
+            ], 200);
+
+        } catch (\Exception $ex) {
+
+            \Log::info($ex->getMessage());
+            \Log::info($ex->getTraceAsString());
+            \DB::rollBack();
+
+            return response()->json([
+                'response' => 'success',
+                'status' => 500,
+                'message' => 'Error al borrar la(s) tienda(s).',
+            ], 500);
+
         }
     }
 }
