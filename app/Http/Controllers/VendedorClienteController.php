@@ -2,11 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Entities\VendedorCliente;
 use App\Entities\User;
+use App\Entities\VendedorCliente;
 use Illuminate\Http\Request;
-
-
 
 class VendedorClienteController extends Controller
 {
@@ -36,19 +34,20 @@ class VendedorClienteController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request){
+    public function store(Request $request)
+    {
         $request->validate([
             'vendedor_id' => 'required',
             'cliente_id' => 'required',
         ]);
 
         $validate = VendedorCliente::where('vendedor', $request['vendedor_id'])->where('cliente', $request['cliente_id'])->exists();
-        
+
         if ($validate) {
             $response = [
                 'response' => 'error',
                 'message' => 'La asignación que desea hacer ya se encuentra registrada.',
-                'status' => 403
+                'status' => 403,
             ];
             return response()->json($response);
         }
@@ -61,13 +60,13 @@ class VendedorClienteController extends Controller
             $response = [
                 'response' => 'success',
                 'message' => 'Cliente asignado correctamente.',
-                'satatus' => 200
+                'satatus' => 200,
             ];
-        }else{
+        } else {
             $response = [
                 'response' => 'error',
                 'message' => 'Error en el servidor.',
-                'satatus' => 403
+                'satatus' => 403,
             ];
         }
         return response()->json($response);
@@ -117,5 +116,24 @@ class VendedorClienteController extends Controller
     public function destroy(VendedorCliente $vendedorCliente)
     {
         //
+    }
+
+    /**
+     * Obtener el vendedor asignado al cliente logueado.
+     */
+    public function vendedorAsignado()
+    {
+        $cliente = auth()->user();
+        $resultado = \DB::table('vendedor_cliente')
+            ->where('cliente', $cliente->id)
+            ->first();
+
+        if ($resultado == null) {
+            return abort(404);
+        }
+
+        $vendedor = User::findOrFail($resultado->vendedor);
+
+        return response()->json($vendedor, 200);
     }
 }

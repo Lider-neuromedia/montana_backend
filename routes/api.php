@@ -54,6 +54,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     // Route::post('/userdata', 'UserController@userData');
 
     Route::apiResource('/asignar-cliente', 'VendedorClienteController');
+    Route::get('/vendedor-asignado', 'VendedorClienteController@vendedorAsignado');
 
     // USUARIOS
     Route::apiResource('/users', 'UserController');
