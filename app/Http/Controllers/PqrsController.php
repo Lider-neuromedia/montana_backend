@@ -16,16 +16,25 @@ class PqrsController extends Controller
     public function index(Request $request)
     {
         $search = $request['search'];
+        $user = auth()->user();
 
         $pqrs = Pqrs::select('id_pqrs', 'codigo', 'fecha_registro', 'ven.name AS name_vendedor',
             'ven.apellidos AS apellidos_vendedor', 'cli.name AS name_cliente', 'cli.apellidos AS apellidos_cliente', 'estado')
             ->join('users AS ven', 'vendedor', '=', 'ven.id')
             ->join('users AS cli', 'cliente', '=', 'cli.id')
-            ->where('codigo', 'like', "%$search%")
-            ->orWhere('ven.name', 'like', "%$search%")
-            ->orWhere('ven.apellidos', 'like', "%$search%")
-            ->orWhere('cli.name', 'like', "%$search%")
-            ->orWhere('cli.apellidos', 'like', "%$search%")
+            ->when($user->rol_id == 3, function ($q) use ($user) {
+                $q->where('cliente', $user->id);
+            })
+            ->when($user->rol_id == 2, function ($q) use ($user) {
+                $q->where('vendedor', $user->id);
+            })
+            ->where(function ($q) use ($search) {
+                $q->where('codigo', 'like', "%$search%")
+                    ->orWhere('ven.name', 'like', "%$search%")
+                    ->orWhere('ven.apellidos', 'like', "%$search%")
+                    ->orWhere('cli.name', 'like', "%$search%")
+                    ->orWhere('cli.apellidos', 'like', "%$search%");
+            })
             ->get();
 
         $response = [
@@ -119,12 +128,24 @@ class PqrsController extends Controller
 
     public function show($id)
     {
+        $user = auth()->user();
+
         $pqrs = Pqrs::select('id_pqrs', 'codigo', 'fecha_registro', 'pqrs.vendedor', 'pqrs.cliente', 'ven.name AS name_vendedor',
             'ven.apellidos AS apellidos_vendedor', 'cli.name AS name_cliente', 'cli.apellidos AS apellidos_cliente', 'estado')
             ->join('users AS ven', 'vendedor', '=', 'ven.id')
             ->join('users AS cli', 'cliente', '=', 'cli.id')
             ->where('id_pqrs', $id)
+            ->when($user->rol_id == 3, function ($q) use ($user) {
+                $q->where('cliente', $user->id);
+            })
+            ->when($user->rol_id == 2, function ($q) use ($user) {
+                $q->where('vendedor', $user->id);
+            })
             ->first();
+
+        if ($pqrs == null) {
+            return abort(404);
+        }
 
         $messages_pqrs = DB::table('seguimiento_pqrs')
             ->select('seguimiento_pqrs.*', 'users.name', 'users.apellidos', 'users.rol_id')
@@ -134,7 +155,7 @@ class PqrsController extends Controller
             ->get();
 
         foreach ($messages_pqrs as $messages) {
-            $val_rol_user = auth()->user()->rol_id;
+            $val_rol_user = $user->rol_id;
             $messages->iniciales = substr($messages->name, 0, 1);
             $messages->iniciales .= substr($messages->apellidos, 0, 1);
             $messages->hora = substr($messages->hora, 0, -3);
