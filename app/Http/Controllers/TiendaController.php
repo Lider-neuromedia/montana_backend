@@ -73,10 +73,9 @@ class TiendaController extends Controller
     {
         $request->validate([
             'nombre' => ['required', 'string', 'max:45'],
-            'direccion' => ['required', 'string', 'max:50'],
             'lugar' => ['required', 'string', 'max:45'],
             'local' => ['nullable', 'string', 'max:20'],
-            'direccion' => ['nullable', 'string', 'max:20'],
+            'direccion' => ['nullable', 'string', 'max:50'],
             'telefono' => ['nullable', 'string', 'max:20'],
         ]);
 
@@ -94,12 +93,13 @@ class TiendaController extends Controller
         }
 
         $tienda = Tienda::findOrFail($id);
-        $tienda->nombre = $request['nombre'];
-        $tienda->lugar = $request['lugar'];
-        $tienda->local = $request['local'];
-        $tienda->direccion = $request['direccion'];
-        $tienda->telefono = $request['telefono'];
-        $tienda->save();
+        $tienda->update([
+            'nombre' => $request['nombre'],
+            'lugar' => $request['lugar'],
+            'local' => $request['local'],
+            'direccion' => $request['direccion'],
+            'telefono' => $request['telefono'],
+        ]);
 
         return response()->json([
             'response' => 'success',
@@ -111,7 +111,7 @@ class TiendaController extends Controller
     {
         $request->validate([
             'tiendas' => ['required', 'array', 'min:1'],
-            'tiendas.*' => ['required', 'exists:tiendas,id'],
+            'tiendas.*' => ['required', 'exists:tiendas,id_tiendas'],
         ]);
 
         try {
