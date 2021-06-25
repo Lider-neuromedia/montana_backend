@@ -125,11 +125,16 @@ class AuthController extends Controller
         }
     }
 
-    public function dashboardResumen()
+    public function dashboardResumen(Request $request)
     {
+        $request->validate([
+            'fecha_atendidos' => ["nullable", "date_format:Y-m"],
+        ]);
+
         $user = auth()->user();
 
         if ($user->rol_id == 2) { // Vendedor
+            $fecha_atendidos = $request->get('fecha_atendidos');
 
             // Cantidad de clientes
             $cantidad_clientes = \DB::table('vendedor_cliente')
@@ -141,6 +146,10 @@ class AuthController extends Controller
             $cantidad_clientes_atendidos = \DB::table('pqrs')
                 ->where('estado', 'cerrado')
                 ->where('vendedor', $user->id)
+                ->when($fecha_atendidos, function ($q) use ($fecha_atendidos) {
+                    $fa = Carbon::createFromFormat('Y-m', $fecha_atendidos);
+                    $q->whereMonth('created_at', $fa)->whereYear('created_at', $fa);
+                })
                 ->groupBy('cliente')
                 ->count();
 
@@ -154,6 +163,7 @@ class AuthController extends Controller
         }
 
         if ($user->rol_id == 3) { // Cliente
+
             // Tiendas Creadas
             $cantidad_tiendas = \DB::table('tiendas')
                 ->where('cliente', $user->id)
