@@ -124,4 +124,95 @@ class AuthController extends Controller
             return response()->json($response, 403);
         }
     }
+
+    public function dashboardResumen()
+    {
+        $user = auth()->user();
+
+        if ($user->rol_id == 2) { // Vendedor
+
+            // Cantidad de clientes
+            $cantidad_clientes = \DB::table('vendedor_cliente')
+                ->select(\DB::raw('count(*) as clientes'))
+                ->where('vendedor', $user->id)
+                ->count();
+
+            // Cantidad de clientes atendidos
+            $cantidad_clientes_atendidos = \DB::table('pqrs')
+                ->where('estado', 'cerrado')
+                ->where('vendedor', $user->id)
+                ->groupBy('cliente')
+                ->count();
+
+            $cantidad_pedidos = $this->calcularCantidadPedidos($user);
+
+            return response()->json(compact(
+                'cantidad_clientes',
+                'cantidad_clientes_atendidos',
+                'cantidad_pedidos',
+            ), 200);
+        }
+
+        if ($user->rol_id == 3) { // Cliente
+            // Tiendas Creadas
+            $cantidad_tiendas = \DB::table('tiendas')
+                ->where('cliente', $user->id)
+                ->count();
+
+            // PQRS generados
+            $cantidad_pqrs = \DB::table('pqrs')
+                ->where('cliente', $user->id)
+                ->count();
+
+            $cantidad_pedidos = $this->calcularCantidadPedidos($user);
+
+            return response()->json(compact(
+                'cantidad_tiendas',
+                'cantidad_pqrs',
+                'cantidad_pedidos'
+            ), 200);
+        }
+
+        return response()->json([], 200);
+    }
+
+    public function calcularCantidadPedidos(User $user)
+    {
+        $cantidad_pedidos = \DB::table('pedidos')
+            ->select('estado', \DB::raw('count(*) as cantidad'))
+            ->when($user->rol_id == 2, function ($q) use ($user) { // Vendedor
+                $q->where('vendedor', $user->id);
+            })
+            ->when($user->rol_id == 3, function ($q) use ($user) { // Cliente
+                $q->where('cliente', $user->id);
+            })
+            ->groupBy('estado')
+            ->get();
+
+        $aprobados = 0;
+        $rechazados = 0;
+        $pendientes = 0;
+        $realizados = 0;
+
+        foreach ($cantidad_pedidos as $cp) {
+            $aprobados += $cp->cantidad;
+
+            if ($cp->estado == 1) {
+                $realizados = $cp->cantidad;
+            }
+            if ($cp->estado == 2) {
+                $pendientes = $cp->cantidad;
+            }
+            if ($cp->estado == 3) {
+                $rechazados = $cp->cantidad;
+            }
+        }
+
+        return [
+            'realizados' => $aprobados,
+            'aprobados' => $rechazados,
+            'rechazados' => $pendientes,
+            'pendientes' => $realizados,
+        ];
+    }
 }

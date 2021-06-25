@@ -49,6 +49,7 @@ Route::group(['prefix' => 'auth'], function () {
 Route::group(['middleware' => 'auth:api'], function () {
 
     Route::post('devices', 'DevicesController@post');
+    Route::get('/dashboard-resumen', 'AuthController@dashboardResumen');
 
     Route::apiResource('/roles', 'RolController');
     // Route::post('/userdata', 'UserController@userData');
