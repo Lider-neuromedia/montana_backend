@@ -52,7 +52,6 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::get('/dashboard-resumen', 'AuthController@dashboardResumen');
 
     Route::apiResource('/roles', 'RolController');
-    // Route::post('/userdata', 'UserController@userData');
 
     Route::apiResource('/asignar-cliente', 'VendedorClienteController');
     Route::get('/vendedor-asignado', 'VendedorClienteController@vendedorAsignado');
@@ -62,7 +61,6 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::post('/update-user', 'UserController@updateUser');
     Route::post('/delete-users', 'UserController@destroyUsers');
     Route::get('/user-rol/{id}', 'UserController@getForRole');
-    // Route::post('/delete-user', 'UserController@destroyUsers');
 
     // ADMINISTRADORES
     Route::get('/admins', 'UserController@getAdmins');

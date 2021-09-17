@@ -479,96 +479,61 @@ class UserController extends Controller
 
     public function destroyUsers(Request $request)
     {
-        foreach ($request['usuarios'] as $key => $id) {
-            $user = User::find($id);
+        try {
+            DB::beginTransaction();
 
-            if ($user->rol_id == 1) {
-
-                DB::table('user_data')->where('user_id', $id)->delete();
-                $user->delete();
-                $response = [
-                    'response' => 'success',
-                    'message' => "Usuario eliminado correctamente",
-                    'status' => 200,
-                ];
-
-            } else if ($user->rol_id == 2) {
-
+            foreach ($request['usuarios'] as $id) {
+                $user = User::findOrFail($id);
+                $validate_pqrs = DB::table('seguimiento_pqrs')->where('usuario', $id)->exists();
                 $validate_vendedor = DB::table('vendedor_cliente')->where('vendedor', $id)->exists();
-
-                if (!$validate_vendedor) {
-
-                    DB::table('user_data')->where('user_id', $id)->delete();
-                    $user->delete();
-                    $response = [
-                        'response' => 'success',
-                        'message' => "Usuario eliminado correctamente",
-                        'status' => 200,
-                    ];
-
-                } else {
-
-                    $response = [
-                        'response' => 'error',
-                        'message' => "El usuario {$user->name} {$user->apellido} no se puede eliminar, porque tiene clientes asignados.",
-                        'status' => 200,
-                    ];
-
-                    return response()->json($response);
-
-                }
-
-            } else {
-
                 $validate_cliente = DB::table('pedidos')->where('cliente', $id)->exists();
 
-                if (!$validate_cliente) {
+                if ($validate_pqrs) {
+                    throw new \Exception("El usuario {$user->name} {$user->apellido} no se puede eliminar, porque tiene pqrs/mensajes asignados.", 403);
+                }
+                if ($validate_vendedor) {
+                    throw new \Exception("El usuario {$user->name} {$user->apellido} no se puede eliminar, porque tiene clientes asignados.", 403);
+                }
+                if ($validate_cliente) {
+                    throw new \Exception("El usuario {$user->name} {$user->apellido} no se puede eliminar, porque tiene pedidos registrados.", 403);
+                }
 
-                    // dd($validate_cliente);
-                    DB::table('tiendas')->where('cliente', $id)->delete();
-                    DB::table('vendedor_cliente')->where('cliente', $id)->delete();
-                    DB::table('user_data')->where('user_id', $id)->delete();
-                    DB::table('valoraciones')->where('usuario', $id)->delete();
+                DB::table('tiendas')->where('cliente', $id)->delete();
+                DB::table('vendedor_cliente')->where('cliente', $id)->delete();
+                DB::table('user_data')->where('user_id', $id)->delete();
+                DB::table('valoraciones')->where('usuario', $id)->delete();
 
-                    try {
-
-                        $user->delete();
-
-                    } catch (\Throwable $e) {
-
-                        $response = [
-                            'response' => 'error',
-                            'message' => "El usuario {$user->name} {$user->apellido} no se puede eliminar, porque tiene información registrada.",
-                            'status' => 403,
-                        ];
-
-                        return response()->json($response);
-
-                    }
-
-                    $response = [
-                        'response' => 'success',
-                        'message' => "Usuario eliminado correctamente",
-                        'status' => 200,
-                    ];
-
-                } else {
-
-                    $response = [
-                        'response' => 'error',
-                        'message' => "El usuario {$user->name} {$user->apellido} no se puede eliminar, porque tiene pedidos registrados.",
-                        'status' => 403,
-                    ];
-
-                    return response()->json($response);
-
+                try {
+                    $user->delete();
+                } catch (\Exception $ex) {
+                    \Log::info($ex->getMessage());
+                    \Log::info($ex->getTraceAsString());
+                    throw new \Exception("El usuario {$user->name} {$user->apellido} no se puede eliminar, porque tiene información registrada.", 403);
                 }
 
             }
 
-        }
+            DB::commit();
 
-        return response()->json($response);
+            return response()->json([
+                'response' => 'success',
+                'message' => "Usuario eliminado correctamente",
+                'status' => 200,
+            ]);
+
+        } catch (\Exception $ex) {
+            \Log::info($ex->getMessage());
+            \Log::info($ex->getTraceAsString());
+            DB::rollBack();
+
+            return response()->json([
+                'status' => 500,
+                'response' => 'error',
+                'code' => $ex->getCode(),
+                'message' => $ex->getMessage(),
+                'message_error' => 'Error interno del servidor, no se pudo borrar el registro.',
+            ], 500);
+        }
     }
 
     public function searchVendedor(Request $request)
