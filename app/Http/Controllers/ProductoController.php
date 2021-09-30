@@ -235,6 +235,13 @@ class ProductoController extends Controller
 
                             }
                         }
+                    } else {
+                        // Actualizar imagen sin archivo nuevo.
+                        if (isset($image['id_galeria_prod'])) {
+                            $image_store = GaleriaProducto::find($image['id_galeria_prod']);
+                            $image_store->destacada = $image['destacada'];
+                            $image_store->save();
+                        }
                     }
                 }
             }
