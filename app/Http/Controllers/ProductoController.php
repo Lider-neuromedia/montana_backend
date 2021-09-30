@@ -185,9 +185,10 @@ class ProductoController extends Controller
             // Update images.
             if ($request->has('imagenes') && $request->get('imagenes')) {
                 foreach ($request->get('imagenes') as $index => $image) {
+                    $es_borrar_imagen = isset($image['delete']) && $image['delete'] == 1;
 
                     // Borrar imagen.
-                    if (isset($image['id_galeria_prod']) && isset($image['delete']) && $image['delete'] == 1) {
+                    if (isset($image['id_galeria_prod']) && $es_borrar_imagen) {
                         $image_store = GaleriaProducto::find($image['id_galeria_prod']);
                         $path_image = public_path($image_store->image);
 
@@ -199,28 +200,29 @@ class ProductoController extends Controller
                     }
 
                     // Guardar imagen
-                    if (isset($request->file('imagenes')[$index])
-                        && isset($request->file('imagenes')[$index]['image'])) {
+                    if (isset($request->file('imagenes')[$index]) && isset($request->file('imagenes')[$index]['image'])) {
                         $imagen = $request->file('imagenes')[$index]['image'];
 
                         if ($imagen != null) {
                             if (isset($image['id_galeria_prod'])) {
+
                                 // Actualizar imagen.
                                 $image_store = GaleriaProducto::find($image['id_galeria_prod']);
-                                $name = $image_store->name_img;
 
-                                // Elimina la imagen anterior.
-                                $path_image = public_path($image_store->image);
+                                if ($image_store) {
+                                    $name = $image_store->name_img;
+                                    $path_image = public_path($image_store->image); // Elimina la imagen anterior.
 
-                                if (file_exists($path_image)) {
-                                    unlink($path_image);
+                                    if (file_exists($path_image)) {
+                                        unlink($path_image);
+                                    }
+
+                                    // Guardamos la imagen nueva.
+                                    $filename = $this->saveImage($imagen, $name, $producto->catalogo, $producto->referencia);
+                                    $image_store->image = "storage/productos/{$producto->catalogo}/{$producto->referencia}/{$filename}";
+                                    $image_store->destacada = $image['destacada'];
+                                    $image_store->save();
                                 }
-
-                                // Guardamos la imagen nueva.
-                                $filename = $this->saveImage($imagen, $name, $producto->catalogo, $producto->referencia);
-                                $image_store->image = "storage/productos/{$producto->catalogo}/{$producto->referencia}/{$filename}";
-                                $image_store->destacada = $image['destacada'];
-                                $image_store->save();
 
                             } else {
 
@@ -237,10 +239,12 @@ class ProductoController extends Controller
                         }
                     } else {
                         // Actualizar imagen sin archivo nuevo.
-                        if (isset($image['id_galeria_prod'])) {
+                        if (isset($image['id_galeria_prod']) && !$es_borrar_imagen) {
                             $image_store = GaleriaProducto::find($image['id_galeria_prod']);
-                            $image_store->destacada = $image['destacada'];
-                            $image_store->save();
+                            if ($image_store) {
+                                $image_store->destacada = $image['destacada'];
+                                $image_store->save();
+                            }
                         }
                     }
                 }
