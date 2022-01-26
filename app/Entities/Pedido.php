@@ -18,6 +18,7 @@ class Pedido extends Model
         'metodo_pago',
         'descuento',
         'notas',
+        'notas_facturacion',
         'firma',
         'vendedor',
         'cliente',

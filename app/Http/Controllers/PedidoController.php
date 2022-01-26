@@ -122,7 +122,8 @@ class PedidoController extends Controller
             'total_pedido' => 'required|numeric',
             'descuento' => 'required|numeric',
             'forma_pago' => 'required|string|max:100|in:contado,credito',
-            'notas' => 'string',
+            'notas' => ['nullable', 'string', 'max:250'],
+            'notas_facturacion' => ['nullable', 'string', 'max:250'],
             'firma' => 'required|image',
             'productos' => 'required|array',
             'productos.*.id_producto' => [
@@ -162,6 +163,7 @@ class PedidoController extends Controller
 
             $pedido->total = $total;
             $pedido->notas = $request['notas'];
+            $pedido->notas_facturacion = $request['notas_facturacion'];
             $pedido->vendedor = $request['vendedor'];
             $pedido->cliente = $request['cliente'];
             $pedido->estado = 2;
@@ -211,7 +213,7 @@ class PedidoController extends Controller
     public function show($id)
     {
         $pedido = Pedido::select('id_pedido', 'fecha', 'firma', 'codigo', 'metodo_pago', 'sub_total', 'total',
-            'descuento', 'notas', 'vendedor', 'estados.estado', 'id_estado', 'cliente')
+            'descuento', 'notas', 'notas_facturacion', 'vendedor', 'estados.estado', 'id_estado', 'cliente')
             ->join('estados', 'pedidos.estado', '=', 'id_estado')
             ->where('id_pedido', $id)
             ->first();
@@ -280,7 +282,7 @@ class PedidoController extends Controller
     public function edit($id)
     {
         $pedido = Pedido::select('id_pedido', 'fecha', 'firma', 'codigo', 'metodo_pago', 'sub_total', 'total',
-            'descuento', 'notas', 'vendedor', 'estados.estado', 'id_estado', 'cliente')
+            'descuento', 'notas', 'notas_facturacion', 'vendedor', 'estados.estado', 'id_estado', 'cliente')
             ->join('estados', 'pedidos.estado', '=', 'id_estado')
             ->where('id_pedido', $id)
             ->first();
@@ -315,6 +317,8 @@ class PedidoController extends Controller
             'metodo_pago' => 'required|string|max:100|in:contado,credito',
             'total' => 'required|numeric',
             'firma' => 'nullable|image',
+            'notas' => ['nullable', 'string', 'max:250'],
+            'notas_facturacion' => ['nullable', 'string', 'max:250'],
 
             'productos' => 'required|array',
             'productos.*.producto' => [
@@ -335,11 +339,14 @@ class PedidoController extends Controller
             $pedido->metodo_pago = $request['metodo_pago'];
             $pedido->sub_total = $request['total'];
             $pedido->total = $request['total'];
+            $pedido->notas = $request['notas'];
+            $pedido->notas_facturacion = $request['notas_facturacion'];
 
             // Guardar firma.
             if ($request->hasFile('firma')) {
                 // Borrar firma actual.
                 $firma_actual = $pedido->firma;
+
                 if ($firma_actual) {
                     $file = array_reverse(explode('/', $firma_actual))[0];
                     \Storage::delete("public/firmas/$file");

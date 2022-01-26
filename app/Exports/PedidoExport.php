@@ -21,7 +21,8 @@ class PedidoExport implements FromQuery, WithHeadings
             'Total',
             'Vendedor',
             'Descuento',
-            'Notas',
+            'Notas Descuentos',
+            'Notas Facturación',
             'Estado',
         ];
     }
@@ -31,7 +32,7 @@ class PedidoExport implements FromQuery, WithHeadings
         return Pedido::query()
             ->select('cli.name AS cliente,', 'fecha', 'codigo',
                 'metodo_pago', 'total', 'vend.name AS vendedor',
-                'descuento', 'notas', 'estados.estado')
+                'descuento', 'notas', 'notas_facturacion', 'estados.estado')
             ->join('estados', 'pedidos.estado', '=', 'id_estado')
             ->join('users as vend', 'pedidos.vendedor', '=', 'vend.id')
             ->join('users as cli', 'pedidos.cliente', '=', 'cli.id');
