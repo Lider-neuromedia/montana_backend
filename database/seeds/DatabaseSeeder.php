@@ -25,5 +25,7 @@ class DatabaseSeeder extends Seeder
                 'password' => \Hash::make(env('TEST_PASSWORD', 'secret')),
             ]);
         }
+
+        $this->call(MarcasTableSeeder::class);
     }
 }

@@ -59,7 +59,7 @@ class ProductoController extends Controller
             'codigo' => 'required',
             'referencia' => 'required',
             'stock' => 'required|numeric',
-            'marca' => 'required',
+            'marca' => ['required', 'exists:marcas,id_marca'],
             'descripcion' => 'required',
             'precio' => 'required|numeric',
             'catalogo' => 'required',
@@ -159,7 +159,7 @@ class ProductoController extends Controller
             'codigo' => 'required',
             'referencia' => 'required',
             'stock' => 'required|numeric',
-            'marca' => 'required',
+            'marca' => ['required', 'exists:marcas,id_marca'],
             'descripcion' => 'required',
             'precio' => 'required|numeric',
             'catalogo' => 'required',
@@ -349,7 +349,7 @@ class ProductoController extends Controller
 
     public function getMarcas()
     {
-        $marcas = DB::table('marcas')->get();
+        $marcas = DB::table('marcas')->orderBy('nombre_marca', 'asc')->get();
 
         return response()->json([
             'response' => 'success',
