@@ -2,9 +2,8 @@
 
 namespace App\Utils;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Schema;
 use DB;
+use Illuminate\Support\Facades\Schema;
 use Storage;
 
 class TestData
@@ -65,10 +64,10 @@ class TestData
             $path = "database/$table.json";
 
             if (Storage::exists($path) && Schema::hasTable($table)) {
-                $rows = (Array)json_decode(Storage::get($path));
+                $rows = (Array) json_decode(Storage::get($path));
 
                 foreach ($rows as $data) {
-                    DB::table($table)->insert((Array)$data);
+                    DB::table($table)->insert((Array) $data);
                 }
             }
         }

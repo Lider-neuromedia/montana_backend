@@ -37,13 +37,11 @@ class PqrsController extends Controller
             })
             ->get();
 
-        $response = [
+        return response()->json([
             'response' => 'success',
             'status' => 200,
             'pqrs' => $pqrs,
-        ];
-
-        return response()->json($response);
+        ], 200);
     }
 
     public function getPqrsUserSesion()
@@ -58,20 +56,18 @@ class PqrsController extends Controller
                 ->where('vendedor', '=', $user->id)
                 ->get();
 
-            $response = [
+            return response()->json([
                 'response' => 'success',
                 'status' => 200,
                 'pqrs' => $pqrs,
-            ];
-        } else {
-            $response = [
-                'response' => 'error',
-                'status' => 403,
-                'message' => 'La sesión del usuario a finalizado.',
-            ];
+            ], 200);
         }
 
-        return response()->json($response, $response['status']);
+        return response()->json([
+            'response' => 'error',
+            'status' => 403,
+            'message' => 'La sesión del usuario a finalizado.',
+        ], 403);
     }
 
     public function store(Request $request)
@@ -88,7 +84,7 @@ class PqrsController extends Controller
 
             $now = Carbon::now();
 
-            $pqrs = new Pqrs;
+            $pqrs = new Pqrs();
             $pqrs->codigo = uniqid();
             $pqrs->fecha_registro = $now->format('Y-m-d');
             $pqrs->cliente = $request['cliente'];
@@ -112,7 +108,6 @@ class PqrsController extends Controller
             ], 200);
 
         } catch (\Exception $ex) {
-
             \Log::info($ex->getMessage());
             \Log::info($ex->getTraceAsString());
             DB::rollBack();
@@ -121,8 +116,7 @@ class PqrsController extends Controller
                 'response' => 'error',
                 'status' => 403,
                 'message' => 'Error en la creación de la PQRS.',
-            ], 500);
-
+            ], 403);
         }
     }
 
@@ -200,13 +194,11 @@ class PqrsController extends Controller
 
         $pqrs->pedidos = $pedidos;
 
-        $response = [
+        return response()->json([
             'response' => 'success',
             'status' => 200,
             'pqrs' => $pqrs,
-        ];
-
-        return response()->json($response);
+        ], 200);
     }
 
     public function NewMessage(Request $request)
@@ -225,7 +217,7 @@ class PqrsController extends Controller
 
             \DB::beginTransaction();
 
-            $seguimiento = new SeguimientoPqrs;
+            $seguimiento = new SeguimientoPqrs();
             $seguimiento->usuario = $request['usuario'];
             $seguimiento->pqrs = $request['pqrs'];
             $seguimiento->mensaje = $request['mensaje'];
@@ -276,7 +268,6 @@ class PqrsController extends Controller
             ], 200);
 
         } catch (\Exception $ex) {
-
             \Log::info($ex->getMessage());
             \Log::info($ex->getTraceAsString());
             \DB::rollBack();
@@ -285,8 +276,7 @@ class PqrsController extends Controller
                 'response' => 'error',
                 'status' => 403,
                 'message' => 'Error creando el mensaje.',
-            ], 500);
-
+            ], 403);
         }
     }
 
@@ -343,33 +333,28 @@ class PqrsController extends Controller
 
     public function changeState($id, $state)
     {
-        $pqrs = Pqrs::find($id);
+        $pqrs = Pqrs::findOrFail($id);
 
         if ($state == 'abierto' || $state == 'cerrado') {
+
             $pqrs->estado = $state;
+
         } else {
-            $response = [
+
+            return response()->json([
                 'response' => 'error',
                 'status' => 403,
                 'message' => 'El estado enviado no es valido.',
-            ];
-            return response()->json($response, $response['status']);
+            ], 403);
+
         }
 
-        if ($pqrs->save()) {
-            $response = [
-                'response' => 'success',
-                'status' => 200,
-                'message' => 'Estado asignado de manera correcta.',
-            ];
-        } else {
-            $response = [
-                'response' => 'error',
-                'status' => 403,
-                'message' => 'Error en el cambio de estado.',
-            ];
-        }
+        $pqrs->save();
 
-        return response()->json($response);
+        return response()->json([
+            'response' => 'success',
+            'status' => 200,
+            'message' => 'Estado asignado de manera correcta.',
+        ], 200);
     }
 }

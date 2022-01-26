@@ -16,6 +16,6 @@ class Tienda extends Model
         'local',
         'direccion',
         'telefono',
-        'cliente'
+        'cliente',
     ];
 }

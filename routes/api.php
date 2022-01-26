@@ -12,20 +12,19 @@
  */
 
 Route::get('/unauthenticated', function () {
-    $response = [
+    return response()->json([
         'response' => 'error',
         'status' => 403,
         'message' => 'Token vencido o invalido.',
-    ];
-    return response()->json($response, $response['status']);
+    ], 403);
 })->name('unauthenticated');
 
 Route::group(['middleware' => ['role:administrador']], function () {
-    // Route::apiResource('/users', 'UserController');
+    //
 });
 
 Route::group(['middleware' => ['permission:create user']], function () {
-    #Route::apiResource('/users', 'UserController');
+    //
 });
 
 Route::group(['namespace' => 'Auth'], function () {

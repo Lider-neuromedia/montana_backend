@@ -1,7 +1,7 @@
 <?php
 
-use Illuminate\Database\Seeder;
 use App\Utils\TestData;
+use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -19,10 +19,10 @@ class DatabaseSeeder extends Seeder
             TestData::saveToDataBase();
         }
 
-        // Actualizar contraseñas de usuarios para pruebas.
-        if (env('APP_ENV') === 'local') {
+        // Actualizar contraseñas de usuarios para entorno de pruebas.
+        if (env('APP_ENV') != 'production') {
             \DB::table('users')->update([
-                'password' => \Hash::make(env('TEST_PASSWORD', \Str::random(18)))
+                'password' => \Hash::make(env('TEST_PASSWORD', 'secret')),
             ]);
         }
     }

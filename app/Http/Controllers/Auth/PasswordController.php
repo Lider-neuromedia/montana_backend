@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Entities\User;
 use App\Http\Controllers\Controller;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
-use Carbon\Carbon;
-use App\Entities\User;
 
 class PasswordController extends Controller
 {
@@ -35,15 +35,13 @@ class PasswordController extends Controller
             'created_at' => Carbon::now(),
         ]);
 
-        Mail::send('emails.password', compact('to', 'token', 'minutes', 'nombre'), function($message) use($to) {
-
+        Mail::send('emails.password', compact('to', 'token', 'minutes', 'nombre'), function ($message) use ($to) {
             $message->to($to)->subject('Athletic Air - Reinicio de Contraseña');
-
         });
 
         return response()->json([
-            'message' => 'Correo con token de reinicio de contraseña enviado.'
-        ]);
+            'message' => 'Correo con token de reinicio de contraseña enviado.',
+        ], 200);
     }
 
     public function reset(Request $request)
@@ -57,7 +55,7 @@ class PasswordController extends Controller
                 'required',
                 'min:' . self::TOKEN_LENGTH,
                 'max:' . self::TOKEN_LENGTH,
-                function($attribute, $value, $fail) use($email) {
+                function ($attribute, $value, $fail) use ($email) {
                     $row = \DB::table('password_resets')
                         ->where('email', $email)
                         ->first();
@@ -79,7 +77,7 @@ class PasswordController extends Controller
 
             $password = bcrypt($request->get('password'));
             $user = User::where('email', $email)->firstOrFail();
-            $user->update([ 'password' => $password ]);
+            $user->update(['password' => $password]);
 
             \DB::table('password_resets')
                 ->where('email', $email)
@@ -87,16 +85,13 @@ class PasswordController extends Controller
 
             \DB::commit();
 
-            return response()->json([ 'message' => 'Contraseña actualizada correctamente.' ]);
+            return response()->json(['message' => 'Contraseña actualizada correctamente.'], 200);
 
         } catch (\Exception $ex) {
-
             \Log::info($ex->getMessage());
             \Log::info($ex->getTraceAsString());
             \DB::rollBack();
-
-            return response()->json([ 'message' => $ex->getMessage() ], 500);
-
+            return response()->json(['message' => $ex->getMessage()], 500);
         }
     }
 }

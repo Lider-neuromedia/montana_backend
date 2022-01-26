@@ -33,13 +33,11 @@ class EncuestaController extends Controller
             ->orWhere('encuestas.estado', 'like', "%$search%")
             ->get();
 
-        $response = [
+        return response()->json([
             'response' => 'success',
             'status' => 200,
             'encuestas' => $encuestas,
-        ];
-
-        return response()->json($response);
+        ], 200);
     }
 
     /**
@@ -56,45 +54,53 @@ class EncuestaController extends Controller
             'preguntas' => 'required|array|max:5',
         ]);
 
-        // Validar que el catalogo no tenga encuesta registrada y activa.
-        $validate_catalogo = Encuesta::where('catalogo', $request['catalogo'])->where('estado', 'activo')->exists();
+        try {
 
-        if ($validate_catalogo) {
-            $response = [
-                'response' => 'error',
-                'status' => 403,
-                'message' => 'El catalogo seleccionado ya tiene encuesta activa. Por favor inactive la encuesta para poder crear una nueva',
-            ];
-            return response()->json($response);
-        } else {
-            $encuesta = new Encuesta;
+            \DB::beginTransaction();
+
+            // Validar que el catalogo no tenga encuesta registrada y activa.
+            $validate_catalogo = Encuesta::query()
+                ->where('catalogo', $request['catalogo'])
+                ->where('estado', 'activo')
+                ->exists();
+
+            if ($validate_catalogo) {
+                throw new \Exception('El catalogo seleccionado ya tiene encuesta activa. Por favor inactive la encuesta para poder crear una nueva', 1);
+            }
+
+            $encuesta = new Encuesta();
             $encuesta->codigo = uniqid();
             $encuesta->fecha_creacion = date('Y-m-d');
             $encuesta->catalogo = $request['catalogo'];
             $encuesta->tipo = $request['tipo'];
             $encuesta->estado = 'activo';
+            $encuesta->save();
 
-            if ($encuesta->save()) {
-                foreach ($request['preguntas'] as $pregunta) {
-                    $pregunta_db = new Preguntas;
-                    $pregunta_db->encuesta = $encuesta->id_form;
-                    $pregunta_db->pregunta = $pregunta['name'];
-                    $pregunta_db->save();
-                }
-                $response = [
-                    'response' => 'success',
-                    'status' => 200,
-                ];
-            } else {
-                $response = [
-                    'response' => 'error',
-                    'status' => 403,
-                    'message' => 'Error en la creación de la encuesta.',
-                ];
+            foreach ($request['preguntas'] as $pregunta) {
+                $pregunta_db = new Preguntas();
+                $pregunta_db->encuesta = $encuesta->id_form;
+                $pregunta_db->pregunta = $pregunta['name'];
+                $pregunta_db->save();
             }
-        }
 
-        return response()->json($response);
+            \DB::commit();
+
+            return response()->json([
+                'response' => 'success',
+                'status' => 200,
+            ], 200);
+
+        } catch (\Exception $ex) {
+            \Log::info($ex->getMessage());
+            \Log::info($ex->getTraceAsString());
+            \DB::rollBack();
+
+            return response()->json([
+                'response' => 'error',
+                'message' => $ex->getMessage(),
+                'status' => 500,
+            ], 500);
+        }
     }
 
     /**
@@ -105,41 +111,33 @@ class EncuestaController extends Controller
      */
     public function getPreguntas($catalogo)
     {
-        $validate_catalogo = Catalogo::find($catalogo);
-        if ($validate_catalogo) {
-            $usuario = auth()->user();
-            $encuesta_preguntas = Encuesta::select('id_form', 'catalogo', 'preguntas.*')
-                ->where('catalogo', $catalogo)
-                ->where('estado', 'activo')
-                ->join('preguntas', 'encuesta', '=', 'id_form')
-                ->get();
+        $validate_catalogo = Catalogo::findOrFail($catalogo);
 
-            $validate_user = Encuesta::select('id_form', 'catalogo', 'preguntas.*')
-                ->join('preguntas', 'encuesta', '=', 'id_form')
-                ->join('valoraciones', 'valoraciones.pregunta', '=', 'id_pregunta')
-                ->where('catalogo', $catalogo)
-                ->where('estado', 'activo')
-                ->where('usuario', $usuario->id)
-                ->exists();
+        $usuario = auth()->user();
+        $encuesta_preguntas = Encuesta::select('id_form', 'catalogo', 'preguntas.*')
+            ->where('catalogo', $catalogo)
+            ->where('estado', 'activo')
+            ->join('preguntas', 'encuesta', '=', 'id_form')
+            ->get();
 
-            foreach ($encuesta_preguntas as $pregunta) {
-                $pregunta->respuesta = 0;
-            }
-            $response = [
-                'response' => 'success',
-                'status' => 200,
-                'preguntas' => $encuesta_preguntas,
-                'respuesta_usuario' => $validate_user,
-            ];
-        } else {
-            $response = [
-                'response' => 'error',
-                'status' => 403,
-                'preguntas' => 'Catalogo no existe en base de datos.',
-            ];
+        $validate_user = Encuesta::select('id_form', 'catalogo', 'preguntas.*')
+            ->join('preguntas', 'encuesta', '=', 'id_form')
+            ->join('valoraciones', 'valoraciones.pregunta', '=', 'id_pregunta')
+            ->where('catalogo', $catalogo)
+            ->where('estado', 'activo')
+            ->where('usuario', $usuario->id)
+            ->exists();
+
+        foreach ($encuesta_preguntas as $pregunta) {
+            $pregunta->respuesta = 0;
         }
 
-        return response()->json($response);
+        return response()->json([
+            'response' => 'success',
+            'status' => 200,
+            'preguntas' => $encuesta_preguntas,
+            'respuesta_usuario' => $validate_user,
+        ], 200);
     }
 
     public function getProductoValoraciones($producto)
@@ -195,40 +193,30 @@ class EncuestaController extends Controller
 
     public function getValoraciones($catalogo)
     {
-        $validate_catalogo = Catalogo::find($catalogo);
-        if ($validate_catalogo) {
-            $usuario = auth()->user();
-            $encuesta_preguntas = Encuesta::select('id_form', 'catalogo', 'preguntas.*', 'valoraciones.respuesta')
-                ->where('catalogo', $catalogo)
-                ->where('estado', 'activo')
-                ->join('preguntas', 'encuesta', '=', 'id_form')
-                ->join('valoraciones', 'valoraciones.pregunta', '=', 'preguntas.id_pregunta')
-                ->get();
+        $validate_catalogo = Catalogo::findOrFail($catalogo);
 
-            $validate_user = Encuesta::select('id_form', 'catalogo', 'preguntas.*')
-                ->join('preguntas', 'encuesta', '=', 'id_form')
-                ->join('valoraciones', 'valoraciones.pregunta', '=', 'id_pregunta')
-                ->where('catalogo', $catalogo)
-                ->where('estado', 'activo')
-                ->where('usuario', $usuario->id)
-                ->exists();
+        $usuario = auth()->user();
+        $encuesta_preguntas = Encuesta::select('id_form', 'catalogo', 'preguntas.*', 'valoraciones.respuesta')
+            ->where('catalogo', $catalogo)
+            ->where('estado', 'activo')
+            ->join('preguntas', 'encuesta', '=', 'id_form')
+            ->join('valoraciones', 'valoraciones.pregunta', '=', 'preguntas.id_pregunta')
+            ->get();
 
-            $response = [
-                'response' => 'success',
-                'status' => 200,
-                'preguntas' => $encuesta_preguntas,
-                'respuesta_usuario' => $validate_user,
-            ];
-        } else {
-            $response = [
-                'response' => 'error',
-                'status' => 403,
-                'preguntas' => 'Catalogo no existe en base de datos.',
-            ];
-        }
+        $validate_user = Encuesta::select('id_form', 'catalogo', 'preguntas.*')
+            ->join('preguntas', 'encuesta', '=', 'id_form')
+            ->join('valoraciones', 'valoraciones.pregunta', '=', 'id_pregunta')
+            ->where('catalogo', $catalogo)
+            ->where('estado', 'activo')
+            ->where('usuario', $usuario->id)
+            ->exists();
 
-        return response()->json($response);
-
+        return response()->json([
+            'response' => 'success',
+            'status' => 200,
+            'preguntas' => $encuesta_preguntas,
+            'respuesta_usuario' => $validate_user,
+        ], 200);
     }
     /**
      * Crear las valoraciones de los clientes o vendedores segun el producto.
@@ -247,7 +235,7 @@ class EncuestaController extends Controller
         ]);
 
         foreach ($request['preguntas'] as $pregunta) {
-            $respuestas = new Valoracion;
+            $respuestas = new Valoracion();
             $respuestas->pregunta = $pregunta['pregunta'];
             $respuestas->usuario = $request['usuario'];
             $respuestas->producto = $request['producto'];
@@ -255,12 +243,10 @@ class EncuestaController extends Controller
             $respuestas->save();
         }
 
-        $response = [
+        return response()->json([
             'response' => 'success',
             'status' => 200,
-        ];
-
-        return response()->json($response, 200);
+        ], 200);
     }
 
     public function destroyPregunta($id_pregunta)
@@ -268,30 +254,20 @@ class EncuestaController extends Controller
         $validate_pregunta = Valoracion::where('pregunta', $id_pregunta)->exists();
 
         if ($validate_pregunta) {
-            $response = [
+            return response()->json([
                 'response' => 'error',
                 'status' => 403,
                 'message' => 'La pregunta tiene respuestas diligenciadas. No se puede eliminar.',
-            ];
-        } else {
-            $pregunta = Preguntas::find($id_pregunta);
-
-            if ($pregunta) {
-                $pregunta->delete();
-                $response = [
-                    'response' => 'success',
-                    'status' => 200,
-                ];
-            } else {
-                $response = [
-                    'response' => 'error',
-                    'status' => 403,
-                    'message' => 'La pregunta enviada no existe.',
-                ];
-            }
+            ], 403);
         }
 
-        return response()->json($response);
+        $pregunta = Preguntas::findOrFail($id_pregunta);
+        $pregunta->delete();
+
+        return response()->json([
+            'response' => 'success',
+            'status' => 200,
+        ], 200);
     }
 
     /**
@@ -362,14 +338,12 @@ class EncuestaController extends Controller
             }
         }
 
-        $response = [
+        return response()->json([
             'response' => 'success',
             'status' => 200,
             'preguntas' => $preguntas,
             'porcentaje_diligenciados' => $porcentaje_diligenciado,
-        ];
-
-        return response()->json($response);
+        ], 200);
     }
 
     public function edit($id)
@@ -385,13 +359,11 @@ class EncuestaController extends Controller
             ->join('preguntas', 'encuesta', '=', 'id_form')
             ->get();
 
-        $response = [
+        return response()->json([
             'response' => 'success',
             'status' => 200,
             'encuesta' => $encuesta,
-        ];
-
-        return response()->json($response);
+        ], 200);
     }
 
     /**
@@ -411,36 +383,44 @@ class EncuestaController extends Controller
             'preguntas' => 'required|array',
         ]);
 
-        $encuesta->tipo = $request['tipo'];
-        $encuesta->estado = $request['estado'];
-        $encuesta->catalogo = $request['catalogo'];
-        if ($encuesta->save()) {
+        try {
+
+            \DB::beginTransaction();
+
+            $encuesta->tipo = $request['tipo'];
+            $encuesta->estado = $request['estado'];
+            $encuesta->catalogo = $request['catalogo'];
+            $encuesta->save();
 
             foreach ($request['preguntas'] as $data) {
                 if (isset($data['id_pregunta'])) {
                     $pregunta = Preguntas::find($data['id_pregunta']);
                 } else {
-                    $pregunta = new Preguntas;
+                    $pregunta = new Preguntas();
                 }
+
                 $pregunta->pregunta = $data['pregunta'];
                 $pregunta->encuesta = $encuesta->id_form;
                 $pregunta->save();
             }
 
-            $response = [
+            \DB::commit();
+
+            return response()->json([
                 'response' => 'success',
                 'status' => 200,
-            ];
-        } else {
-            $response = [
+            ], 200);
+
+        } catch (\Exception $ex) {
+            \Log::info($ex->getMessage());
+            \Log::info($ex->getTraceAsString());
+            \DB::rollBack();
+
+            return response()->json([
                 'response' => 'error',
-                'status' => 403,
-                'message' => 'Error en la actualización',
-            ];
+                'message' => $ex->getMessage(),
+                'status' => 500,
+            ], 500);
         }
-
-        return response()->json($response);
-
     }
-
 }

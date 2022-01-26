@@ -8,13 +8,12 @@ class PedidoProduct extends Model
 {
     protected $table = 'pedido_productos';
 
-    protected $primaryKey = 'id_pedido_prod'; 
+    protected $primaryKey = 'id_pedido_prod';
 
     protected $fillable = [
         'pedido',
         'producto',
         'cantidad_producto',
-        'tienda'
+        'tienda',
     ];
-    
 }

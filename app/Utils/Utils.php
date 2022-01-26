@@ -2,8 +2,6 @@
 
 namespace App\Utils;
 
-// App\Utils\Utils::corregirCantidadDeProductosEnCatalogos();
-
 class Utils
 {
     public static function corregirCantidadDeProductosEnCatalogos()

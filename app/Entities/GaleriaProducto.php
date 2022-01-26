@@ -16,5 +16,4 @@ class GaleriaProducto extends Model
         'name_img',
         'destacada',
     ];
-
 }

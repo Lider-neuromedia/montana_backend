@@ -41,35 +41,29 @@ class VendedorClienteController extends Controller
             'cliente_id' => 'required',
         ]);
 
-        $validate = VendedorCliente::where('vendedor', $request['vendedor_id'])->where('cliente', $request['cliente_id'])->exists();
+        $validate = VendedorCliente::query()
+            ->where('vendedor', $request['vendedor_id'])
+            ->where('cliente', $request['cliente_id'])
+            ->exists();
 
         if ($validate) {
-            $response = [
+            return response()->json([
                 'response' => 'error',
                 'message' => 'La asignación que desea hacer ya se encuentra registrada.',
                 'status' => 403,
-            ];
-            return response()->json($response);
+            ], 403);
         }
 
         $vendedor_cliente = new VendedorCliente();
         $vendedor_cliente->cliente = $request['cliente_id'];
         $vendedor_cliente->vendedor = $request['vendedor_id'];
+        $vendedor_cliente->save();
 
-        if ($vendedor_cliente->save()) {
-            $response = [
-                'response' => 'success',
-                'message' => 'Cliente asignado correctamente.',
-                'satatus' => 200,
-            ];
-        } else {
-            $response = [
-                'response' => 'error',
-                'message' => 'Error en el servidor.',
-                'satatus' => 403,
-            ];
-        }
-        return response()->json($response);
+        return response()->json([
+            'response' => 'success',
+            'message' => 'Cliente asignado correctamente.',
+            'satatus' => 200,
+        ], 200);
     }
 
     /**
@@ -80,7 +74,9 @@ class VendedorClienteController extends Controller
      */
     public function show($id)
     {
-        $cliente = User::find($id)->vendedor_clientes()->get();
+        $cliente = User::findOrFail($id)
+            ->vendedor_clientes()
+            ->get();
         return $cliente;
     }
 

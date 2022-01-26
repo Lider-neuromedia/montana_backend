@@ -43,7 +43,6 @@ class TiendaController extends Controller
             ], 200);
 
         } catch (\Exception $ex) {
-
             \Log::info($ex->getMessage());
             \Log::info($ex->getTraceAsString());
             \DB::rollBack();
@@ -53,7 +52,6 @@ class TiendaController extends Controller
                 'status' => 500,
                 'message' => 'Error al guardar la(s) tienda(s).',
             ], 500);
-
         }
     }
 
@@ -66,7 +64,8 @@ class TiendaController extends Controller
                 $q->where('cliente', $user->id);
             })
             ->first();
-        return response()->json($tienda);
+
+        return response()->json($tienda, 200);
     }
 
     public function update(Request $request, $id)
@@ -119,7 +118,6 @@ class TiendaController extends Controller
             \DB::beginTransaction();
 
             foreach ($request['tiendas'] as $tienda) {
-
                 $pedido = DB::table('pedido_productos')
                     ->where('tienda', $tienda)
                     ->exists();
@@ -130,7 +128,6 @@ class TiendaController extends Controller
 
                 $tienda = Tienda::findOrFail($tienda);
                 $tienda->delete();
-
             }
 
             \DB::commit();
@@ -142,7 +139,6 @@ class TiendaController extends Controller
             ], 200);
 
         } catch (\Exception $ex) {
-
             \Log::info($ex->getMessage());
             \Log::info($ex->getTraceAsString());
             \DB::rollBack();
@@ -152,7 +148,6 @@ class TiendaController extends Controller
                 'status' => 500,
                 'message' => 'Error al borrar la(s) tienda(s).',
             ], 500);
-
         }
     }
 }

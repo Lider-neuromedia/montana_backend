@@ -47,7 +47,7 @@ class RolController extends Controller
      */
     public function show($id)
     {
-        $rol = Rol::find($id);
+        $rol = Rol::findOrFail($id);
         return $rol;
     }
 

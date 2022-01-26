@@ -17,9 +17,10 @@ class AmpliacionCupoController extends Controller
             $search = "";
         }
 
-        $solicitudes = AmpliacionCupo::select('id_cupo', 'codigo_solicitud', 'fecha_solicitud',
-            'vendedor', 'cliente', 'doc_identidad', 'doc_rut', 'doc_camara_com', 'monto',
-            'estado', 'vend.name', 'vend.apellidos')
+        $solicitudes = AmpliacionCupo::select(
+            'id_cupo', 'codigo_solicitud', 'fecha_solicitud', 'vendedor',
+            'cliente', 'doc_identidad', 'doc_rut', 'doc_camara_com',
+            'monto', 'estado', 'vend.name', 'vend.apellidos')
             ->join('users as vend', 'vendedor', '=', 'vend.id')
             ->where('codigo_solicitud', 'like', "%$search%")
             ->orWhere('vend.name', 'like', "%$search%")
@@ -34,13 +35,11 @@ class AmpliacionCupoController extends Controller
             $solicitud->doc_camara_com = url($solicitud->doc_camara_com);
         }
 
-        $response = [
+        return response()->json([
             'response' => 'success',
             'status' => 200,
             'solicitudes' => $solicitudes,
-        ];
-
-        return response()->json($response);
+        ], 200);
     }
 
     public function getUserSmall($rol_id)
@@ -50,13 +49,11 @@ class AmpliacionCupoController extends Controller
             ->where('rol_id', $rol_id)
             ->get();
 
-        $response = [
+        return response()->json([
             'response' => 'success',
             'status' => 200,
             'users' => $users,
-        ];
-
-        return response()->json($response);
+        ], 200);
     }
 
     public function saveImage($image, $id_cliente, $name)
@@ -88,7 +85,7 @@ class AmpliacionCupoController extends Controller
             'monto' => 'required|integer',
         ]);
 
-        $solicitud = new AmpliacionCupo;
+        $solicitud = new AmpliacionCupo();
         $solicitud->codigo_solicitud = uniqid();
         $solicitud->fecha_solicitud = date('Y-m-d');
         $solicitud->vendedor = $request['vendedor'];
@@ -101,22 +98,12 @@ class AmpliacionCupoController extends Controller
         $solicitud->doc_identidad = $path_solicitud . $this->saveImage($request->file('doc_identidad'), $request['cliente'], 'doc_identidad');
         $solicitud->doc_rut = $path_solicitud . $this->saveImage($request->file('doc_rut'), $request['cliente'], 'doc_rut');
         $solicitud->doc_camara_com = $path_solicitud . $this->saveImage($request->file('doc_camara_com'), $request['cliente'], 'doc_camara_comercio');
+        $solicitud->save();
 
-        if ($solicitud->save()) {
-            $response = [
-                'response' => 'success',
-                'status' => 200,
-            ];
-        } else {
-            $response = [
-                'response' => 'error',
-                'status' => 403,
-                'message' => 'Error con la creación de la solicitud. Intente nuevamente',
-            ];
-        }
-
-        return response()->json($response);
-
+        return response()->json([
+            'response' => 'success',
+            'status' => 200,
+        ], 200);
     }
 
     public function update(Request $request, $id)
@@ -127,13 +114,14 @@ class AmpliacionCupoController extends Controller
             'monto' => 'required',
         ]);
 
-        $solicitud = AmpliacionCupo::find($id);
+        $solicitud = AmpliacionCupo::findOrFail($id);
         $solicitud->vendedor = $request['vendedor'];
         $solicitud->cliente = $request['cliente'];
         $solicitud->monto = $request['monto'];
 
         // Guardar imagenes.
         $path_solicitud = "storage/solicitudes/{$request['cliente']}/";
+
         if (isset($request['doc_identidad']) && $request['doc_identidad'] != '') {
             $solicitud->doc_identidad = $path_solicitud . $this->saveImage($request->file('doc_identidad'), $request['cliente'], 'doc_identidad');
         }
@@ -144,34 +132,23 @@ class AmpliacionCupoController extends Controller
             $solicitud->doc_camara_com = $path_solicitud . $this->saveImage($request->file('doc_camara_com'), $request['cliente'], 'doc_camara_comercio');
         }
 
-        if ($solicitud->save()) {
-            $response = [
-                'response' => 'success',
-                'status' => 200,
-            ];
-        } else {
-            $response = [
-                'response' => 'error',
-                'status' => 403,
-                'message' => 'Error con la actualización de la solicitud. Intente nuevamente',
-            ];
-        }
+        $solicitud->save();
 
-        return response()->json($response);
-
+        return response()->json([
+            'response' => 'success',
+            'status' => 200,
+        ], 200);
     }
 
     public function changeState($solicitud, $estado)
     {
-        $solicitud_db = AmpliacionCupo::find($solicitud);
+        $solicitud_db = AmpliacionCupo::findOrFail($solicitud);
         $solicitud_db->estado = $estado;
+        $solicitud_db->save();
 
-        if ($solicitud_db->save()) {
-            $response = ['response' => 'success', 'status' => 200];
-        } else {
-            $response = ['response' => 'error', 'status' => 403, 'message' => 'Error en el cambio de estado.'];
-        }
-
-        return response()->json($response);
+        return response()->json([
+            'response' => 'success',
+            'status' => 200,
+        ], 200);
     }
 }

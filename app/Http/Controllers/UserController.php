@@ -7,8 +7,6 @@ use App\Entities\User;
 use App\Entities\UserData;
 use App\Http\Requests\UserRequest;
 use DB;
-
-// use App\Entities\Rol;
 use Illuminate\Http\Request;
 
 class UserController extends Controller
@@ -24,7 +22,7 @@ class UserController extends Controller
             ->where('rol_id', $rol)
             ->get();
 
-        return response()->json($userdata);
+        return response()->json($userdata, 200);
     }
 
     public function getUsers($rol_id, $search = null)
@@ -40,7 +38,10 @@ class UserController extends Controller
             ->get();
 
         foreach ($users as $user) {
-            $data_admin = DB::table('user_data')->where('user_id', $user->id)->get();
+            $data_admin = DB::table('user_data')
+                ->where('user_id', $user->id)
+                ->get();
+
             $user->user_data = $data_admin;
             $user->iniciales = substr($user->name, 0, 1);
             $user->iniciales .= substr($user->apellidos, 0, 1);
@@ -54,16 +55,23 @@ class UserController extends Controller
             }
         }
 
-        $admin_ramdom = DB::table('users')->where('rol_id', $rol_id)->first();
-        $fields_db = DB::table('user_data')->where('user_id', $admin_ramdom->id)->get();
+        $admin_ramdom = DB::table('users')
+            ->where('rol_id', $rol_id)
+            ->first();
+        $fields_db = DB::table('user_data')
+            ->where('user_id', $admin_ramdom->id)
+            ->get();
+
         $fields = [];
 
         foreach ($fields_db as $field) {
             $fields[] = $field->field_key;
         }
 
-        $response = ['fields' => $fields, 'users' => $users];
-        return response()->json($response);
+        return response()->json([
+            'fields' => $fields,
+            'users' => $users,
+        ], 200);
     }
 
     public function getAdmins()
@@ -73,22 +81,26 @@ class UserController extends Controller
 
     public function getAdmin($id)
     {
-        $admin = DB::table('users')->where('id', $id)->where('rol_id', 1)->first();
+        $admin = DB::table('users')
+            ->where('id', $id)
+            ->where('rol_id', 1)
+            ->first();
 
         if ($admin == null) {
-            $response = [
+            return response()->json([
                 'response' => 'error',
                 'message' => 'El id del usuario no es un administrador.',
                 'status' => 403,
-            ];
-
-            return response()->json($response);
+            ], 403);
         }
 
-        $data_admin = DB::table('user_data')->where('user_id', $id)->get();
+        $data_admin = DB::table('user_data')
+            ->where('user_id', $id)
+            ->get();
+
         $admin->user_data = $data_admin;
 
-        return response()->json($admin);
+        return response()->json($admin, 200);
     }
 
     public function getVendedores(Request $request)
@@ -116,22 +128,14 @@ class UserController extends Controller
     public function getVendedor($id)
     {
         // Buscar el vendedor.
-        $user = User::where('rol_id', 2)->find($id);
-        // validar que sea un vendedor.
-        if ($user == null) {
-            $response = [
-                'response' => 'error',
-                'message' => 'El id del usuario no es un vendedor.',
-                'status' => 403,
-            ];
-            return response()->json($response);
-        }
+        $user = User::where('rol_id', 2)->findOrFail($id);
 
         // Buscar la data del usuario en cuestion.
         $metadata = UserData::where('user_id', $id)->get();
 
         // Organizar los campos administrados del usuario y organizarlos.
         $filterData = [];
+
         foreach ($metadata as $mt) {
             $filterData[] = [
                 'id_field' => $mt->id,
@@ -153,11 +157,14 @@ class UserController extends Controller
         $user->clientes = $clientes_vendedor;
 
         // Buscar pedidos
-        $pedidos_vendedor = DB::table('pedidos')->where('vendedor', $id)->get();
+        $pedidos_vendedor = DB::table('pedidos')
+            ->where('vendedor', $id)
+            ->get();
+
         // Setear pedidos.
         $user->pedidos = $pedidos_vendedor;
 
-        return response()->json($user);
+        return response()->json($user, 200);
     }
 
     public function getCliente($id)
@@ -167,12 +174,11 @@ class UserController extends Controller
 
         // validar que sea un cliente.
         if ($user == null) {
-            $response = [
+            return response()->json([
                 'response' => 'error',
                 'message' => 'El id del usuario no es un cliente.',
                 'status' => 403,
-            ];
-            return response()->json($response);
+            ], 403);
         }
 
         // Buscar la data del usuario en cuestion.
@@ -180,6 +186,7 @@ class UserController extends Controller
 
         // Organizar los campos administrados del usuario.
         $filterData = [];
+
         foreach ($metadata as $mt) {
             $filterData[] = [
                 'id_field' => $mt->id,
@@ -199,7 +206,9 @@ class UserController extends Controller
             ->first();
 
         if ($vendedor != null) {
-            $data_vendedor = DB::table('user_data')->where('user_id', $vendedor->id_vendedor)->get();
+            $data_vendedor = DB::table('user_data')
+                ->where('user_id', $vendedor->id_vendedor)
+                ->get();
             $vendedor->user_data = $data_vendedor;
         }
 
@@ -217,8 +226,7 @@ class UserController extends Controller
         $pedidos = DB::table('pedidos')->where('cliente', $id)->get();
         $user->pedidos = $pedidos;
 
-        return response()->json($user);
-
+        return response()->json($user, 200);
     }
 
     public function createAdmin(Request $request)
@@ -232,7 +240,6 @@ class UserController extends Controller
         ]);
 
         $user = User::create([
-            //'rol_id' => $request->rol,
             'rol_id' => 1,
             'name' => $request->name,
             'apellidos' => $request->apellidos,
@@ -244,13 +251,11 @@ class UserController extends Controller
             'user_id' => $user->id,
             'field_key' => $request->name,
             'value_key' => $request->nombre,
-            // 'campo_id' => $request->name,
         ]);
 
         return response()->json([
             'message' => 'Successfully created user!',
         ], 201);
-
     }
 
     public function assignedCustomers($id)
@@ -258,12 +263,11 @@ class UserController extends Controller
         $vendedor = DB::table('users')->where('id', $id)->where('rol_id', 2)->first();
 
         if ($vendedor == null) {
-            $response = [
+            return response()->json([
                 'response' => 'error',
                 'message' => 'El id del usuario no es un vendedor.',
                 'status' => 403,
-            ];
-            return response()->json($response, 403);
+            ], 403);
         }
 
         $clientes_vendedor = DB::table('vendedor_cliente')
@@ -277,6 +281,7 @@ class UserController extends Controller
             $metadata = UserData::where('user_id', $cliente->id_cliente)->get();
             // Organizar los campos administrados del usuario y organizarlos.
             $filterData = [];
+
             foreach ($metadata as $mt) {
                 $filterData[] = [
                     'id_field' => $mt->id,
@@ -284,10 +289,11 @@ class UserController extends Controller
                     'value_key' => $mt->value_key,
                 ];
             }
+
             $cliente->data = $filterData;
         }
 
-        return response()->json($clientes_vendedor);
+        return response()->json($clientes_vendedor, 200);
     }
 
     public function store(UserRequest $request)
@@ -369,10 +375,10 @@ class UserController extends Controller
 
             return true;
 
-        } catch (\Exception $e) {
-
+        } catch (\Exception $ex) {
+            \Log::info($ex->getMessage());
+            \Log::info($ex->getTraceAsString());
             return false;
-
         }
     }
 
@@ -392,41 +398,50 @@ class UserController extends Controller
             'password' => 'nullable|confirmed|min:6|max:20',
         ]);
 
-        //Actualizacion de la informacion basica del usuario.
-        $user = User::findOrFail($request['id']);
-        $user->rol_id = $request['rol_id'];
-        $user->name = $request['name'];
-        $user->dni = $request['dni'];
-        $user->apellidos = $request['apellidos'];
-        $user->email = $request['email'];
+        try {
 
-        if ($request->has('password') && $request->get('password')) {
-            $user->password = bcrypt($request['password']);
-        }
+            \DB::beginTransaction();
 
-        if (!$user->save()) {
-            $response = [
+            // Actualizacion de la informacion basica del usuario.
+            $user = User::findOrFail($request['id']);
+            $user->rol_id = $request['rol_id'];
+            $user->name = $request['name'];
+            $user->dni = $request['dni'];
+            $user->apellidos = $request['apellidos'];
+            $user->email = $request['email'];
+
+            if ($request->has('password') && $request->get('password')) {
+                $user->password = bcrypt($request['password']);
+            }
+
+            $user->save();
+
+            foreach ($request['user_data'] as $data) {
+                $user_data = UserData::findOrFail($data['id_field']);
+                $user_data->field_key = $data['field_key'];
+                $user_data->value_key = $data['value_key'];
+                $user_data->save();
+            }
+
+            \DB::commit();
+
+            return response()->json([
+                'response' => 'success',
+                'message' => 'Usuario actualizado con exito.',
+                'status' => 200,
+            ], 200);
+
+        } catch (\Exception $ex) {
+            \Log::info($ex->getMessage());
+            \Log::info($ex->getTraceAsString());
+            \DB::rollBack();
+
+            return response()->json([
                 'response' => 'error',
-                'message' => 'Error en la actualizacion del usuario.',
-                'status' => 403,
-            ];
-            return response()->json($response);
+                'message' => $ex->getMessage(),
+                'status' => 500,
+            ], 500);
         }
-
-        foreach ($request['user_data'] as $data) {
-            $user_data = UserData::findOrFail($data['id_field']);
-            $user_data->field_key = $data['field_key'];
-            $user_data->value_key = $data['value_key'];
-            $user_data->save();
-        }
-
-        $response = [
-            'response' => 'success',
-            'message' => 'Usuario actualizado con exito.',
-            'status' => 200,
-        ];
-
-        return response()->json($response);
     }
 
     public function updateClient(Request $request, $id)
@@ -440,53 +455,68 @@ class UserController extends Controller
             'data_user' => 'required',
         ]);
 
-        //Actualizacion de la informacion basica del usuario.
-        $user = User::find($request['id']);
-        $user->name = $request['name'];
-        $user->dni = $request['dni'];
-        $user->apellidos = $request['apellidos'];
-        $user->email = $request['email'];
+        try {
 
-        if (isset($request['password'])) {
-            $user->password = bcrypt($request['password']);
-        }
+            \DB::beginTransaction();
 
-        if (!$user->save()) {
-            $response = [
+            // Actualizacion de la informacion basica del usuario.
+            $user = User::findOrFail($request['id']);
+            $user->name = $request['name'];
+            $user->dni = $request['dni'];
+            $user->apellidos = $request['apellidos'];
+            $user->email = $request['email'];
+
+            if (isset($request['password'])) {
+                $user->password = bcrypt($request['password']);
+            }
+
+            $user->save();
+
+            foreach ($request['data_user'] as $data) {
+                $user_data = UserData::findOrFail($data['id_field']);
+                $user_data->field_key = $data['field_key'];
+                $user_data->value_key = $data['value_key'];
+                $user_data->save();
+            }
+
+            \DB::commit();
+
+            return response()->json([
+                'response' => 'success',
+                'message' => 'Usuario actualizado con exito.',
+                'status' => 200,
+            ], 200);
+
+        } catch (\Exception $ex) {
+            \Log::info($ex->getMessage());
+            \Log::info($ex->getTraceAsString());
+            \DB::rollBack();
+
+            return response()->json([
                 'response' => 'error',
-                'message' => 'Error en la actualizacion del usuario.',
-                'status' => 403,
-            ];
-
-            return response()->json($response);
+                'message' => $ex->getMessage(),
+                'status' => 500,
+            ], 500);
         }
-
-        foreach ($request['data_user'] as $data) {
-            $user_data = UserData::find($data['id_field']);
-            $user_data->field_key = $data['field_key'];
-            $user_data->value_key = $data['value_key'];
-            $user_data->save();
-        }
-
-        $response = [
-            'response' => 'success',
-            'message' => 'Usuario actualizado con exito.',
-            'status' => 200,
-        ];
-
-        return response()->json($response);
     }
 
     public function destroyUsers(Request $request)
     {
         try {
+
             DB::beginTransaction();
 
             foreach ($request['usuarios'] as $id) {
                 $user = User::findOrFail($id);
-                $validate_pqrs = DB::table('seguimiento_pqrs')->where('usuario', $id)->exists();
-                $validate_vendedor = DB::table('vendedor_cliente')->where('vendedor', $id)->exists();
-                $validate_cliente = DB::table('pedidos')->where('cliente', $id)->exists();
+                $validate_pqrs = DB::table('seguimiento_pqrs')
+                    ->where('usuario', $id)
+                    ->exists();
+                $validate_vendedor = DB::table('vendedor_cliente')
+                    ->where('vendedor', $id)
+                    ->exists();
+                $validate_cliente = DB::table('pedidos')
+                    ->where('cliente', $id)
+                    ->exists();
 
                 if ($validate_pqrs) {
                     throw new \Exception("El usuario {$user->name} {$user->apellido} no se puede eliminar, porque tiene pqrs/mensajes asignados.", 403);
@@ -503,14 +533,7 @@ class UserController extends Controller
                 DB::table('user_data')->where('user_id', $id)->delete();
                 DB::table('valoraciones')->where('usuario', $id)->delete();
 
-                try {
-                    $user->delete();
-                } catch (\Exception $ex) {
-                    \Log::info($ex->getMessage());
-                    \Log::info($ex->getTraceAsString());
-                    throw new \Exception("El usuario {$user->name} {$user->apellido} no se puede eliminar, porque tiene información registrada.", 403);
-                }
-
+                $user->delete();
             }
 
             DB::commit();
@@ -519,7 +542,7 @@ class UserController extends Controller
                 'response' => 'success',
                 'message' => "Usuario eliminado correctamente",
                 'status' => 200,
-            ]);
+            ], 200);
 
         } catch (\Exception $ex) {
             \Log::info($ex->getMessage());
@@ -542,11 +565,8 @@ class UserController extends Controller
             $search = $request['search'];
 
             if ($request['search'] == '') {
-
                 $vendedores = User::where('rol_id', 2)->get();
-
             } else {
-
                 $vendedores = User::query()
                     ->where(function ($query) use ($search) {
                         $query->where('name', 'like', "%{$search}%");
@@ -557,24 +577,19 @@ class UserController extends Controller
                     ->get();
             }
 
-            $response = [
+            return response()->json([
                 'response' => 'success',
                 'vendedores' => $vendedores,
                 'status' => 200,
-            ];
-
-        } else {
-
-            $response = [
-                'response' => 'error',
-                'vendedores' => null,
-                'status' => 403,
-                'message' => 'Sin busqueda.',
-            ];
-
+            ], 200);
         }
 
-        return response()->json($response);
+        return response()->json([
+            'response' => 'error',
+            'vendedores' => null,
+            'status' => 403,
+            'message' => 'Sin busqueda.',
+        ], 403);
     }
 
     public function searchClientes(Request $request)
@@ -601,26 +616,22 @@ class UserController extends Controller
                     ->where('rol_id', '=', 3)
                     ->where('vendedor_cliente.id_vendedor_cliente', null)
                     ->get();
+
             }
 
-            $response = [
+            return response()->json([
                 'response' => 'success',
                 'clientes' => $clientes,
                 'status' => 200,
-            ];
-
-        } else {
-
-            $response = [
-                'response' => 'error',
-                'clientes' => null,
-                'status' => 403,
-                'message' => 'Sin busqueda.',
-            ];
-
+            ], 200);
         }
 
-        return response()->json($response);
+        return response()->json([
+            'response' => 'error',
+            'clientes' => null,
+            'status' => 403,
+            'message' => 'Sin busqueda.',
+        ], 403);
     }
 
     public function updateVendedor(Request $request, $id)
@@ -634,30 +645,46 @@ class UserController extends Controller
             'data_user' => 'required',
         ]);
 
-        $user = User::find($id);
-        $user->name = $request['name'];
-        $user->apellidos = $request['apellidos'];
-        $user->email = $request['email'];
-        $user->dni = $request['dni'];
+        try {
 
-        if (isset($request['password'])) {
-            $user->password = bcrypt($request['password']);
-        }
+            \DB::beginTransaction();
 
-        if ($user->save()) {
+            $user = User::findOrFail($id);
+            $user->name = $request['name'];
+            $user->apellidos = $request['apellidos'];
+            $user->email = $request['email'];
+            $user->dni = $request['dni'];
+
+            if (isset($request['password'])) {
+                $user->password = bcrypt($request['password']);
+            }
+
+            $user->save();
+
             foreach ($request['data_user'] as $data) {
-                $user_data = UserData::find($data['id_field']);
+                $user_data = UserData::findOrFail($data['id_field']);
                 $user_data->value_key = $data['value_key'];
                 $user_data->save();
             }
+
+            \DB::commit();
+
+            return response()->json([
+                'response' => 'success',
+                'status' => 200,
+            ], 200);
+
+        } catch (\Exception $ex) {
+            \Log::info($ex->getMessage());
+            \Log::info($ex->getTraceAsString());
+            \DB::rollBack();
+
+            return response()->json([
+                'response' => 'error',
+                'message' => $ex->getMessage(),
+                'status' => 500,
+            ], 500);
         }
-
-        $response = [
-            'response' => 'success',
-            'status' => 200,
-        ];
-
-        return response()->json($response);
     }
 
     public function updateAsignClient($idClient, $idVendedor, $action)
@@ -671,80 +698,65 @@ class UserController extends Controller
 
             // Validar antes de cualquier operacion los Id's
             if ($validate_client == true && $validate_vend == true) {
-
                 $validate_asign = DB::table('vendedor_cliente')
                     ->where('vendedor', $idVendedor)
                     ->where('cliente', $idClient)
                     ->exists();
 
                 if (!$validate_asign) {
-
                     DB::table('vendedor_cliente')->insert([
                         'vendedor' => $idVendedor,
                         'cliente' => $idClient,
                     ]);
-                    $response = [
+
+                    return response()->json([
                         'response' => 'success',
                         'status' => 200,
                         'message' => 'Cliente asignado al vendedor correctamente.',
-                    ];
-
-                } else {
-
-                    $response = [
-                        'response' => 'error',
-                        'status' => 403,
-                        'message' => 'Ya tiene asignado el cliente.',
-                    ];
-
+                    ], 200);
                 }
 
-            } else {
-
-                $response = [
+                return response()->json([
                     'response' => 'error',
                     'status' => 403,
-                    'message' => 'Cliente o vendedor no existen.',
-                ];
-
+                    'message' => 'Ya tiene asignado el cliente.',
+                ], 403);
             }
+
+            return response()->json([
+                'response' => 'error',
+                'status' => 403,
+                'message' => 'Cliente o vendedor no existen.',
+            ], 403);
 
         } else if ($action == 'delete') {
 
             if ($validate_client == true && $validate_vend == true) {
-
                 DB::table('vendedor_cliente')
                     ->where('vendedor', $idVendedor)
                     ->where('cliente', $idClient)
                     ->delete();
 
-                $response = [
+                return response()->json([
                     'response' => 'success',
                     'status' => 200,
                     'message' => 'Cliente removido del vendedor de manera correcta.',
-                ];
-
-            } else {
-
-                $response = [
-                    'response' => 'error',
-                    'status' => 403,
-                    'message' => 'Cliente o vendedor no existen.',
-                ];
-
+                ], 200);
             }
 
-        } else {
-
-            $response = [
+            return response()->json([
                 'response' => 'error',
                 'status' => 403,
-                'message' => 'Acción no valida.',
-            ];
+                'message' => 'Cliente o vendedor no existen.',
+            ], 403);
 
         }
 
-        return response()->json($response);
+        return response()->json([
+            'response' => 'error',
+            'status' => 403,
+            'message' => 'Acción no valida.',
+        ], 403);
     }
 
     public function updateAsignVend($idClient, $idVendedor, $action)
@@ -758,79 +770,64 @@ class UserController extends Controller
 
             // Validar antes de cualquier operacion los Id's
             if ($validate_client == true && $validate_vend == true) {
-
                 $validate_asign = DB::table('vendedor_cliente')
                     ->where('cliente', $idClient)
                     ->exists();
 
                 if (!$validate_asign) {
-
                     DB::table('vendedor_cliente')->insert([
                         'vendedor' => $idVendedor,
                         'cliente' => $idClient,
                     ]);
-                    $response = [
+
+                    return response()->json([
                         'response' => 'success',
                         'status' => 200,
                         'message' => 'Vendedor asignado al cliente de manera correcta.',
-                    ];
-
-                } else {
-
-                    $response = [
-                        'response' => 'error',
-                        'status' => 403,
-                        'message' => 'Ya tiene asignado el vendedor.',
-                    ];
-
+                    ], 200);
                 }
 
-            } else {
-
-                $response = [
+                return response()->json([
                     'response' => 'error',
                     'status' => 403,
-                    'message' => 'Cliente o vendedor no existen.',
-                ];
-
+                    'message' => 'Ya tiene asignado el vendedor.',
+                ], 403);
             }
+
+            return response()->json([
+                'response' => 'error',
+                'status' => 403,
+                'message' => 'Cliente o vendedor no existen.',
+            ], 403);
 
         } else if ($action == 'delete') {
 
             if ($validate_client == true && $validate_vend == true) {
-
                 DB::table('vendedor_cliente')
                     ->where('vendedor', $idVendedor)
                     ->where('cliente', $idClient)
                     ->delete();
 
-                $response = [
+                return response()->json([
                     'response' => 'success',
                     'status' => 200,
                     'message' => 'Vendedor removido del cliente de manera correcta.',
-                ];
-
-            } else {
-
-                $response = [
-                    'response' => 'error',
-                    'status' => 403,
-                    'message' => 'Cliente o vendedor no existen.',
-                ];
-
+                ], 200);
             }
 
-        } else {
-
-            $response = [
+            return response()->json([
                 'response' => 'error',
                 'status' => 403,
-                'message' => 'Acción no valida.',
-            ];
+                'message' => 'Cliente o vendedor no existen.',
+            ], 403);
 
         }
 
-        return response()->json($response);
+        return response()->json([
+            'response' => 'error',
+            'status' => 403,
+            'message' => 'Acción no valida.',
+        ], 403);
     }
 
     public function newTienda(Request $request, $cliente)
@@ -841,31 +838,18 @@ class UserController extends Controller
             'direccion' => 'required',
         ]);
 
-        $tienda = new Tienda;
+        $tienda = new Tienda();
         $tienda->nombre = $request['nombre'];
         $tienda->lugar = $request['lugar'];
         $tienda->direccion = $request['direccion'];
         $tienda->local = $request['local'];
         $tienda->telefono = $request['telefono'];
         $tienda->cliente = $cliente;
+        $tienda->save();
 
-        if ($tienda->save()) {
-
-            $response = [
-                'response' => 'success',
-                'status' => 200,
-            ];
-
-        } else {
-
-            $response = [
-                'response' => 'error',
-                'status' => 403,
-                'message' => 'Error creando la tienda.',
-            ];
-
-        }
-
-        return response()->json($response);
+        return response()->json([
+            'response' => 'success',
+            'status' => 200,
+        ], 200);
     }
 }

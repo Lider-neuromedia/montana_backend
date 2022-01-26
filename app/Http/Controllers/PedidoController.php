@@ -62,36 +62,35 @@ class PedidoController extends Controller
 
         $pedidos = $pedidos->get();
 
-        $response = [
+        return response()->json([
             'response' => 'success',
             'status' => 200,
             'pedidos' => $pedidos,
-        ];
-
-        return response()->json($response);
+        ], 200);
     }
 
     public function resourcesCreate()
     {
         $vendedores = User::where('rol_id', 2)->get();
         $clientes = User::where('rol_id', 3)->get();
-        $catalogos = Catalogo::where('estado', 'activo')->where('cantidad', '!=', 0)->get();
+        $catalogos = Catalogo::query()
+            ->where('estado', 'activo')
+            ->where('cantidad', '!=', 0)
+            ->get();
 
-        $response = [
+        return response()->json([
             'response' => 'success',
             'status' => 200,
             'vendedores' => $vendedores,
             'clientes' => $clientes,
             'catalogos' => $catalogos,
-        ];
-
-        return response()->json($response);
+        ], 200);
     }
 
     public function tiendaCliente($id)
     {
         $tiendas = DB::table('tiendas')->where('cliente', $id)->get();
-        return response()->json($tiendas);
+        return response()->json($tiendas, 200);
     }
 
     public function generateCodePedido()
@@ -100,24 +99,18 @@ class PedidoController extends Controller
         $validate_code = Pedido::where('codigo', $code)->exists();
 
         if (!$validate_code) {
-
-            $response = [
+            return response()->json([
                 'response' => 'success',
                 'status' => 200,
                 'code' => $code,
-            ];
-
-        } else {
-
-            $response = [
-                'response' => 'error',
-                'status' => 403,
-                'message' => 'El codigo esta registrado. Intenta de nuevo.',
-            ];
-
+            ], 200);
         }
 
-        return response()->json($response);
+        return response()->json([
+            'response' => 'error',
+            'status' => 403,
+            'message' => 'El codigo esta registrado. Intenta de nuevo.',
+        ], 403);
     }
 
     public function store(Request $request)
@@ -203,7 +196,6 @@ class PedidoController extends Controller
             ], 200);
 
         } catch (\Exception $ex) {
-
             \Log::info($ex->getMessage());
             \Log::info($ex->getTraceAsString());
             \DB::rollBack();
@@ -225,7 +217,7 @@ class PedidoController extends Controller
             ->first();
 
         // Consulta del cliente asignado.
-        $cliente = User::find($pedido->cliente);
+        $cliente = User::findOrFail($pedido->cliente);
         $data_admin = DB::table('user_data')->where('user_id', $pedido->cliente)->first();
         $cliente->nit = $data_admin->value_key;
 
@@ -244,39 +236,24 @@ class PedidoController extends Controller
         $novedades = Novedades::where('pedido', $pedido->id_pedido)->get();
         $pedido->novedades = $novedades;
 
-        $response = [
+        return response()->json([
             'status' => 200,
             'response' => 'success',
             'pedido' => $pedido,
-        ];
-
-        return response()->json($response);
+        ], 200);
     }
 
     public function changeState(Request $request)
     {
-        $pedido = Pedido::find($request['pedido']);
+        $pedido = Pedido::findOrFail($request['pedido']);
         $pedido->estado = $request['state'];
+        $pedido->save();
 
-        if ($pedido->save()) {
-
-            $response = [
-                'status' => 200,
-                'response' => 'success',
-                'message' => 'Actualizado.',
-            ];
-
-        } else {
-
-            $response = [
-                'status' => 403,
-                'response' => 'error',
-                'message' => 'error en la actualizacion',
-            ];
-
-        }
-
-        return response()->json($response);
+        return response()->json([
+            'status' => 200,
+            'response' => 'success',
+            'message' => 'Actualizado.',
+        ], 200);
     }
 
     public function storeNovedades(Request $request)
@@ -291,27 +268,13 @@ class PedidoController extends Controller
         $novedad->tipo = $request['tipo'];
         $novedad->descripcion = $request['descripcion'];
         $novedad->pedido = $request['pedido'];
+        $novedad->save();
 
-        if ($novedad->save()) {
-
-            $response = [
-                'status' => 200,
-                'response' => 'success',
-                'message' => 'Novedad creada.',
-            ];
-
-        } else {
-
-            $response = [
-                'status' => 403,
-                'response' => 'error',
-                'message' => 'Error en la creación.',
-            ];
-
-        }
-
-        return response()->json($response);
-
+        return response()->json([
+            'status' => 200,
+            'response' => 'success',
+            'message' => 'Novedad creada.',
+        ], 200);
     }
 
     public function edit($id)
@@ -338,13 +301,11 @@ class PedidoController extends Controller
 
         $pedido->productos = $productos;
 
-        $response = [
+        return response()->json([
             'status' => 200,
             'response' => 'success',
             'pedido' => $pedido,
-        ];
-
-        return response()->json($response);
+        ], 200);
     }
 
     public function update(Request $request)
@@ -411,7 +372,6 @@ class PedidoController extends Controller
             ], 200);
 
         } catch (\Exception $ex) {
-
             \Log::info($ex->getMessage());
             \Log::info($ex->getTraceAsString());
             \DB::rollBack();
@@ -421,7 +381,6 @@ class PedidoController extends Controller
                 'response' => 'success',
                 'message' => 'Error interno del servidor, no se pudo actualizar el pedido.',
             ], 500);
-
         }
     }
 
@@ -435,30 +394,24 @@ class PedidoController extends Controller
         $pedido = Pedido::where('codigo', $code);
 
         if ($pedido->exists()) {
-
             $pedido = $pedido->select('id_pedido', 'fecha', 'codigo', 'descuento', 'total', 'ven.name AS name_vendedor', 'cliente', 'vendedor',
                 'ven.apellidos AS apellido_vendedor', 'cli.name AS name_cliente', 'cli.apellidos AS apellido_cliente', 'estado')
                 ->join('users AS ven', 'vendedor', '=', 'ven.id')
                 ->join('users AS cli', 'cliente', '=', 'cli.id')
                 ->first();
 
-            $response = [
+            return response()->json([
                 'response' => 'success',
                 'status' => 200,
                 'pedido' => $pedido,
-            ];
-
-        } else {
-
-            $response = [
-                'response' => 'error',
-                'status' => 403,
-                'message' => 'El pedido ingresado no existe en base de datos.',
-            ];
-
+            ], 200);
         }
 
-        return response()->json($response);
+        return response()->json([
+            'response' => 'error',
+            'status' => 403,
+            'message' => 'El pedido ingresado no existe en base de datos.',
+        ], 403);
     }
 
     public function changeDescuentoPedido($pedido, $descuento)
@@ -466,27 +419,21 @@ class PedidoController extends Controller
         $validate_pedido = Pedido::where('id_pedido', $pedido);
 
         if ($validate_pedido->exists()) {
-
-            $pedido = Pedido::find($pedido);
+            $pedido = Pedido::findOrFail($pedido);
             $pedido->descuento = $descuento;
             $pedido->total = $pedido->sub_total - ($pedido->sub_total * ($descuento / 100));
             $pedido->save();
 
-            $response = [
+            return response()->json([
                 'response' => 'success',
                 'status' => 200,
-            ];
-
-        } else {
-
-            $response = [
-                'response' => 'error',
-                'status' => 403,
-                'message' => 'El pedido ingresado no existe en base de datos.',
-            ];
-
+            ], 200);
         }
 
-        return response()->json($response);
+        return response()->json([
+            'response' => 'error',
+            'status' => 403,
+            'message' => 'El pedido ingresado no existe en base de datos.',
+        ], 403);
     }
 }

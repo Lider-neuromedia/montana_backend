@@ -4,7 +4,8 @@ namespace App\Entities;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Pqrs extends Model{
+class Pqrs extends Model
+{
     protected $table = 'pqrs';
 
     protected $primaryKey = 'id_pqrs';

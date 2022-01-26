@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class AmpliacionCupo extends Model
 {
-
     protected $table = 'ampliacion_cupo';
 
     protected $primaryKey = 'id_cupo';
@@ -20,15 +19,16 @@ class AmpliacionCupo extends Model
         'file_rut',
         'file_camara_comercio',
         'monto',
-        'estado'
+        'estado',
     ];
 
-    public function vendedor(){
+    public function vendedor()
+    {
         return $this->hasOne('App\Entities\User', 'vendedor');
     }
 
-    public function cliente(){
+    public function cliente()
+    {
         return $this->hasOne('App\Entities\User', 'cliente');
     }
-
 }

@@ -21,7 +21,6 @@ class CatalogoController extends Controller
 
         if (isset($request['search'])) {
             $search = json_decode($request['search'], true);
-
             $filtro_catalogos = [];
             $filtro_publico = [];
             $filtro_etiquetas = [];
@@ -56,7 +55,6 @@ class CatalogoController extends Controller
             }
 
             $catalogos = $catalogos->get();
-
         } else {
             $catalogos = Catalogo::all();
         }
@@ -66,14 +64,12 @@ class CatalogoController extends Controller
             $catalogo->imagen = url($catalogo->imagen);
         }
 
-        $response = [
+        return response()->json([
             'response' => 'success',
             'message' => '',
             'status' => 200,
             'catalogos' => $catalogos,
-        ];
-
-        return response()->json($response);
+        ], 200);
     }
 
     /**
@@ -99,18 +95,17 @@ class CatalogoController extends Controller
 
         if ($request['tipo'] == 'show room' && $request['estado'] == 'activo') {
             $validate_show_room = Catalogo::where('tipo', 'show room')->where('estado', 'activo')->exists();
+
             if (!$validate_show_room) {
                 // Si no existe un catalogo show room activo sigue normal.
                 $catalogo->estado = $request['estado'];
             } else {
                 // Si existe. No se crea el catalogo y se devuelve al front.
-                $response = [
+                return response()->json([
                     'response' => 'warning',
                     'status' => 200,
                     'message' => 'Solo debe existir un catalogo show room activo. Por favor inactive el anterior catalogo antes de activar uno nuevo.',
-                ];
-
-                return response()->json($response);
+                ], 200);
             }
         } else {
             $catalogo->estado = $request['estado'];
@@ -128,7 +123,7 @@ class CatalogoController extends Controller
             'catalogo' => $catalogo,
             'response' => 'success',
             'status' => 200,
-        ]);
+        ], 200);
     }
 
     public function saveImage($image, $id_catalogo)
@@ -201,13 +196,11 @@ class CatalogoController extends Controller
                     $catalogo->descuento = $request->get('descuento') ? $request->get('descuento') : $catalogo->descuento;
                     $catalogo->save();
 
-                    $response = [
+                    return response()->json([
                         'response' => 'warning',
                         'status' => 200,
                         'message' => 'Solo debe existir un catalogo show room activo. Por favor inactive el anterior catalogo antes de activar uno nuevo.',
-                    ];
-
-                    return response()->json($response);
+                    ], 200);
                 }
             }
 
@@ -229,7 +222,7 @@ class CatalogoController extends Controller
             'catalogo' => $catalogo,
             'response' => 'success',
             'status' => 200,
-        ]);
+        ], 200);
     }
 
     /**
@@ -246,32 +239,35 @@ class CatalogoController extends Controller
 
         if ($catalogo->cantidad == 0) {
             $catalogo->delete();
-            $response = [
+
+            return response()->json([
                 'response' => 'success',
                 'status' => 200,
-            ];
-        } else {
-            $response = [
-                'response' => 'error',
-                'status' => 401,
-                'message' => 'El catalogo tiene productos registrados. No se puede eliminar.',
-            ];
+            ], 200);
         }
-        return response()->json($response);
+
+        return response()->json([
+            'response' => 'error',
+            'status' => 401,
+            'message' => 'El catalogo tiene productos registrados. No se puede eliminar.',
+        ], 401);
     }
 
     public function consumerCatalogos()
     {
-        $catalogos = Catalogo::where('estado', 'activo')->where('cantidad', '!=', 0)->get();
+        $catalogos = Catalogo::query()
+            ->where('estado', 'activo')
+            ->where('cantidad', '!=', 0)
+            ->get();
+
         foreach ($catalogos as $catalogo) {
             $catalogo->imagen = url($catalogo->imagen);
         }
-        $response = [
+
+        return response()->json([
             'response' => 'success',
             'status' => 200,
             'catalogos' => $catalogos,
-        ];
-
-        return response()->json($response);
+        ], 200);
     }
 }

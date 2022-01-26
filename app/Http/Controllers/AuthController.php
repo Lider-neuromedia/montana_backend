@@ -26,7 +26,9 @@ class AuthController extends Controller
         ]);
         $user->save();
 
-        return response()->json(['message' => 'Successfully created user!'], 201);
+        return response()->json([
+            'message' => 'Successfully created user!',
+        ], 201);
     }
 
     public function login(Request $request)
@@ -40,7 +42,9 @@ class AuthController extends Controller
         $credentials = $request->only('email', 'password');
 
         if (!Auth::attempt($credentials)) {
-            return response()->json(['message' => 'Unauthorized'], 401);
+            return response()->json([
+                'message' => 'Unauthorized',
+            ], 401);
         }
 
         $user = auth()->user();
@@ -105,24 +109,20 @@ class AuthController extends Controller
                 $accesos = [];
             }
 
-            $response = [
+            return response()->json([
                 'response' => 'success',
                 'status' => 200,
                 'user' => $user,
                 'userdata' => $userdata,
                 'accesos' => $accesos,
-            ];
-
-            return response()->json($response, 200);
-        } else {
-            $response = [
-                'response' => 'error',
-                'status' => 403,
-                'message' => 'Token vencido o invalido.',
-            ];
-
-            return response()->json($response, 403);
+            ], 200);
         }
+
+        return response()->json([
+            'response' => 'error',
+            'status' => 403,
+            'message' => 'Token vencido o invalido.',
+        ], 403);
     }
 
     public function dashboardResumen(Request $request)
@@ -163,7 +163,6 @@ class AuthController extends Controller
         }
 
         if ($user->rol_id == 3) { // Cliente
-
             // Tiendas Creadas
             $cantidad_tiendas = \DB::table('tiendas')
                 ->where('cliente', $user->id)

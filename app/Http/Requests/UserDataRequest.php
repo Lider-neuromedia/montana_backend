@@ -24,7 +24,7 @@ class UserDataRequest extends FormRequest
     public function rules()
     {
         return [
-            'nombres' => 'required'
+            'nombres' => 'required',
         ];
     }
 
@@ -38,8 +38,7 @@ class UserDataRequest extends FormRequest
     public function messages()
     {
         return [
-            'nombres.required' => 'El :attribute es obligatorio'
+            'nombres.required' => 'El :attribute es obligatorio',
         ];
     }
-
 }

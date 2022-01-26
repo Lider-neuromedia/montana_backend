@@ -190,13 +190,16 @@ class ProductoController extends Controller
                     // Borrar imagen.
                     if (isset($image['id_galeria_prod']) && $es_borrar_imagen) {
                         $image_store = GaleriaProducto::find($image['id_galeria_prod']);
-                        $path_image = public_path($image_store->image);
 
-                        if (file_exists($path_image)) {
-                            unlink($path_image);
+                        if ($image_store) {
+                            $path_image = public_path($image_store->image);
+
+                            if (file_exists($path_image)) {
+                                unlink($path_image);
+                            }
+
+                            $image_store->delete();
                         }
-
-                        $image_store->delete();
                     }
 
                     // Guardar imagen
@@ -241,6 +244,7 @@ class ProductoController extends Controller
                         // Actualizar imagen sin archivo nuevo.
                         if (isset($image['id_galeria_prod']) && !$es_borrar_imagen) {
                             $image_store = GaleriaProducto::find($image['id_galeria_prod']);
+
                             if ($image_store) {
                                 $image_store->destacada = $image['destacada'];
                                 $image_store->save();
@@ -259,7 +263,6 @@ class ProductoController extends Controller
             ], 200);
 
         } catch (\Exception $ex) {
-
             \Log::info($ex->getMessage());
             \Log::info($ex->getTraceAsString());
 
@@ -268,24 +271,27 @@ class ProductoController extends Controller
                 'status' => 403,
                 'message' => $ex->getMessage(),
             ], 403);
-
         }
     }
 
     public function deleteImages($id_producto)
     {
-        $info_product = Producto::find($id_producto);
-        $images_prod = GaleriaProducto::where('producto', $id_producto)->get();
-
-        foreach ($images_prod as $image) {
-            $path = public_path($image->image);
-            unlink($path);
-        }
-
         try {
+
+            $info_product = Producto::findOrFail($id_producto);
+            $images_prod = GaleriaProducto::where('producto', $id_producto)->get();
+
+            foreach ($images_prod as $image) {
+                $path = public_path($image->image);
+                unlink($path);
+            }
+
             rmdir(public_path("storage/productos/{$info_product->catalogo}/{$info_product->referencia}"));
             return true;
-        } catch (\Exception $e) {
+
+        } catch (\Exception $ex) {
+            \Log::info($ex->getMessage());
+            \Log::info($ex->getTraceAsString());
             return false;
         }
     }

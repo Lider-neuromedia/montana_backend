@@ -4,7 +4,8 @@ namespace App\Entities;
 
 use Illuminate\Database\Eloquent\Model;
 
-class SeguimientoPqrs extends Model{
+class SeguimientoPqrs extends Model
+{
     protected $table = 'seguimiento_pqrs';
 
     protected $primaryKey = 'id_seguimiento';
@@ -13,6 +14,6 @@ class SeguimientoPqrs extends Model{
         'usuario',
         'pqrs',
         'mensaje',
-        'hora'
+        'hora',
     ];
 }
