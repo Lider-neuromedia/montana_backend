@@ -62,6 +62,7 @@ class TestData
 
         foreach (self::TABLES as $table) {
             $path = "database/$table.json";
+            \Log::info("seed: $path");
 
             if (Storage::exists($path) && Schema::hasTable($table)) {
                 $rows = (Array) json_decode(Storage::get($path));
