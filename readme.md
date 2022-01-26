@@ -2,5 +2,5 @@
 
 ##### Deploy a Caprover
 ```
-caprover deploy -n captain-01 -a montana -b master
+caprover deploy -n captain-01 -a montana -b back
 ```
