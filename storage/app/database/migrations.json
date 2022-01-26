@@ -1,1 +1,422 @@
-[{"id":1,"migration":"2021_04_23_164843_create_ampliacion_cupo_table","batch":0},{"id":2,"migration":"2021_04_23_164843_create_catalogos_table","batch":0},{"id":3,"migration":"2021_04_23_164843_create_categorias_table","batch":0},{"id":4,"migration":"2021_04_23_164843_create_categorias_productos_table","batch":0},{"id":5,"migration":"2021_04_23_164843_create_ciudades_table","batch":0},{"id":6,"migration":"2021_04_23_164843_create_departamentos_table","batch":0},{"id":7,"migration":"2021_04_23_164843_create_encuestas_table","batch":0},{"id":8,"migration":"2021_04_23_164843_create_estados_table","batch":0},{"id":9,"migration":"2021_04_23_164843_create_galeria_productos_table","batch":0},{"id":10,"migration":"2021_04_23_164843_create_marcas_table","batch":0},{"id":11,"migration":"2021_04_23_164843_create_novedades_table","batch":0},{"id":12,"migration":"2021_04_23_164843_create_pedido_productos_table","batch":0},{"id":13,"migration":"2021_04_23_164843_create_pedidos_table","batch":0},{"id":14,"migration":"2021_04_23_164843_create_pqrs_table","batch":0},{"id":15,"migration":"2021_04_23_164843_create_preguntas_table","batch":0},{"id":16,"migration":"2021_04_23_164843_create_productos_table","batch":0},{"id":17,"migration":"2021_04_23_164843_create_seguimiento_pqrs_table","batch":0},{"id":18,"migration":"2021_04_23_164843_create_tiendas_table","batch":0},{"id":19,"migration":"2021_04_23_164843_create_valoraciones_table","batch":0},{"id":20,"migration":"2021_04_23_164843_create_vendedor_cliente_table","batch":0},{"id":21,"migration":"2021_04_23_164845_add_foreign_keys_to_ampliacion_cupo_table","batch":0},{"id":22,"migration":"2021_04_23_164845_add_foreign_keys_to_categorias_productos_table","batch":0},{"id":23,"migration":"2021_04_23_164845_add_foreign_keys_to_ciudades_table","batch":0},{"id":24,"migration":"2021_04_23_164845_add_foreign_keys_to_encuestas_table","batch":0},{"id":25,"migration":"2021_04_23_164845_add_foreign_keys_to_galeria_productos_table","batch":0},{"id":26,"migration":"2021_04_23_164845_add_foreign_keys_to_novedades_table","batch":0},{"id":27,"migration":"2021_04_23_164845_add_foreign_keys_to_pedido_productos_table","batch":0},{"id":28,"migration":"2021_04_23_164845_add_foreign_keys_to_pedidos_table","batch":0},{"id":29,"migration":"2021_04_23_164845_add_foreign_keys_to_pqrs_table","batch":0},{"id":30,"migration":"2021_04_23_164845_add_foreign_keys_to_preguntas_table","batch":0},{"id":31,"migration":"2021_04_23_164845_add_foreign_keys_to_productos_table","batch":0},{"id":32,"migration":"2021_04_23_164845_add_foreign_keys_to_seguimiento_pqrs_table","batch":0},{"id":33,"migration":"2021_04_23_164845_add_foreign_keys_to_tiendas_table","batch":0},{"id":34,"migration":"2021_04_23_164845_add_foreign_keys_to_valoraciones_table","batch":0},{"id":35,"migration":"2021_04_23_164845_add_foreign_keys_to_vendedor_cliente_table","batch":0}]
+[
+    {
+        "id": "1",
+        "migration": "2021_04_23_164843_create_ampliacion_cupo_table",
+        "batch": "0"
+    },
+    {
+        "id": "2",
+        "migration": "2021_04_23_164843_create_catalogos_table",
+        "batch": "0"
+    },
+    {
+        "id": "3",
+        "migration": "2021_04_23_164843_create_categorias_table",
+        "batch": "0"
+    },
+    {
+        "id": "4",
+        "migration": "2021_04_23_164843_create_categorias_productos_table",
+        "batch": "0"
+    },
+    {
+        "id": "5",
+        "migration": "2021_04_23_164843_create_ciudades_table",
+        "batch": "0"
+    },
+    {
+        "id": "6",
+        "migration": "2021_04_23_164843_create_departamentos_table",
+        "batch": "0"
+    },
+    {
+        "id": "7",
+        "migration": "2021_04_23_164843_create_encuestas_table",
+        "batch": "0"
+    },
+    {
+        "id": "8",
+        "migration": "2021_04_23_164843_create_estados_table",
+        "batch": "0"
+    },
+    {
+        "id": "9",
+        "migration": "2021_04_23_164843_create_galeria_productos_table",
+        "batch": "0"
+    },
+    {
+        "id": "10",
+        "migration": "2021_04_23_164843_create_marcas_table",
+        "batch": "0"
+    },
+    {
+        "id": "11",
+        "migration": "2021_04_23_164843_create_novedades_table",
+        "batch": "0"
+    },
+    {
+        "id": "12",
+        "migration": "2021_04_23_164843_create_pedido_productos_table",
+        "batch": "0"
+    },
+    {
+        "id": "13",
+        "migration": "2021_04_23_164843_create_pedidos_table",
+        "batch": "0"
+    },
+    {
+        "id": "14",
+        "migration": "2021_04_23_164843_create_pqrs_table",
+        "batch": "0"
+    },
+    {
+        "id": "15",
+        "migration": "2021_04_23_164843_create_preguntas_table",
+        "batch": "0"
+    },
+    {
+        "id": "16",
+        "migration": "2021_04_23_164843_create_productos_table",
+        "batch": "0"
+    },
+    {
+        "id": "17",
+        "migration": "2021_04_23_164843_create_seguimiento_pqrs_table",
+        "batch": "0"
+    },
+    {
+        "id": "18",
+        "migration": "2021_04_23_164843_create_tiendas_table",
+        "batch": "0"
+    },
+    {
+        "id": "19",
+        "migration": "2021_04_23_164843_create_valoraciones_table",
+        "batch": "0"
+    },
+    {
+        "id": "20",
+        "migration": "2021_04_23_164843_create_vendedor_cliente_table",
+        "batch": "0"
+    },
+    {
+        "id": "21",
+        "migration": "2021_04_23_164845_add_foreign_keys_to_ampliacion_cupo_table",
+        "batch": "0"
+    },
+    {
+        "id": "22",
+        "migration": "2021_04_23_164845_add_foreign_keys_to_categorias_productos_table",
+        "batch": "0"
+    },
+    {
+        "id": "23",
+        "migration": "2021_04_23_164845_add_foreign_keys_to_ciudades_table",
+        "batch": "0"
+    },
+    {
+        "id": "24",
+        "migration": "2021_04_23_164845_add_foreign_keys_to_encuestas_table",
+        "batch": "0"
+    },
+    {
+        "id": "25",
+        "migration": "2021_04_23_164845_add_foreign_keys_to_galeria_productos_table",
+        "batch": "0"
+    },
+    {
+        "id": "26",
+        "migration": "2021_04_23_164845_add_foreign_keys_to_novedades_table",
+        "batch": "0"
+    },
+    {
+        "id": "27",
+        "migration": "2021_04_23_164845_add_foreign_keys_to_pedido_productos_table",
+        "batch": "0"
+    },
+    {
+        "id": "28",
+        "migration": "2021_04_23_164845_add_foreign_keys_to_pedidos_table",
+        "batch": "0"
+    },
+    {
+        "id": "29",
+        "migration": "2021_04_23_164845_add_foreign_keys_to_pqrs_table",
+        "batch": "0"
+    },
+    {
+        "id": "30",
+        "migration": "2021_04_23_164845_add_foreign_keys_to_preguntas_table",
+        "batch": "0"
+    },
+    {
+        "id": "31",
+        "migration": "2021_04_23_164845_add_foreign_keys_to_productos_table",
+        "batch": "0"
+    },
+    {
+        "id": "32",
+        "migration": "2021_04_23_164845_add_foreign_keys_to_seguimiento_pqrs_table",
+        "batch": "0"
+    },
+    {
+        "id": "33",
+        "migration": "2021_04_23_164845_add_foreign_keys_to_tiendas_table",
+        "batch": "0"
+    },
+    {
+        "id": "34",
+        "migration": "2021_04_23_164845_add_foreign_keys_to_valoraciones_table",
+        "batch": "0"
+    },
+    {
+        "id": "35",
+        "migration": "2021_04_23_164845_add_foreign_keys_to_vendedor_cliente_table",
+        "batch": "0"
+    },
+    {
+        "id": "693",
+        "migration": "2013_07_22_184223_create_permission_tables",
+        "batch": "1"
+    },
+    {
+        "id": "694",
+        "migration": "2014_10_12_000000_create_users_table",
+        "batch": "1"
+    },
+    {
+        "id": "695",
+        "migration": "2014_10_12_100000_create_password_resets_table",
+        "batch": "1"
+    },
+    {
+        "id": "696",
+        "migration": "2015_07_22_192633_create_user_data_table",
+        "batch": "1"
+    },
+    {
+        "id": "697",
+        "migration": "2016_06_01_000001_create_oauth_auth_codes_table",
+        "batch": "1"
+    },
+    {
+        "id": "698",
+        "migration": "2016_06_01_000002_create_oauth_access_tokens_table",
+        "batch": "1"
+    },
+    {
+        "id": "699",
+        "migration": "2016_06_01_000003_create_oauth_refresh_tokens_table",
+        "batch": "1"
+    },
+    {
+        "id": "700",
+        "migration": "2016_06_01_000004_create_oauth_clients_table",
+        "batch": "1"
+    },
+    {
+        "id": "701",
+        "migration": "2016_06_01_000005_create_oauth_personal_access_clients_table",
+        "batch": "1"
+    },
+    {
+        "id": "702",
+        "migration": "2021_04_23_164843_create_ampliacion_cupo_table",
+        "batch": "1"
+    },
+    {
+        "id": "703",
+        "migration": "2021_04_23_164843_create_catalogos_table",
+        "batch": "1"
+    },
+    {
+        "id": "704",
+        "migration": "2021_04_23_164843_create_categorias_productos_table",
+        "batch": "1"
+    },
+    {
+        "id": "705",
+        "migration": "2021_04_23_164843_create_categorias_table",
+        "batch": "1"
+    },
+    {
+        "id": "706",
+        "migration": "2021_04_23_164843_create_ciudades_table",
+        "batch": "1"
+    },
+    {
+        "id": "707",
+        "migration": "2021_04_23_164843_create_departamentos_table",
+        "batch": "1"
+    },
+    {
+        "id": "708",
+        "migration": "2021_04_23_164843_create_encuestas_table",
+        "batch": "1"
+    },
+    {
+        "id": "709",
+        "migration": "2021_04_23_164843_create_estados_table",
+        "batch": "1"
+    },
+    {
+        "id": "710",
+        "migration": "2021_04_23_164843_create_galeria_productos_table",
+        "batch": "1"
+    },
+    {
+        "id": "711",
+        "migration": "2021_04_23_164843_create_marcas_table",
+        "batch": "1"
+    },
+    {
+        "id": "712",
+        "migration": "2021_04_23_164843_create_novedades_table",
+        "batch": "1"
+    },
+    {
+        "id": "713",
+        "migration": "2021_04_23_164843_create_pedido_productos_table",
+        "batch": "1"
+    },
+    {
+        "id": "714",
+        "migration": "2021_04_23_164843_create_pedidos_table",
+        "batch": "1"
+    },
+    {
+        "id": "715",
+        "migration": "2021_04_23_164843_create_pqrs_table",
+        "batch": "1"
+    },
+    {
+        "id": "716",
+        "migration": "2021_04_23_164843_create_preguntas_table",
+        "batch": "1"
+    },
+    {
+        "id": "717",
+        "migration": "2021_04_23_164843_create_productos_table",
+        "batch": "1"
+    },
+    {
+        "id": "718",
+        "migration": "2021_04_23_164843_create_seguimiento_pqrs_table",
+        "batch": "1"
+    },
+    {
+        "id": "719",
+        "migration": "2021_04_23_164843_create_tiendas_table",
+        "batch": "1"
+    },
+    {
+        "id": "720",
+        "migration": "2021_04_23_164843_create_valoraciones_table",
+        "batch": "1"
+    },
+    {
+        "id": "721",
+        "migration": "2021_04_23_164843_create_vendedor_cliente_table",
+        "batch": "1"
+    },
+    {
+        "id": "722",
+        "migration": "2021_04_23_164845_add_foreign_keys_to_ampliacion_cupo_table",
+        "batch": "1"
+    },
+    {
+        "id": "723",
+        "migration": "2021_04_23_164845_add_foreign_keys_to_categorias_productos_table",
+        "batch": "1"
+    },
+    {
+        "id": "724",
+        "migration": "2021_04_23_164845_add_foreign_keys_to_ciudades_table",
+        "batch": "1"
+    },
+    {
+        "id": "725",
+        "migration": "2021_04_23_164845_add_foreign_keys_to_encuestas_table",
+        "batch": "1"
+    },
+    {
+        "id": "726",
+        "migration": "2021_04_23_164845_add_foreign_keys_to_galeria_productos_table",
+        "batch": "1"
+    },
+    {
+        "id": "727",
+        "migration": "2021_04_23_164845_add_foreign_keys_to_novedades_table",
+        "batch": "1"
+    },
+    {
+        "id": "728",
+        "migration": "2021_04_23_164845_add_foreign_keys_to_pedido_productos_table",
+        "batch": "1"
+    },
+    {
+        "id": "729",
+        "migration": "2021_04_23_164845_add_foreign_keys_to_pedidos_table",
+        "batch": "1"
+    },
+    {
+        "id": "730",
+        "migration": "2021_04_23_164845_add_foreign_keys_to_pqrs_table",
+        "batch": "1"
+    },
+    {
+        "id": "731",
+        "migration": "2021_04_23_164845_add_foreign_keys_to_preguntas_table",
+        "batch": "1"
+    },
+    {
+        "id": "732",
+        "migration": "2021_04_23_164845_add_foreign_keys_to_productos_table",
+        "batch": "1"
+    },
+    {
+        "id": "733",
+        "migration": "2021_04_23_164845_add_foreign_keys_to_seguimiento_pqrs_table",
+        "batch": "1"
+    },
+    {
+        "id": "734",
+        "migration": "2021_04_23_164845_add_foreign_keys_to_tiendas_table",
+        "batch": "1"
+    },
+    {
+        "id": "735",
+        "migration": "2021_04_23_164845_add_foreign_keys_to_valoraciones_table",
+        "batch": "1"
+    },
+    {
+        "id": "736",
+        "migration": "2021_04_23_164845_add_foreign_keys_to_vendedor_cliente_table",
+        "batch": "1"
+    },
+    {
+        "id": "737",
+        "migration": "2021_04_27_103953_add_delete_at_column_to_productos_table",
+        "batch": "1"
+    },
+    {
+        "id": "738",
+        "migration": "2021_04_27_112616_add_delete_at_column_to_catalogos_table",
+        "batch": "1"
+    },
+    {
+        "id": "739",
+        "migration": "2021_05_07_153651_add_etiqueta_column_to_catalogos_table",
+        "batch": "1"
+    },
+    {
+        "id": "740",
+        "migration": "2021_05_07_160837_add_firma_column_to_pedidos_table",
+        "batch": "1"
+    },
+    {
+        "id": "741",
+        "migration": "2021_06_08_163444_add_device_token_column_to_users_table",
+        "batch": "1"
+    }
+]

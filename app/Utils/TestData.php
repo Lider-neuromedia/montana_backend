@@ -12,7 +12,6 @@ class TestData
         'ciudades',
         'oauth_access_tokens',
         'pedido_productos',
-        'migrations',
         'valoraciones',
         'departamentos',
         'user_data',
@@ -60,19 +59,28 @@ class TestData
     {
         Schema::disableForeignKeyConstraints();
 
+        if (\DB::table('migrations')->count() == 0) {
+            self::migrateTable('migrations', "database/migrations.json");
+        }
+
         foreach (self::TABLES as $table) {
             $path = "database/$table.json";
-            \Log::info("seed: $path");
-
-            if (Storage::exists($path) && Schema::hasTable($table)) {
-                $rows = (Array) json_decode(Storage::get($path));
-
-                foreach ($rows as $data) {
-                    DB::table($table)->insert((Array) $data);
-                }
-            }
+            self::migrateTable($table, $path);
         }
 
         Schema::enableForeignKeyConstraints();
+    }
+
+    private static function migrateTable($table, $path)
+    {
+        \Log::info("seed: $path");
+
+        if (Storage::exists($path) && Schema::hasTable($table)) {
+            $rows = (Array) json_decode(Storage::get($path));
+
+            foreach ($rows as $data) {
+                DB::table($table)->insert((Array) $data);
+            }
+        }
     }
 }
