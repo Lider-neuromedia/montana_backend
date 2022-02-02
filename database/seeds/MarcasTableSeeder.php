@@ -43,7 +43,14 @@ class MarcasTableSeeder extends Seeder
             $existe = Marca::where('nombre_marca', $m[1])->exists();
 
             if (!$existe) {
-                Marca::create(["nombre_marca" => $m[1]]);
+                Marca::create(["nombre_marca" => $m[1], "codigo" => $m[0]]);
+            } else {
+                Marca::query()
+                    ->where('nombre_marca', $m[1])
+                    ->where('codigo', '!=', $m[0])
+                    ->update([
+                        'codigo' => $m[0],
+                    ]);
             }
         }
     }

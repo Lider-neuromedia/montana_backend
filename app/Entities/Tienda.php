@@ -17,5 +17,23 @@ class Tienda extends Model
         'direccion',
         'telefono',
         'cliente',
+        "sucursal",
+        "fecha_ingreso",
+        "fecha_ultima_compra",
+        "cupo",
+        "ciudad_codigo",
+        "zona",
+        "bloqueado",
+        "bloqueado_fecha",
+        "nombre_representante",
+        "plazo",
+        "escala_factura",
+        "observaciones",
+    ];
+
+    protected $dates = [
+        "fecha_ingreso",
+        "fecha_ultima_compra",
+        "bloqueado_fecha",
     ];
 }

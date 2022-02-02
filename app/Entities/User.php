@@ -42,4 +42,9 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(User::class, 'vendedor_cliente', 'cliente', 'vendedor');
     }
+
+    public function datos()
+    {
+        return $this->hasMany(UserData::class);
+    }
 }

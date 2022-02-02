@@ -561,77 +561,74 @@ class UserController extends Controller
 
     public function searchVendedor(Request $request)
     {
-        if (isset($request['search'])) {
-            $search = $request['search'];
-
-            if ($request['search'] == '') {
-                $vendedores = User::where('rol_id', 2)->get();
-            } else {
-                $vendedores = User::query()
-                    ->where(function ($query) use ($search) {
-                        $query->where('name', 'like', "%{$search}%");
-                        $query->orWhere('apellidos', 'like', "%{$search}%");
-                        $query->orWhere('dni', 'like', "%{$search}%");
-                    })
-                    ->where('rol_id', '=', 2)
-                    ->get();
-            }
-
+        if (!isset($request['search'])) {
             return response()->json([
-                'response' => 'success',
-                'vendedores' => $vendedores,
-                'status' => 200,
-            ], 200);
+                'response' => 'error',
+                'vendedores' => null,
+                'status' => 403,
+                'message' => 'Sin busqueda.',
+            ], 403);
+        }
+
+        $search = $request['search'];
+
+        if ($request['search'] == '') {
+            $vendedores = User::where('rol_id', 2)->get();
+        } else {
+            $vendedores = User::query()
+                ->where(function ($query) use ($search) {
+                    $query->where('name', 'like', "%{$search}%");
+                    $query->orWhere('apellidos', 'like', "%{$search}%");
+                    $query->orWhere('dni', 'like', "%{$search}%");
+                })
+                ->where('rol_id', '=', 2)
+                ->get();
         }
 
         return response()->json([
-            'response' => 'error',
-            'vendedores' => null,
-            'status' => 403,
-            'message' => 'Sin busqueda.',
-        ], 403);
+            'response' => 'success',
+            'vendedores' => $vendedores,
+            'status' => 200,
+        ], 200);
     }
 
     public function searchClientes(Request $request)
     {
-        if (isset($request['search'])) {
-            $search = $request['search'];
-
-            if ($request['search'] == '') {
-
-                $clientes = User::where('rol_id', 3)
-                    ->leftJoin('vendedor_cliente', 'cliente', '=', 'id')
-                    ->where('vendedor_cliente.id_vendedor_cliente', null)
-                    ->get();
-
-            } else {
-
-                $clientes = User::query()
-                    ->where(function ($query) use ($search) {
-                        $query->where('name', 'like', "%{$search}%");
-                        $query->orWhere('apellidos', 'like', "%{$search}%");
-                        $query->orWhere('dni', 'like', "%{$search}%");
-                    })
-                    ->leftJoin('vendedor_cliente', 'cliente', '=', 'id')
-                    ->where('rol_id', '=', 3)
-                    ->where('vendedor_cliente.id_vendedor_cliente', null)
-                    ->get();
-
-            }
-
+        if (!isset($request['search'])) {
             return response()->json([
-                'response' => 'success',
-                'clientes' => $clientes,
-                'status' => 200,
-            ], 200);
+                'response' => 'error',
+                'clientes' => null,
+                'status' => 403,
+                'message' => 'Sin busqueda.',
+            ], 403);
+        }
+
+        $search = $request['search'];
+
+        if ($request['search'] == '') {
+            $clientes = User::query()
+                ->where('rol_id', 3)
+                ->leftJoin('vendedor_cliente', 'cliente', '=', 'id')
+                ->where('vendedor_cliente.id_vendedor_cliente', null)
+                ->get();
+        } else {
+            $clientes = User::query()
+                ->where(function ($query) use ($search) {
+                    $query->where('name', 'like', "%{$search}%");
+                    $query->orWhere('apellidos', 'like', "%{$search}%");
+                    $query->orWhere('dni', 'like', "%{$search}%");
+                })
+                ->leftJoin('vendedor_cliente', 'cliente', '=', 'id')
+                ->where('rol_id', '=', 3)
+                ->where('vendedor_cliente.id_vendedor_cliente', null)
+                ->get();
         }
 
         return response()->json([
-            'response' => 'error',
-            'clientes' => null,
-            'status' => 403,
-            'message' => 'Sin busqueda.',
-        ], 403);
+            'response' => 'success',
+            'clientes' => $clientes,
+            'status' => 200,
+        ], 200);
     }
 
     public function updateVendedor(Request $request, $id)
@@ -690,20 +687,20 @@ class UserController extends Controller
     public function updateAsignClient($idClient, $idVendedor, $action)
     {
         // Validacion manual de los Id's
-        $validate_client = User::find($idClient)->exists();
-        $validate_vend = User::find($idVendedor)->exists();
+        $existeCliente = User::find($idClient)->exists();
+        $existeVendedor = User::find($idVendedor)->exists();
 
         // Validar que accion se ejecuta. Crear asignacion o eliminarla.
         if ($action == 'create') {
 
             // Validar antes de cualquier operacion los Id's
-            if ($validate_client == true && $validate_vend == true) {
-                $validate_asign = DB::table('vendedor_cliente')
+            if ($existeCliente == true && $existeVendedor == true) {
+                $yaEstaAsignado = DB::table('vendedor_cliente')
                     ->where('vendedor', $idVendedor)
                     ->where('cliente', $idClient)
                     ->exists();
 
-                if (!$validate_asign) {
+                if (!$yaEstaAsignado) {
                     DB::table('vendedor_cliente')->insert([
                         'vendedor' => $idVendedor,
                         'cliente' => $idClient,
@@ -731,7 +728,7 @@ class UserController extends Controller
 
         } else if ($action == 'delete') {
 
-            if ($validate_client == true && $validate_vend == true) {
+            if ($existeCliente == true && $existeVendedor == true) {
                 DB::table('vendedor_cliente')
                     ->where('vendedor', $idVendedor)
                     ->where('cliente', $idClient)
@@ -762,19 +759,19 @@ class UserController extends Controller
     public function updateAsignVend($idClient, $idVendedor, $action)
     {
         // Validacion manual de los Id's
-        $validate_client = User::find($idClient)->exists();
-        $validate_vend = User::find($idVendedor)->exists();
+        $existeCliente = User::find($idClient)->exists();
+        $existeVendedor = User::find($idVendedor)->exists();
 
         // Validar que accion se ejecuta. Crear asignacion o eliminarla.
         if ($action == 'create') {
 
             // Validar antes de cualquier operacion los Id's
-            if ($validate_client == true && $validate_vend == true) {
-                $validate_asign = DB::table('vendedor_cliente')
+            if ($existeCliente == true && $existeVendedor == true) {
+                $yaEstaAsignado = DB::table('vendedor_cliente')
                     ->where('cliente', $idClient)
                     ->exists();
 
-                if (!$validate_asign) {
+                if (!$yaEstaAsignado) {
                     DB::table('vendedor_cliente')->insert([
                         'vendedor' => $idVendedor,
                         'cliente' => $idClient,
@@ -802,7 +799,7 @@ class UserController extends Controller
 
         } else if ($action == 'delete') {
 
-            if ($validate_client == true && $validate_vend == true) {
+            if ($existeCliente == true && $existeVendedor == true) {
                 DB::table('vendedor_cliente')
                     ->where('vendedor', $idVendedor)
                     ->where('cliente', $idClient)

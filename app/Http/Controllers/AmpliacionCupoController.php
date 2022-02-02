@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Entities\AmpliacionCupo;
 use Carbon\Carbon;
-use DB;
 use Illuminate\Http\Request;
 
 class AmpliacionCupoController extends Controller
@@ -44,7 +43,7 @@ class AmpliacionCupoController extends Controller
 
     public function getUserSmall($rol_id)
     {
-        $users = DB::table('users')
+        $users = \DB::table('users')
             ->select('id', 'name', 'apellidos')
             ->where('rol_id', $rol_id)
             ->get();

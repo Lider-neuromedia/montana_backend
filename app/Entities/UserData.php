@@ -13,4 +13,9 @@ class UserData extends Model
         'field_key',
         'value_key',
     ];
+
+    protected $hidden = [
+        'created_at',
+        'updated_at',
+    ];
 }

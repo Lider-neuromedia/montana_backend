@@ -138,4 +138,9 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::get('changeState/{id}/{state}', 'PqrsController@changeState');
     Route::get('getPqrsUser', 'PqrsController@getPqrsUserSesion');
 
+    Route::post('batch/importar-marcas', 'BatchDataController@importarMarcas');
+    Route::post('batch/importar-productos', 'BatchDataController@importarProductos');
+    Route::post('batch/importar-vendedores', 'BatchDataController@importarVendedores');
+    Route::post('batch/importar-clientes', 'BatchDataController@importarClientes');
+    Route::post('batch/importar-cartera', 'BatchDataController@importarCartera');
 });
