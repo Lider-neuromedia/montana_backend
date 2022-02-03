@@ -5,10 +5,12 @@ namespace App\Entities;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Passport\HasApiTokens;
+use OwenIt\Auditing\Contracts\Auditable;
 use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable
+class User extends Authenticatable implements Auditable
 {
+    use \OwenIt\Auditing\Auditable;
     use Notifiable, HasRoles, HasApiTokens;
 
     protected $table = 'users';

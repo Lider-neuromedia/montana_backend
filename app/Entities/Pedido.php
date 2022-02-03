@@ -3,9 +3,12 @@
 namespace App\Entities;
 
 use Illuminate\Database\Eloquent\Model;
+use OwenIt\Auditing\Contracts\Auditable;
 
-class Pedido extends Model
+class Pedido extends Model implements Auditable
 {
+    use \OwenIt\Auditing\Auditable;
+
     protected $table = 'pedidos';
 
     protected $primaryKey = 'id_pedido';

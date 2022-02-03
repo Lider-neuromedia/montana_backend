@@ -19,8 +19,8 @@ Route::get('/unauthenticated', function () {
     ], 403);
 })->name('unauthenticated');
 
-Route::group(['middleware' => ['role:administrador']], function () {
-    //
+Route::group(['middleware' => 'auth:api'], function () {
+    Route::get('monitoreo', 'MonitoreoController@index');
 });
 
 Route::group(['middleware' => ['permission:create user']], function () {
