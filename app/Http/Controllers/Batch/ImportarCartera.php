@@ -106,7 +106,7 @@ class ImportarCartera extends Importar
             ->where('rol_id', 3)
             ->whereHas('datos', function ($q) use ($idCliente) {
                 $q->where([
-                    'field_key' => 'cliente_id',
+                    'field_key' => 'nit',
                     'value_key' => $idCliente,
                 ]);
             })

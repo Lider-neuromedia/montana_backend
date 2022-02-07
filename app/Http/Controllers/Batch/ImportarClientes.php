@@ -32,27 +32,31 @@ class ImportarClientes extends Importar
             $records = $stmt->process($csv);
 
             foreach ($records as $record) {
-                $idCliente = $record[0];
+                $nit = $record[0];
                 $vendedorCodigo = $record[12];
 
                 $nombresTemporal = $this->dividirNombre($record[2]);
                 $nombres = $nombresTemporal->nombres;
                 $nombreCliente = $nombres[0];
-                $emailCliente = $record[9] ?: (\Str::slug($nombreCliente . $idCliente) . '@example.com');
+                $razonSocial = $nombres[0];
+                $emailCliente = $record[9] ?: \Str::slug("{$nombreCliente}{$nit}") . "@example.com";
                 $nombreTienda = $nombres[0];
                 $lugarTienda = $record[7];
                 $localTienda = "";
 
                 if ($nombresTemporal->conteo == 4) {
-                    $nombreTienda = implode(" ", [$nombres[0], $nombres[1]]);
+                    $nombreTienda = $nombres[1];
+                    $razonSocial = $nombres[1];
                     $lugarTienda = $nombres[2];
                     $localTienda = $nombres[3];
                 } else if ($nombresTemporal->conteo == 3) {
-                    $nombreTienda = implode(" ", [$nombres[0], $nombres[1]]);
+                    $nombreTienda = $nombres[1];
+                    $razonSocial = $nombres[1];
                     $lugarTienda = $nombres[2];
                     $localTienda = "";
                 } else if ($nombresTemporal->conteo == 2) {
                     $nombreTienda = $nombres[0];
+                    $razonSocial = $nombres[0];
                     $lugarTienda = $nombres[1];
                     $localTienda = "";
                 }
@@ -60,20 +64,19 @@ class ImportarClientes extends Importar
                 $datosCliente = [
                     'rol_id' => 3,
                     'name' => $nombreCliente,
-                    'apellidos' => '', // TODO: El nombre completo viene en un solo campo
-                    'email' => $emailCliente, // TODO: No viene en el archivo
-                    'tipo_identificacion' => 'Cedula', // TODO: No viene en el archivo
-                    'dni' => '', // TODO: No viene en el archivo
-                    'password' => $password, // TODO: No viene en el archivo
+                    'apellidos' => '',
+                    'email' => $emailCliente,
+                    'tipo_identificacion' => 'Cedula',
+                    'dni' => $nit,
+                    'password' => $password,
                 ];
 
                 $datosTienda = [
                     "nombre" => $nombreTienda,
-                    "lugar" => $lugarTienda, // Ciudad
+                    "lugar" => $lugarTienda,
                     "local" => $localTienda,
                     "direccion" => $record[4],
                     "telefono" => $record[8],
-                    // TODO: Datos por validar si van en datos de la tienda
                     "fecha_ingreso" => $this->formatearFecha($record[10]),
                     "fecha_ultima_compra" => $this->formatearFecha($record[11]),
                     "cupo" => $record[15],
@@ -82,33 +85,34 @@ class ImportarClientes extends Importar
                     "zona" => $record[5],
                     "bloqueado" => $record[16],
                     "bloqueado_fecha" => $this->formatearFecha($record[17]),
-                    "nombre_representante" => $record[3], // Vacío
+                    "nombre_representante" => $record[3],
                     "plazo" => $record[13],
                     "escala_factura" => $record[14],
                     "observaciones" => $record[18],
                 ];
 
                 $camposExtra = [
-                    new UserData(["field_key" => "cliente_id", "value_key" => $idCliente]), // TODO: registros vacíos
-                    new UserData(["field_key" => "nit", "value_key" => ""]), // TODO: registros vacíos
-                    new UserData(["field_key" => "razon_social", "value_key" => ""]), // TODO: registros vacíos
-                    new UserData(["field_key" => "direccion", "value_key" => ""]), // TODO: se tiene la dirección de la tienda
-                    new UserData(["field_key" => "telefono", "value_key" => ""]), // TODO: se tiene el teléfono de la tienda
+                    new UserData(["field_key" => "nit", "value_key" => $nit]),
+                    new UserData(["field_key" => "razon_social", "value_key" => $razonSocial]),
                 ];
 
-                if (!isset($diccionario["$idCliente"])) {
-                    $diccionario["$idCliente"] = [
+                if (!isset($diccionario["$nit"])) {
+                    $diccionario["$nit"] = [
                         "conteo" => 0,
                         "clientes" => [],
                         "tiendas" => [],
+                        "telefonos" => [],
+                        "direcciones" => [],
                     ];
                 }
 
-                // $diccionario["$idCliente"]["record"] = $this->formatRecord($record);
-                $diccionario["$idCliente"]["conteo"]++;
-                $diccionario["$idCliente"]["vendedor_codigo"] = $vendedorCodigo;
-                $diccionario["$idCliente"]["tiendas"][] = $datosTienda;
-                $diccionario["$idCliente"]["clientes"][$datosCliente["name"]] = [
+                // $diccionario["$nit"]["record"] = $this->formatRecord($record);
+                $diccionario["$nit"]["conteo"]++;
+                $diccionario["$nit"]["telefonos"][] = $record[8];
+                $diccionario["$nit"]["direcciones"][] = $record[4];
+                $diccionario["$nit"]["vendedor_codigo"] = $vendedorCodigo;
+                $diccionario["$nit"]["tiendas"][] = $datosTienda;
+                $diccionario["$nit"]["clientes"][$datosCliente["name"]] = [
                     "cliente" => $datosCliente,
                     "extra" => $camposExtra,
                 ];
@@ -116,12 +120,7 @@ class ImportarClientes extends Importar
         }
 
         foreach ($diccionario as $clienteId => $grupoClientes) {
-            $this->saveOrUpdateCliente(
-                $clienteId,
-                $grupoClientes["vendedor_codigo"],
-                $grupoClientes["clientes"],
-                $grupoClientes["tiendas"],
-            );
+            $this->saveOrUpdateCliente($clienteId, $grupoClientes);
         }
 
         return [
@@ -133,14 +132,26 @@ class ImportarClientes extends Importar
         ];
     }
 
-    private function saveOrUpdateCliente($idCliente, $vendedorCodigo, array $clientes, array $tiendas)
+    private function saveOrUpdateCliente($nit, $grupoClientes)
     {
         $conteoClientes = 0;
+        $vendedorCodigo = $grupoClientes["vendedor_codigo"];
+        $clientes = $grupoClientes["clientes"];
+        $tiendas = $grupoClientes["tiendas"];
 
-        // Guardar cada uno de los clientes de un grupo(cliente_id).
+        $telefonoCliente = new UserData([
+            "field_key" => "telefono",
+            "value_key" => implode(", ", array_unique($grupoClientes["telefonos"])),
+        ]);
+        $direccionCliente = new UserData([
+            "field_key" => "direccion",
+            "value_key" => implode(", ", array_unique($grupoClientes["direcciones"])),
+        ]);
+
+        // Guardar cada uno de los clientes de un grupo(nit).
         foreach ($clientes as $nombreCliente => $data) {
             $conteoClientes++;
-            $cliente = $this->buscarCliente($idCliente, $nombreCliente);
+            $cliente = $this->buscarCliente($nit, $nombreCliente);
 
             // Guardar datos de cliente.
             if ($cliente == null) {
@@ -150,6 +161,8 @@ class ImportarClientes extends Importar
             }
 
             // Guardar datos extra.
+            $data['extra'][] = $telefonoCliente;
+            $data['extra'][] = $direccionCliente;
             $camposExtra = collect($data['extra'])
                 ->map(function ($x) use ($cliente) {
                     $x->user_id = $cliente->id;
@@ -172,7 +185,7 @@ class ImportarClientes extends Importar
             }
 
             // Guardar tiendas. Solo asignarle tiendas al primer
-            // cliente del grupo definido por el idCliente.
+            // cliente del grupo definido por el nit.
             if ($conteoClientes == 1) {
                 foreach ($tiendas as $datosTienda) {
                     $datosTienda["cliente"] = $cliente->id;
@@ -188,15 +201,15 @@ class ImportarClientes extends Importar
         }
     }
 
-    private function buscarCliente($idCliente, $nombre)
+    private function buscarCliente($nit, $nombre)
     {
         return User::query()
             ->where('rol_id', 3)
             ->where('name', $nombre)
-            ->whereHas('datos', function ($q) use ($idCliente) {
+            ->whereHas('datos', function ($q) use ($nit) {
                 $q->where([
-                    'field_key' => 'cliente_id',
-                    'value_key' => $idCliente,
+                    'field_key' => 'nit',
+                    'value_key' => $nit,
                 ]);
             })
             ->first();
@@ -257,7 +270,7 @@ class ImportarClientes extends Importar
     private function formatRecord($record)
     {
         return (Object) [
-            "CLIENTE" => $record[0], // cliente_id
+            "CLIENTE" => $record[0], // nit
             "SUCURSAL" => $record[1], // sucursal
             "NCLIENTE" => $record[2], // nombre
             "REPRESENTA" => $record[3], // nombre_representante
