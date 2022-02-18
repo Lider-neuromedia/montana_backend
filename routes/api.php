@@ -52,7 +52,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     Route::apiResource('/roles', 'RolController');
 
-    Route::apiResource('/asignar-cliente', 'VendedorClienteController');
+    Route::apiResource('/asignar-cliente', 'VendedorClienteController', ['only' => ['index', 'store', 'show']]);
     Route::get('/vendedor-asignado', 'VendedorClienteController@vendedorAsignado');
 
     // USUARIOS

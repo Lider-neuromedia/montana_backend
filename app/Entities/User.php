@@ -35,14 +35,33 @@ class User extends Authenticatable implements Auditable
         'email_verified_at' => 'datetime',
     ];
 
-    public function vendedor_clientes()
+    /**
+     * Obtener vendedores asignados a mi (como cliente).
+     */
+    public function vendedores()
     {
-        return $this->belongsToMany(User::class, 'vendedor_cliente', 'vendedor', 'cliente');
+        return $this->belongsToMany(Tienda::class, 'vendedor_cliente', 'cliente', 'vendedor');
     }
 
-    public function cliente_vendedor()
+    /**
+     * Obtener clientes asignados a mi (como vendedor).
+     */
+    public function clientes()
     {
-        return $this->belongsToMany(User::class, 'vendedor_cliente', 'cliente', 'vendedor');
+        return $this->belongsToMany(Tienda::class, 'vendedor_cliente', 'vendedor', 'cliente');
+    }
+
+    /**
+     * Obtener mis tiendas asignadas como vendedor.
+     */
+    public function vendedorTiendas()
+    {
+        return $this->belongsToMany(Tienda::class, 'tienda_vendedor', 'vendedor_id', 'tienda_id');
+    }
+
+    public function tiendas()
+    {
+        return $this->hasMany(Tienda::class, 'cliente');
     }
 
     public function datos()

@@ -39,4 +39,9 @@ class Tienda extends Model implements Auditable
         "fecha_ultima_compra",
         "bloqueado_fecha",
     ];
+
+    public function vendedores()
+    {
+        return $this->belongsToMany(Tienda::class, 'tienda_vendedor', 'tienda_id', 'vendedor_id');
+    }
 }

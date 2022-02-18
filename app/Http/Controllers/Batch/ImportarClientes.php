@@ -33,7 +33,6 @@ class ImportarClientes extends Importar
 
             foreach ($records as $record) {
                 $nit = $record[0];
-                $vendedorCodigo = $record[12];
 
                 $nombresTemporal = $this->dividirNombre($record[2]);
                 $nombres = $nombresTemporal->nombres;
@@ -89,6 +88,7 @@ class ImportarClientes extends Importar
                     "plazo" => $record[13],
                     "escala_factura" => $record[14],
                     "observaciones" => $record[18],
+                    "vendedor_codigo" => $record[12],
                 ];
 
                 $camposExtra = [
@@ -106,11 +106,9 @@ class ImportarClientes extends Importar
                     ];
                 }
 
-                // $diccionario["$nit"]["record"] = $this->formatRecord($record);
                 $diccionario["$nit"]["conteo"]++;
                 $diccionario["$nit"]["telefonos"][] = $record[8];
                 $diccionario["$nit"]["direcciones"][] = $record[4];
-                $diccionario["$nit"]["vendedor_codigo"] = $vendedorCodigo;
                 $diccionario["$nit"]["tiendas"][] = $datosTienda;
                 $diccionario["$nit"]["clientes"][$datosCliente["name"]] = [
                     "cliente" => $datosCliente,
@@ -119,8 +117,18 @@ class ImportarClientes extends Importar
             }
         }
 
-        foreach ($diccionario as $clienteId => $grupoClientes) {
-            $this->saveOrUpdateCliente($clienteId, $grupoClientes);
+        try {
+            \DB::beginTransaction();
+
+            foreach ($diccionario as $nit => $grupoClientes) {
+                $this->saveOrUpdateCliente($nit, $grupoClientes);
+            }
+
+            \DB::commit();
+        } catch (\Exception $ex) {
+            \Log::info($ex->getMessage());
+            \Log::info($ex->getTraceAsString());
+            \DB::rollBack();
         }
 
         return [
@@ -128,14 +136,12 @@ class ImportarClientes extends Importar
             'registros_guardados' => count($diccionario),
             'clientes_total' => User::where('rol_id', 3)->count(),
             'tiendas_total' => Tienda::count(),
-            // 'diccionario' => $diccionario,
         ];
     }
 
     private function saveOrUpdateCliente($nit, $grupoClientes)
     {
         $conteoClientes = 0;
-        $vendedorCodigo = $grupoClientes["vendedor_codigo"];
         $clientes = $grupoClientes["clientes"];
         $tiendas = $grupoClientes["tiendas"];
 
@@ -152,6 +158,14 @@ class ImportarClientes extends Importar
         foreach ($clientes as $nombreCliente => $data) {
             $conteoClientes++;
             $cliente = $this->buscarCliente($nit, $nombreCliente);
+
+            // Limpiar relaciones entre clientes - tiendas y vendedores - tiendas.
+            if ($conteoClientes == 1 && $cliente != null) {
+                $cliente->vendedores()->detach();
+                foreach ($cliente->tiendas()->get() as $tienda) {
+                    $tienda->vendedores()->detach();
+                }
+            }
 
             // Guardar datos de cliente.
             if ($cliente == null) {
@@ -171,19 +185,6 @@ class ImportarClientes extends Importar
             $cliente->datos()->delete();
             $cliente->datos()->saveMany($camposExtra);
 
-            // Asignar vendedor.
-            $vendedor = $this->buscarVendedor($vendedorCodigo);
-            \DB::table('vendedor_cliente')
-                ->where('cliente', $cliente->id)
-                ->delete();
-
-            if ($vendedor) {
-                \DB::table('vendedor_cliente')->insert([
-                    'vendedor' => $vendedor->id,
-                    'cliente' => $cliente->id,
-                ]);
-            }
-
             // Guardar tiendas. Solo asignarle tiendas al primer
             // cliente del grupo definido por el nit.
             if ($conteoClientes == 1) {
@@ -195,6 +196,13 @@ class ImportarClientes extends Importar
                         $tienda = Tienda::create($datosTienda);
                     } else {
                         $tienda->update($datosTienda);
+                    }
+
+                    // Asignar vendedor.
+                    $vendedor = $this->buscarVendedor($datosTienda["vendedor_codigo"]);
+                    if ($vendedor) {
+                        $tienda->vendedores()->syncWithoutDetaching([$vendedor->id]);
+                        $cliente->vendedores()->syncWithoutDetaching([$vendedor->id]);
                     }
                 }
             }
