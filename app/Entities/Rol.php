@@ -15,4 +15,10 @@ class Rol extends Model implements Auditable
         'name',
         'guard_name',
     ];
+
+    protected $hidden = [
+        'created_at',
+        'updated_at',
+        'guard_name',
+    ];
 }

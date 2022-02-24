@@ -21,4 +21,14 @@ class Pqrs extends Model implements Auditable
         'estado',
         'tipo',
     ];
+
+    public function pqrsVendedor()
+    {
+        return $this->belongsTo(User::class, 'vendedor');
+    }
+
+    public function pqrsCliente()
+    {
+        return $this->belongsTo(User::class, 'cliente');
+    }
 }

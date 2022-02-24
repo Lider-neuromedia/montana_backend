@@ -2,400 +2,239 @@
 
 namespace App\Http\Controllers;
 
+use App\Entities\Rol;
+use App\Entities\SeguimientoPqrs;
 use App\Entities\Tienda;
 use App\Entities\User;
 use App\Entities\UserData;
-use App\Http\Requests\UserRequest;
-use DB;
+use App\Entities\Valoracion;
 use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
+    public function roles()
+    {
+        $roles = Rol::all();
+        return response()->json($roles, 200);
+    }
+
     public function index()
     {
-        return User::paginate(4);
+        $users = User::paginate(4);
+        return response()->json($users, 200);
     }
 
-    public function getForRole($rol)
+    public function usuariosPorRol(Request $request, $rol_id)
     {
-        $userdata = DB::table('users')
-            ->where('rol_id', $rol)
-            ->get();
-
-        return response()->json($userdata, 200);
+        $users = User::query()
+            ->where('rol_id', $rol_id)
+            ->orderBy('name', 'asc')
+            ->orderBy('apellidos', 'asc')
+            ->paginate(10);
+        return response()->json($users, 200);
     }
 
-    public function getUsers($rol_id, $search = null)
+    private function buscarUsuariosPorRol($rol_id, $search, $es_simple = false)
     {
-        $users = DB::table('users')
-            ->where(function ($query) use ($search) {
-                $query->where('name', 'like', "%{$search}%");
-                $query->orWhere('apellidos', 'like', "%{$search}%");
-                $query->orWhere('dni', 'like', "%{$search}%");
-                $query->orWhere('email', 'like', "%{$search}%");
+        $users = User::query()
+            ->when($search, function ($q) use ($search) {
+                $q->where(function ($query) use ($search) {
+                    $query->where('name', 'like', "%{$search}%")
+                        ->orWhere('apellidos', 'like', "%{$search}%")
+                        ->orWhere('dni', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                });
             })
             ->where('rol_id', $rol_id)
-            ->get();
+            ->when($es_simple == false, function ($q) use ($rol_id) {
+                $q->with('datos');
+            })
+            ->paginate(10);
 
-        foreach ($users as $user) {
-            $data_admin = DB::table('user_data')
-                ->where('user_id', $user->id)
-                ->get();
-
-            $user->user_data = $data_admin;
-            $user->iniciales = substr($user->name, 0, 1);
-            $user->iniciales .= substr($user->apellidos, 0, 1);
-
-            if ($rol_id == 3) {
-                $vendedor = DB::table('vendedor_cliente')
-                    ->where('cliente', $user->id)
-                    ->join('users', 'vendedor', '=', 'users.id')
-                    ->first();
-                $user->vendedor = $vendedor;
-            }
-        }
-
-        $admin_ramdom = DB::table('users')
-            ->where('rol_id', $rol_id)
-            ->first();
-        $fields_db = DB::table('user_data')
-            ->where('user_id', $admin_ramdom->id)
-            ->get();
-
-        $fields = [];
-
-        foreach ($fields_db as $field) {
-            $fields[] = $field->field_key;
-        }
-
-        return response()->json([
-            'fields' => $fields,
-            'users' => $users,
-        ], 200);
+        return $users;
     }
 
-    public function getAdmins()
+    /**
+     * Obtener los campos extra que tiene un rol de usuario;
+     */
+    private function camposExtraPorRol($rol_id)
     {
-        return $this->getUsers(1);
+        return UserData::query()
+            ->whereHas('usuario', function ($q) use ($rol_id) {
+                $q->where('rol_id', $rol_id);
+            })
+            ->get()
+            ->pluck('field_key')
+            ->unique()
+            ->flatten();
     }
 
-    public function getAdmin($id)
-    {
-        $admin = DB::table('users')
-            ->where('id', $id)
-            ->where('rol_id', 1)
-            ->first();
-
-        if ($admin == null) {
-            return response()->json([
-                'response' => 'error',
-                'message' => 'El id del usuario no es un administrador.',
-                'status' => 403,
-            ], 403);
-        }
-
-        $data_admin = DB::table('user_data')
-            ->where('user_id', $id)
-            ->get();
-
-        $admin->user_data = $data_admin;
-
-        return response()->json($admin, 200);
-    }
-
-    public function getVendedores(Request $request)
-    {
-        if (isset($request['search'])) {
-            $search = $request['search'];
-        } else {
-            $search = null;
-        }
-
-        return $this->getUsers(2, $search);
-    }
-
-    public function getClientes(Request $request)
-    {
-        if (isset($request['search'])) {
-            $search = $request['search'];
-        } else {
-            $search = null;
-        }
-
-        return $this->getUsers(3, $search);
-    }
-
-    public function getVendedor($id)
-    {
-        // Buscar el vendedor.
-        $user = User::where('rol_id', 2)->findOrFail($id);
-
-        // Buscar la data del usuario en cuestion.
-        $metadata = UserData::where('user_id', $id)->get();
-
-        // Organizar los campos administrados del usuario y organizarlos.
-        $filterData = [];
-
-        foreach ($metadata as $mt) {
-            $filterData[] = [
-                'id_field' => $mt->id,
-                'field_key' => $mt->field_key,
-                'value_key' => $mt->value_key,
-            ];
-        }
-
-        // Setear los campos administrador en un atributo "data_user".
-        $user->data_user = $filterData;
-        // Buscar clientes.
-        $clientes_vendedor = DB::table('vendedor_cliente')
-            ->select('id_vendedor_cliente', 'id as id_cliente', 'rol_id', 'name', 'apellidos', 'email', 'dni')
-            ->join('users', 'cliente', '=', 'id')
-            ->where('vendedor', $id)
-            ->get();
-
-        // Setear clientes.
-        $user->clientes = $clientes_vendedor;
-
-        // Buscar pedidos
-        $pedidos_vendedor = DB::table('pedidos')
-            ->where('vendedor', $id)
-            ->get();
-
-        // Setear pedidos.
-        $user->pedidos = $pedidos_vendedor;
-
-        return response()->json($user, 200);
-    }
-
-    public function getCliente($id)
-    {
-        // Buscar el cliente.
-        $user = User::where('rol_id', 3)->find($id);
-
-        // validar que sea un cliente.
-        if ($user == null) {
-            return response()->json([
-                'response' => 'error',
-                'message' => 'El id del usuario no es un cliente.',
-                'status' => 403,
-            ], 403);
-        }
-
-        // Buscar la data del usuario en cuestion.
-        $metadata = UserData::where('user_id', $id)->get();
-
-        // Organizar los campos administrados del usuario.
-        $filterData = [];
-
-        foreach ($metadata as $mt) {
-            $filterData[] = [
-                'id_field' => $mt->id,
-                'field_key' => $mt->field_key,
-                'value_key' => $mt->value_key,
-            ];
-        }
-
-        // Setear los campos administrador en un atributo "data_user".
-        $user->data_user = $filterData;
-
-        // Buscar su vendedor.
-        $vendedor = DB::table('vendedor_cliente')
-            ->select('id_vendedor_cliente', 'id as id_vendedor', 'cliente as id_cliente', 'rol_id', 'name', 'apellidos', 'email')
-            ->join('users', 'vendedor', '=', 'id')
-            ->where('cliente', $id)
-            ->first();
-
-        if ($vendedor != null) {
-            $data_vendedor = DB::table('user_data')
-                ->where('user_id', $vendedor->id_vendedor)
-                ->get();
-            $vendedor->user_data = $data_vendedor;
-        }
-
-        // Setear el vendedor.
-        $user->vendedor = $vendedor;
-
-        // Buscar las tiendas del cliente.
-        $tiendas = DB::table('tiendas')
-            ->select('id_tiendas', 'nombre', 'lugar', 'local', 'direccion', 'telefono')
-            ->where('cliente', $id)
-            ->get();
-        $user->tiendas = $tiendas;
-
-        // Pedidos
-        $pedidos = DB::table('pedidos')->where('cliente', $id)->get();
-        $user->pedidos = $pedidos;
-
-        return response()->json($user, 200);
-    }
-
-    public function createAdmin(Request $request)
+    public function store(Request $request)
     {
         $request->validate([
-            'rol_id' => 'required',
-            'name' => 'required|string',
-            'apellidos' => 'required|string',
-            'email' => 'required|string|email|unique:users',
-            'password' => 'required|string',
+            'rol_id' => ['required', 'integer', 'exists:roles,id'],
+            'name' => ['required', 'string', 'max:250'],
+            'apellidos' => ['required', 'string', 'max:250'],
+            'email' => ['required', 'string', 'email:rfc,dns', 'unique:users,email', 'max:100'],
+            'tipo_identificacion' => ['required', 'string', 'max:250'],
+            'dni' => ['required', 'string', 'max:250'],
+            'password' => ['required', 'string', 'min:8', 'max:50'],
+
+            'datos' => ['required', 'array', 'min:1'],
+            'datos.*.field_key' => ['required', 'string', 'max:250'],
+            'datos.*.value_key' => ['required', 'string', 'max:250'],
+
+            'clientes' => ['required_if:rol_id,2', 'array', 'min:1'],
+            'clientes.*.cliente_id' => ['required', 'integer', 'exists:users,id'],
+            'clientes.*.tienda_id' => ['required', 'integer', 'exists:tiendas,id_tiendas'],
+
+            'tiendas' => ['required_if:rol_id,3', 'array', 'min:1'],
+            'tiendas.*.nombre' => ['required', 'string', 'max:60'],
+            'tiendas.*.lugar' => ['required', 'string', 'max:40'],
+            'tiendas.*.local' => ['nullable', 'string', 'max:30'],
+            'tiendas.*.direccion' => ['nullable', 'string', 'max:60'],
+            'tiendas.*.telefono' => ['nullable', 'string', 'max:40'],
+            'tiendas.*.sucursal' => ['nullable', 'string', 'max:1'],
+            'tiendas.*.fecha_ingreso' => ['required', 'date_format:Y-m-d'],
+            'tiendas.*.fecha_ultima_compra' => ['required', 'date_format:Y-m-d'],
+            'tiendas.*.cupo' => ['required', 'numeric', 'min:0'],
+            'tiendas.*.ciudad_codigo' => ['required', 'numeric'],
+            'tiendas.*.zona' => ['nullable', 'numeric', 'min:0'],
+            'tiendas.*.bloqueado' => ['required', 'string', 'in:N,S'],
+            'tiendas.*.bloqueado_fecha' => ['nullable', 'date_format:Y-m-d'],
+            'tiendas.*.nombre_representante' => ['nullable', 'string', 'max:80'],
+            'tiendas.*.plazo' => ['required', 'integer', 'min:0'],
+            'tiendas.*.escala_factura' => ['nullable', 'string', 'max:1'],
+            'tiendas.*.observaciones' => ['nullable', 'string', 'max:2000'],
+            'tiendas.*.vendedores' => ['required', 'array', 'min:1'],
+            'tiendas.*.vendedores.*' => ['required', 'integer', 'exists:users,id'],
         ]);
 
-        $user = User::create([
-            'rol_id' => 1,
-            'name' => $request->name,
-            'apellidos' => $request->apellidos,
-            'email' => $request->email,
-            'password' => bcrypt($request->password),
-        ]);
-
-        $userdata = UserData::create([
-            'user_id' => $user->id,
-            'field_key' => $request->name,
-            'value_key' => $request->nombre,
-        ]);
-
-        return response()->json([
-            'message' => 'Successfully created user!',
-        ], 201);
-    }
-
-    public function assignedCustomers($id)
-    {
-        $vendedor = DB::table('users')->where('id', $id)->where('rol_id', 2)->first();
-
-        if ($vendedor == null) {
-            return response()->json([
-                'response' => 'error',
-                'message' => 'El id del usuario no es un vendedor.',
-                'status' => 403,
-            ], 403);
-        }
-
-        $clientes_vendedor = DB::table('vendedor_cliente')
-            ->select('id_vendedor_cliente', 'id as id_cliente', 'rol_id', 'name', 'apellidos', 'email')
-            ->join('users', 'cliente', '=', 'id')
-            ->where('vendedor', $id)
-            ->get();
-
-        foreach ($clientes_vendedor as $cliente) {
-            // Buscar la data del usuario en cuestion.
-            $metadata = UserData::where('user_id', $cliente->id_cliente)->get();
-            // Organizar los campos administrados del usuario y organizarlos.
-            $filterData = [];
-
-            foreach ($metadata as $mt) {
-                $filterData[] = [
-                    'id_field' => $mt->id,
-                    'field_key' => $mt->field_key,
-                    'value_key' => $mt->value_key,
-                ];
-            }
-
-            $cliente->data = $filterData;
-        }
-
-        return response()->json($clientes_vendedor, 200);
-    }
-
-    public function store(UserRequest $request)
-    {
-        $request->validate([
-            'rol_id' => 'required',
-            'name' => 'required|string',
-            'apellidos' => 'required|string',
-            'dni' => 'required',
-            'email' => 'required|string|email|unique:users',
-            'password' => 'required|string',
-        ]);
-
-        $user = User::create([
-            'rol_id' => $request->rol_id,
-            'name' => $request->name,
-            'apellidos' => $request->apellidos,
-            'dni' => $request->dni,
-            'email' => $request->email,
-            'password' => bcrypt($request->password),
-        ]);
-
-        $metadata = $request->userdata;
-
-        if ($metadata != null) {
-            foreach ($metadata as $key => $value) {
-                $metadata = UserData::create([
-                    'user_id' => $user->id,
-                    'field_key' => $key,
-                    'value_key' => $value,
-                ]);
-            }
-        }
-        if ($request->rol_id == 2) {
-            // Crear tiendas, y asignar vendedor.
-            foreach ($request->clientes as $cliente) {
-                // Asignar cliente.
-                DB::table('vendedor_cliente')->insert([
-                    'vendedor' => $user->id,
-                    'cliente' => $cliente['id'],
-                ]);
-            }
-        }
-        if ($request->rol_id == 3) {
-            // Crear tiendas, y asignar vendedor.
-            if (isset($request->vendedor)) {
-                $this->gestionCliente($user->id, $request->tiendas, $request->vendedor);
-            }
-        }
-
-        return response()->json([
-            'response' => 'success',
-            'status' => 200,
-            'message' => 'Usuario creado de manera correcta!',
-        ], 201);
-    }
-
-    public function gestionCliente($user, $tiendas, $vendedor)
-    {
         try {
 
-            // Crear tiendas.
-            foreach ($tiendas as $tienda) {
-                DB::table('tiendas')->insert([
-                    'nombre' => $tienda['nombre'],
-                    'lugar' => $tienda['lugar'],
-                    'local' => $tienda['local'],
-                    'direccion' => $tienda['direccion'],
-                    'telefono' => $tienda['direccion'],
-                    'cliente' => $user,
-                ]);
+            \DB::beginTransaction();
+
+            // Informacion basica del usuario.
+            $rol = $request->get('rol_id');
+            $userData = $request->only('rol_id', 'name', 'apellidos', 'tipo_identificacion', 'dni', 'email');
+            $userData['password'] = bcrypt($request->get('password'));
+
+            $user = User::create($userData);
+
+            // Datos extra.
+            $datos = $request->get('datos') ?: [];
+
+            foreach ($datos as $data) {
+                $user->datos()->save(new UserData($data));
             }
 
-            // Asignar vendedor.
-            DB::table('vendedor_cliente')->insert([
-                'vendedor' => $vendedor,
-                'cliente' => $user,
-            ]);
+            if ($rol == 2) {
+                // Vendedor. Asignar clientes.
+                $clientes = $request->get('clientes') ?: [];
 
-            return true;
+                foreach ($clientes as $cliente) {
+                    $user->clientes()->syncWithoutDetaching([
+                        $cliente['cliente_id'],
+                    ]);
+                    $user->vendedorTiendas()->syncWithoutDetaching([
+                        $cliente['tienda_id'],
+                    ]);
+                }
+            } else if ($rol == 3) {
+                // Cliente. Asignar tiendas y vendedores.
+                $tiendas = $request->get('tiendas') ?: [];
+
+                foreach ($tiendas as $tiendaData) {
+                    $tienda = new Tienda([
+                        'nombre' => $tiendaData['nombre'],
+                        'lugar' => $tiendaData['lugar'],
+                        'local' => $tiendaData['local'],
+                        'direccion' => $tiendaData['direccion'],
+                        'telefono' => $tiendaData['direccion'],
+                        'sucursal' => $tiendaData['sucursal'],
+                        'fecha_ingreso' => $tiendaData['fecha_ingreso'],
+                        'fecha_ultima_compra' => $tiendaData['fecha_ultima_compra'],
+                        'cupo' => $tiendaData['cupo'],
+                        'ciudad_codigo' => $tiendaData['ciudad_codigo'],
+                        'zona' => $tiendaData['zona'],
+                        'bloqueado' => $tiendaData['bloqueado'],
+                        'bloqueado_fecha' => $tiendaData['bloqueado_fecha'],
+                        'nombre_representante' => $tiendaData['nombre_representante'],
+                        'plazo' => $tiendaData['plazo'],
+                        'escala_factura' => $tiendaData['escala_factura'],
+                        'observaciones' => $tiendaData['observaciones'],
+                    ]);
+                    $tienda->propietario()->associate($user);
+                    $tienda->save();
+
+                    $vendedores_ids = $tiendaData['vendedores'] ?: [];
+                    $tienda->vendedores()->syncWithoutDetaching($vendedores_ids);
+                    $user->vendedores()->syncWithoutDetaching($vendedores_ids);
+                }
+            }
+
+            \DB::commit();
+
+            return response()->json([
+                'response' => 'success',
+                'status' => 200,
+                'message' => 'Usuario creado de manera correcta!',
+            ], 200);
 
         } catch (\Exception $ex) {
             \Log::info($ex->getMessage());
             \Log::info($ex->getTraceAsString());
-            return false;
+            \DB::rollBack();
+
+            return response()->json([
+                'response' => 'error',
+                'message' => $ex->getMessage(),
+                'status' => 500,
+            ], 500);
         }
     }
 
-    public function updateUser(Request $request)
+    public function actualizarUsuario(Request $request, $id)
     {
+        $userId = $id;
         $request->validate([
-            'id' => 'required|exists:users,id',
-            'rol_id' => 'required',
-            'name' => 'required',
-            'dni' => 'required',
-            'apellidos' => 'required',
-            'email' => 'required',
-            'user_data' => 'required|array',
-            'user_data.*.id_field' => 'required|exists:user_data,id',
-            'user_data.*.field_key' => 'required|string|max:250',
-            'user_data.*.value_key' => 'required|string|max:250',
-            'password' => 'nullable|confirmed|min:6|max:20',
+            'rol_id' => ['required', 'integer', 'exists:roles,id'],
+            'name' => ['required', 'string', 'max:250'],
+            'apellidos' => ['required', 'string', 'max:250'],
+            'dni' => ['required', 'string', 'max:250'],
+            'email' => ['required', 'string', 'email:rfc,dns', "unique:users,email,$userId", 'max:100'],
+            'tipo_identificacion' => ['required', 'string', 'max:250'],
+            'password' => ['nullable', 'string', 'min:8', 'max:50'],
+
+            'datos' => ['required', 'array', 'min:1'],
+            'datos.*.field_key' => ['required', 'string', 'max:250'],
+            'datos.*.value_key' => ['required', 'string', 'max:250'],
+
+            'clientes' => ['required_if:rol_id,2', 'array', 'min:1'],
+            'clientes.*.cliente_id' => ['required', 'integer', 'exists:users,id'],
+            'clientes.*.tienda_id' => ['required', 'integer', 'exists:tiendas,id_tiendas'],
+
+            'tiendas' => ['required_if:rol_id,3', 'array', 'min:1'],
+            'tiendas.*.id' => ['nullable', 'integer', 'exists:tiendas,id_tiendas'],
+            'tiendas.*.nombre' => ['required', 'string', 'max:60'],
+            'tiendas.*.lugar' => ['required', 'string', 'max:40'],
+            'tiendas.*.local' => ['nullable', 'string', 'max:30'],
+            'tiendas.*.direccion' => ['nullable', 'string', 'max:60'],
+            'tiendas.*.telefono' => ['nullable', 'string', 'max:40'],
+            'tiendas.*.sucursal' => ['nullable', 'string', 'max:1'],
+            'tiendas.*.fecha_ingreso' => ['required', 'date_format:Y-m-d'],
+            'tiendas.*.fecha_ultima_compra' => ['required', 'date_format:Y-m-d'],
+            'tiendas.*.cupo' => ['required', 'numeric', 'min:0'],
+            'tiendas.*.ciudad_codigo' => ['required', 'numeric'],
+            'tiendas.*.zona' => ['nullable', 'numeric', 'min:0'],
+            'tiendas.*.bloqueado' => ['required', 'string', 'in:N,S'],
+            'tiendas.*.bloqueado_fecha' => ['nullable', 'date_format:Y-m-d'],
+            'tiendas.*.nombre_representante' => ['nullable', 'string', 'max:80'],
+            'tiendas.*.plazo' => ['required', 'integer', 'min:0'],
+            'tiendas.*.escala_factura' => ['nullable', 'string', 'max:1'],
+            'tiendas.*.observaciones' => ['nullable', 'string', 'max:2000'],
+            'tiendas.*.vendedores' => ['required', 'array', 'min:1'],
+            'tiendas.*.vendedores.*' => ['required', 'integer', 'exists:users,id'],
         ]);
 
         try {
@@ -403,24 +242,105 @@ class UserController extends Controller
             \DB::beginTransaction();
 
             // Actualizacion de la informacion basica del usuario.
-            $user = User::findOrFail($request['id']);
-            $user->rol_id = $request['rol_id'];
-            $user->name = $request['name'];
-            $user->dni = $request['dni'];
-            $user->apellidos = $request['apellidos'];
-            $user->email = $request['email'];
+            $rol = $request->get('rol_id');
+            $userData = $request->only('rol_id', 'name', 'apellidos', 'tipo_identificacion', 'dni', 'email');
 
             if ($request->has('password') && $request->get('password')) {
-                $user->password = bcrypt($request['password']);
+                $userData['password'] = bcrypt($request->get('password'));
             }
 
-            $user->save();
+            $user = User::findOrFail($userId);
+            $user->update($userData);
 
-            foreach ($request['user_data'] as $data) {
-                $user_data = UserData::findOrFail($data['id_field']);
-                $user_data->field_key = $data['field_key'];
-                $user_data->value_key = $data['value_key'];
-                $user_data->save();
+            // Datos extra.
+            $datos = $request->get('datos') ?: [];
+
+            foreach ($datos as $data) {
+                $usuarioData = $user->datos()
+                    ->where('field_key', $data['field_key'])
+                    ->first();
+
+                if ($usuarioData != null) {
+                    $usuarioData->update([
+                        'field_key' => $data['field_key'],
+                        'value_key' => $data['value_key'],
+                    ]);
+                } else {
+                    $user->datos()->save(new UserData([
+                        'field_key' => $data['field_key'],
+                        'value_key' => $data['value_key'],
+                    ]));
+                }
+            }
+
+            if ($rol == 2) {
+                // Vendedor. Asignar clientes y tiendas.
+                $clientes = $request->get('clientes') ?: [];
+                $clientes_ids = [];
+                $tiendas_ids = [];
+
+                foreach ($clientes as $cliente) {
+                    $clientes_ids[] = $cliente['cliente_id'];
+                    $tiendas_ids[] = $cliente['tienda_id'];
+                }
+
+                $user->clientes()->detach();
+                $user->clientes()->syncWithoutDetaching(
+                    array_unique($clientes_ids));
+
+                $user->vendedorTiendas()->detach();
+                $user->vendedorTiendas()->syncWithoutDetaching(
+                    array_unique($tiendas_ids));
+            } else if ($rol == 3) {
+                // Cliente. Asignar tiendas y vendedores.
+                $tiendas = $request->get('tiendas') ?: [];
+                $vendedores_all_ids = [];
+
+                foreach ($tiendas as $tiendaData) {
+                    $tienda = isset($tiendaData['id']) ? $user->tiendas()->find($tiendaData['id']) : null;
+                    $tData = [
+                        'nombre' => $tiendaData['nombre'],
+                        'lugar' => $tiendaData['lugar'],
+                        'local' => $tiendaData['local'],
+                        'direccion' => $tiendaData['direccion'],
+                        'telefono' => $tiendaData['direccion'],
+                        'sucursal' => $tiendaData['sucursal'],
+                        'fecha_ingreso' => $tiendaData['fecha_ingreso'],
+                        'fecha_ultima_compra' => $tiendaData['fecha_ultima_compra'],
+                        'cupo' => $tiendaData['cupo'],
+                        'ciudad_codigo' => $tiendaData['ciudad_codigo'],
+                        'zona' => $tiendaData['zona'],
+                        'bloqueado' => $tiendaData['bloqueado'],
+                        'bloqueado_fecha' => $tiendaData['bloqueado_fecha'],
+                        'nombre_representante' => $tiendaData['nombre_representante'],
+                        'plazo' => $tiendaData['plazo'],
+                        'escala_factura' => $tiendaData['escala_factura'],
+                        'observaciones' => $tiendaData['observaciones'],
+                    ];
+
+                    if ($tienda != null) {
+                        $tienda->update($tData);
+                    } else {
+                        $tienda = new Tienda($tData);
+                        $tienda->propietario()->associate($user);
+                        $tienda->save();
+                    }
+
+                    // Asignar vendedores a tienda.
+                    $vendedores_ids = $tiendaData['vendedores'] ?: [];
+                    $vendedores_all_ids = array_merge(
+                        $vendedores_all_ids,
+                        $vendedores_ids);
+
+                    $tienda->vendedores()->detach();
+                    $tienda->vendedores()->syncWithoutDetaching(
+                        array_unique($vendedores_ids));
+                }
+
+                // Asignar vendedores a cliente.
+                $user->vendedores()->detach();
+                $user->vendedores()->syncWithoutDetaching(
+                    array_unique($vendedores_all_ids));
             }
 
             \DB::commit();
@@ -444,146 +364,112 @@ class UserController extends Controller
         }
     }
 
-    public function updateClient(Request $request, $id)
+    public function eliminarUsuarios(Request $request)
     {
         $request->validate([
-            'rol_id' => 'required',
-            'name' => 'required|string',
-            'apellidos' => 'required|string',
-            'email' => 'required',
-            'dni' => 'required',
-            'data_user' => 'required',
+            'usuarios' => ['required', 'array', 'min:1'],
+            'usuarios.*' => ['required', 'integer', 'exists:users,id'],
         ]);
 
         try {
 
             \DB::beginTransaction();
 
-            // Actualizacion de la informacion basica del usuario.
-            $user = User::findOrFail($request['id']);
-            $user->name = $request['name'];
-            $user->dni = $request['dni'];
-            $user->apellidos = $request['apellidos'];
-            $user->email = $request['email'];
-
-            if (isset($request['password'])) {
-                $user->password = bcrypt($request['password']);
-            }
-
-            $user->save();
-
-            foreach ($request['data_user'] as $data) {
-                $user_data = UserData::findOrFail($data['id_field']);
-                $user_data->field_key = $data['field_key'];
-                $user_data->value_key = $data['value_key'];
-                $user_data->save();
-            }
-
-            \DB::commit();
-
-            return response()->json([
-                'response' => 'success',
-                'message' => 'Usuario actualizado con exito.',
-                'status' => 200,
-            ], 200);
-
-        } catch (\Exception $ex) {
-            \Log::info($ex->getMessage());
-            \Log::info($ex->getTraceAsString());
-            \DB::rollBack();
-
-            return response()->json([
-                'response' => 'error',
-                'message' => $ex->getMessage(),
-                'status' => 500,
-            ], 500);
-        }
-    }
-
-    public function destroyUsers(Request $request)
-    {
-        try {
-
-            DB::beginTransaction();
-
-            foreach ($request['usuarios'] as $id) {
+            foreach ($request->get('usuarios') as $id) {
                 $user = User::findOrFail($id);
-                $validate_pqrs = DB::table('seguimiento_pqrs')
-                    ->where('usuario', $id)
-                    ->exists();
-                $validate_vendedor = DB::table('vendedor_cliente')
-                    ->where('vendedor', $id)
-                    ->exists();
-                $validate_cliente = DB::table('pedidos')
-                    ->where('cliente', $id)
-                    ->exists();
+
+                // Validar PQRS.
+                $validate_pqrs = SeguimientoPqrs::where('usuario', $id)->exists();
 
                 if ($validate_pqrs) {
-                    throw new \Exception("El usuario {$user->name} {$user->apellido} no se puede eliminar, porque tiene pqrs/mensajes asignados.", 403);
-                }
-                if ($validate_vendedor) {
-                    throw new \Exception("El usuario {$user->name} {$user->apellido} no se puede eliminar, porque tiene clientes asignados.", 403);
-                }
-                if ($validate_cliente) {
-                    throw new \Exception("El usuario {$user->name} {$user->apellido} no se puede eliminar, porque tiene pedidos registrados.", 403);
+                    throw new \Exception("El usuario {$user->nombre_completo} no se puede eliminar, porque tiene pqrs/mensajes asignados.", 403);
                 }
 
-                DB::table('tiendas')->where('cliente', $id)->delete();
-                DB::table('vendedor_cliente')->where('cliente', $id)->delete();
-                DB::table('user_data')->where('user_id', $id)->delete();
-                DB::table('valoraciones')->where('usuario', $id)->delete();
+                // Validar clientes y pedidos de vendedor.
+                $validate_vendedor_clientes = $user->clientes()->count() > 0;
+                $validate_vendedor_pedidos = $user->vendedorPedidos()->count() > 0;
 
+                if ($validate_vendedor_clientes) {
+                    throw new \Exception("El usuario {$user->nombre_completo} no se puede eliminar, porque tiene clientes asignados.", 403);
+                }
+                if ($validate_vendedor_pedidos) {
+                    throw new \Exception("El usuario {$user->nombre_completo} no se puede eliminar, porque tiene pedidos registrados.", 403);
+                }
+
+                // Validar vendedores y pedidos de cliente.
+                $validate_cliente_vendedores = $user->vendedores()->count() > 0;
+                $validate_cliente_pedidos = $user->clientePedidos()->count() > 0;
+
+                if ($validate_cliente_vendedores) {
+                    throw new \Exception("El usuario {$user->nombre_completo} no se puede eliminar, porque tiene vendedores asignados.", 403);
+                }
+                if ($validate_cliente_pedidos) {
+                    throw new \Exception("El usuario {$user->nombre_completo} no se puede eliminar, porque tiene pedidos registrados.", 403);
+                }
+
+                // Borrar.
+                \DB::table('vendedor_cliente')->where('cliente', $id)->delete();
+                Tienda::where('cliente', $id)->delete();
+                UserData::where('user_id', $id)->delete();
+                Valoracion::where('usuario', $id)->delete();
                 $user->delete();
             }
 
-            DB::commit();
+            \DB::commit();
 
             return response()->json([
                 'response' => 'success',
-                'message' => "Usuario eliminado correctamente",
+                'message' => "Usuarios eliminados correctamente",
                 'status' => 200,
             ], 200);
 
         } catch (\Exception $ex) {
             \Log::info($ex->getMessage());
             \Log::info($ex->getTraceAsString());
-            DB::rollBack();
+            \DB::rollBack();
 
             return response()->json([
-                'status' => 500,
                 'response' => 'error',
-                'code' => $ex->getCode(),
                 'message' => $ex->getMessage(),
-                'message_error' => 'Error interno del servidor, no se pudo borrar el registro.',
+                'status' => 500,
             ], 500);
         }
     }
 
-    public function searchVendedor(Request $request)
+    // ADMINISTRADORES -------------------------------------------
+
+    public function administradores(Request $request)
     {
-        if (!isset($request['search'])) {
-            return response()->json([
-                'response' => 'error',
-                'vendedores' => null,
-                'status' => 403,
-                'message' => 'Sin busqueda.',
-            ], 403);
-        }
+        $search = $request->get('search') ?: null;
+        $fields = $this->camposExtraPorRol(1);
+        $users = $this->buscarUsuariosPorRol(1, $search);
+        return response()->json(compact('fields', 'users'), 200);
+    }
 
-        $search = $request['search'];
+    public function administrador(Request $request, $id)
+    {
+        $admin = User::query()
+            ->where('id', $id)
+            ->where('rol_id', 1)
+            ->with('datos')
+            ->firstOrFail();
+        return response()->json($admin, 200);
+    }
 
-        if ($request['search'] == '') {
-            $vendedores = User::where('rol_id', 2)->get();
-        } else {
-            $vendedores = User::query()
-                ->where(function ($query) use ($search) {
-                    $query->where('name', 'like', "%{$search}%");
-                    $query->orWhere('apellidos', 'like', "%{$search}%");
-                    $query->orWhere('dni', 'like', "%{$search}%");
-                })
-                ->where('rol_id', '=', 2)
-                ->get();
-        }
+    // VENDEDORES -------------------------------------------
+
+    public function vendedores(Request $request)
+    {
+        $search = $request->get('search') ?: null;
+        $fields = $this->camposExtraPorRol(2);
+        $users = $this->buscarUsuariosPorRol(2, $search);
+        return response()->json(compact('fields', 'users'), 200);
+    }
+
+    public function buscarVendedor(Request $request)
+    {
+        $search = $request->get('search') ?: false;
+        $vendedores = $this->buscarUsuariosPorRol(2, $search, true);
 
         return response()->json([
             'response' => 'success',
@@ -592,37 +478,44 @@ class UserController extends Controller
         ], 200);
     }
 
-    public function searchClientes(Request $request)
+    public function vendedor($id)
     {
-        if (!isset($request['search'])) {
-            return response()->json([
-                'response' => 'error',
-                'clientes' => null,
-                'status' => 403,
-                'message' => 'Sin busqueda.',
-            ], 403);
-        }
+        $vendedor = User::query()
+            ->where('rol_id', 2)
+            ->where('id', $id)
+            ->with('datos')
+            ->firstOrFail();
 
-        $search = $request['search'];
+        return response()->json($vendedor, 200);
+    }
 
-        if ($request['search'] == '') {
-            $clientes = User::query()
-                ->where('rol_id', 3)
-                ->leftJoin('vendedor_cliente', 'cliente', '=', 'id')
-                ->where('vendedor_cliente.id_vendedor_cliente', null)
-                ->get();
-        } else {
-            $clientes = User::query()
-                ->where(function ($query) use ($search) {
-                    $query->where('name', 'like', "%{$search}%");
-                    $query->orWhere('apellidos', 'like', "%{$search}%");
-                    $query->orWhere('dni', 'like', "%{$search}%");
-                })
-                ->leftJoin('vendedor_cliente', 'cliente', '=', 'id')
-                ->where('rol_id', '=', 3)
-                ->where('vendedor_cliente.id_vendedor_cliente', null)
-                ->get();
-        }
+    public function clientesAsignados($vendedor_id)
+    {
+        $clientes = User::query()
+            ->where('rol_id', 3)
+            ->whereHas('vendedores', function ($q) use ($vendedor_id) {
+                $q->where('id', $vendedor_id);
+            })
+            ->with('datos')
+            ->get();
+
+        return response()->json($clientes, 200);
+    }
+
+    // CLIENTES -------------------------------------------
+
+    public function clientes(Request $request)
+    {
+        $search = $request->get('search') ?: null;
+        $fields = $this->camposExtraPorRol(3);
+        $users = $this->buscarUsuariosPorRol(3, $search);
+        return response()->json(compact('fields', 'users'), 200);
+    }
+
+    public function buscarClientes(Request $request)
+    {
+        $search = $request->get('search') ?: false;
+        $clientes = $this->buscarUsuariosPorRol(3, $search, true);
 
         return response()->json([
             'response' => 'success',
@@ -631,43 +524,52 @@ class UserController extends Controller
         ], 200);
     }
 
-    public function updateVendedor(Request $request, $id)
+    public function cliente($id)
     {
-        $request->validate([
-            'rol_id' => 'required',
-            'name' => 'required|string',
-            'apellidos' => 'required|string',
-            'email' => 'required',
-            'dni' => 'required',
-            'data_user' => 'required',
-        ]);
+        $cliente = User::query()
+            ->where('rol_id', 3)
+            ->where('id', $id)
+            ->with('datos')
+            ->firstOrFail();
 
+        return response()->json($cliente, 200);
+    }
+
+    public function vendedoresAsignados($cliente_id)
+    {
+        $vendedores = User::query()
+            ->where('rol_id', 2)
+            ->whereHas('clientes', function ($q) use ($cliente_id) {
+                $q->where('id', $cliente_id);
+            })
+            ->with('datos')
+            ->get();
+
+        return response()->json($vendedores, 200);
+    }
+
+    // CLIENTES -------------------------------------------
+
+    public function asignarVendedorTienda($vendedor_id, $tienda_id)
+    {
         try {
 
             \DB::beginTransaction();
 
-            $user = User::findOrFail($id);
-            $user->name = $request['name'];
-            $user->apellidos = $request['apellidos'];
-            $user->email = $request['email'];
-            $user->dni = $request['dni'];
+            $vendedor = User::findOrFail($vendedor_id);
+            $tienda = Tienda::findOrFail($tienda_id);
 
-            if (isset($request['password'])) {
-                $user->password = bcrypt($request['password']);
-            }
+            $tienda->vendedores()
+                ->syncWithoutDetaching([$vendedor->id]);
 
-            $user->save();
-
-            foreach ($request['data_user'] as $data) {
-                $user_data = UserData::findOrFail($data['id_field']);
-                $user_data->value_key = $data['value_key'];
-                $user_data->save();
-            }
+            $tienda->propietario->vendedores()
+                ->syncWithoutDetaching([$vendedor->id]);
 
             \DB::commit();
 
             return response()->json([
                 'response' => 'success',
+                'message' => 'Cliente/Tienda asignado a vendedor correctamente.',
                 'status' => 200,
             ], 200);
 
@@ -684,169 +586,39 @@ class UserController extends Controller
         }
     }
 
-    public function updateAsignClient($idClient, $idVendedor, $action)
+    public function quitarVendedorTienda($vendedor_id, $tienda_id)
     {
-        // Validacion manual de los Id's
-        $existeCliente = User::find($idClient)->exists();
-        $existeVendedor = User::find($idVendedor)->exists();
+        try {
 
-        // Validar que accion se ejecuta. Crear asignacion o eliminarla.
-        if ($action == 'create') {
+            \DB::beginTransaction();
 
-            // Validar antes de cualquier operacion los Id's
-            if ($existeCliente == true && $existeVendedor == true) {
-                $yaEstaAsignado = DB::table('vendedor_cliente')
-                    ->where('vendedor', $idVendedor)
-                    ->where('cliente', $idClient)
-                    ->exists();
+            $vendedor = User::findOrFail($vendedor_id);
+            $tienda = Tienda::findOrFail($tienda_id);
 
-                if (!$yaEstaAsignado) {
-                    DB::table('vendedor_cliente')->insert([
-                        'vendedor' => $idVendedor,
-                        'cliente' => $idClient,
-                    ]);
+            $tienda->vendedores()
+                ->detach($vendedor->id);
 
-                    return response()->json([
-                        'response' => 'success',
-                        'status' => 200,
-                        'message' => 'Cliente asignado al vendedor correctamente.',
-                    ], 200);
-                }
+            $tienda->propietario->vendedores()
+                ->detach($vendedor->id);
 
-                return response()->json([
-                    'response' => 'error',
-                    'status' => 403,
-                    'message' => 'Ya tiene asignado el cliente.',
-                ], 403);
-            }
+            \DB::commit();
+
+            return response()->json([
+                'response' => 'success',
+                'message' => 'Cliente/Tienda retirado de vendedor correctamente.',
+                'status' => 200,
+            ], 200);
+
+        } catch (\Exception $ex) {
+            \Log::info($ex->getMessage());
+            \Log::info($ex->getTraceAsString());
+            \DB::rollBack();
 
             return response()->json([
                 'response' => 'error',
-                'status' => 403,
-                'message' => 'Cliente o vendedor no existen.',
-            ], 403);
-
-        } else if ($action == 'delete') {
-
-            if ($existeCliente == true && $existeVendedor == true) {
-                DB::table('vendedor_cliente')
-                    ->where('vendedor', $idVendedor)
-                    ->where('cliente', $idClient)
-                    ->delete();
-
-                return response()->json([
-                    'response' => 'success',
-                    'status' => 200,
-                    'message' => 'Cliente removido del vendedor de manera correcta.',
-                ], 200);
-            }
-
-            return response()->json([
-                'response' => 'error',
-                'status' => 403,
-                'message' => 'Cliente o vendedor no existen.',
-            ], 403);
-
+                'message' => $ex->getMessage(),
+                'status' => 500,
+            ], 500);
         }
-
-        return response()->json([
-            'response' => 'error',
-            'status' => 403,
-            'message' => 'Acción no valida.',
-        ], 403);
-    }
-
-    public function updateAsignVend($idClient, $idVendedor, $action)
-    {
-        // Validacion manual de los Id's
-        $existeCliente = User::find($idClient)->exists();
-        $existeVendedor = User::find($idVendedor)->exists();
-
-        // Validar que accion se ejecuta. Crear asignacion o eliminarla.
-        if ($action == 'create') {
-
-            // Validar antes de cualquier operacion los Id's
-            if ($existeCliente == true && $existeVendedor == true) {
-                $yaEstaAsignado = DB::table('vendedor_cliente')
-                    ->where('cliente', $idClient)
-                    ->exists();
-
-                if (!$yaEstaAsignado) {
-                    DB::table('vendedor_cliente')->insert([
-                        'vendedor' => $idVendedor,
-                        'cliente' => $idClient,
-                    ]);
-
-                    return response()->json([
-                        'response' => 'success',
-                        'status' => 200,
-                        'message' => 'Vendedor asignado al cliente de manera correcta.',
-                    ], 200);
-                }
-
-                return response()->json([
-                    'response' => 'error',
-                    'status' => 403,
-                    'message' => 'Ya tiene asignado el vendedor.',
-                ], 403);
-            }
-
-            return response()->json([
-                'response' => 'error',
-                'status' => 403,
-                'message' => 'Cliente o vendedor no existen.',
-            ], 403);
-
-        } else if ($action == 'delete') {
-
-            if ($existeCliente == true && $existeVendedor == true) {
-                DB::table('vendedor_cliente')
-                    ->where('vendedor', $idVendedor)
-                    ->where('cliente', $idClient)
-                    ->delete();
-
-                return response()->json([
-                    'response' => 'success',
-                    'status' => 200,
-                    'message' => 'Vendedor removido del cliente de manera correcta.',
-                ], 200);
-            }
-
-            return response()->json([
-                'response' => 'error',
-                'status' => 403,
-                'message' => 'Cliente o vendedor no existen.',
-            ], 403);
-
-        }
-
-        return response()->json([
-            'response' => 'error',
-            'status' => 403,
-            'message' => 'Acción no valida.',
-        ], 403);
-    }
-
-    public function newTienda(Request $request, $cliente)
-    {
-        $request->validate([
-            'nombre' => 'required',
-            'lugar' => 'required',
-            'direccion' => 'required',
-        ]);
-
-        $tienda = new Tienda();
-        $tienda->nombre = $request['nombre'];
-        $tienda->lugar = $request['lugar'];
-        $tienda->direccion = $request['direccion'];
-        $tienda->local = $request['local'];
-        $tienda->telefono = $request['telefono'];
-        $tienda->cliente = $cliente;
-        $tienda->save();
-
-        return response()->json([
-            'response' => 'success',
-            'status' => 200,
-        ], 200);
     }
 }

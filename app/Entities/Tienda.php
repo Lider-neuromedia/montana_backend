@@ -40,8 +40,18 @@ class Tienda extends Model implements Auditable
         "bloqueado_fecha",
     ];
 
+    public function propietario()
+    {
+        return $this->belongsTo(User::class, 'cliente');
+    }
+
     public function vendedores()
     {
-        return $this->belongsToMany(Tienda::class, 'tienda_vendedor', 'tienda_id', 'vendedor_id');
+        return $this->belongsToMany(User::class, 'tienda_vendedor', 'tienda_id', 'vendedor_id');
+    }
+
+    public function detallesProductos()
+    {
+        return $this->hasMany(PedidoProduct::class, 'tienda', 'id_tiendas');
     }
 }

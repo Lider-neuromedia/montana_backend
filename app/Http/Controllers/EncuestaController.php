@@ -12,11 +12,6 @@ use Illuminate\Http\Request;
 
 class EncuestaController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function index(Request $request)
     {
         if (isset($request['search'])) {
@@ -40,18 +35,12 @@ class EncuestaController extends Controller
         ], 200);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
     public function store(Request $request)
     {
         $request->validate([
-            'catalogo' => 'exists:App\Entities\Catalogo,id_catalogo|required',
-            'tipo' => 'required',
-            'preguntas' => 'required|array|max:5',
+            'catalogo' => ['exists:catalogos,id_catalogo', 'required'],
+            'tipo' => ['required'],
+            'preguntas' => ['required', 'array', 'max:5'],
         ]);
 
         try {
@@ -104,10 +93,7 @@ class EncuestaController extends Controller
     }
 
     /**
-     * Obtener las preguntas activas del catalogo en cuestion.
-     *
-     * @param  \App\Entities\Catalogo  $catalogo
-     * @return \Illuminate\Http\Response
+     * Obtener las preguntas activas del catalogo en cuestión.
      */
     public function getPreguntas($catalogo)
     {
@@ -218,20 +204,18 @@ class EncuestaController extends Controller
             'respuesta_usuario' => $validate_user,
         ], 200);
     }
+
     /**
      * Crear las valoraciones de los clientes o vendedores segun el producto.
-     *
-     * @param  Request  $request
-     * @return \Illuminate\Http\Response
      */
     public function storePreguntas(Request $request)
     {
         $request->validate([
-            'usuario' => 'exists:App\Entities\User,id|required',
-            'producto' => 'exists:App\Entities\Producto,id_producto|required',
-            'preguntas' => 'required|array|min:1',
-            'preguntas.*.respuesta' => 'required|integer|min:1|max:5',
-            'preguntas.*.pregunta' => 'exists:App\Entities\Preguntas,id_pregunta|required',
+            'usuario' => ['required', 'exists:users,id'],
+            'producto' => ['required', 'exists:productos,id_producto'],
+            'preguntas' => ['required', 'array', 'min:1'],
+            'preguntas.*.respuesta' => ['required', 'integer', 'min:1', 'max:5'],
+            'preguntas.*.pregunta' => ['required', 'exists:preguntas,id_pregunta'],
         ]);
 
         foreach ($request['preguntas'] as $pregunta) {
@@ -270,12 +254,6 @@ class EncuestaController extends Controller
         ], 200);
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Entities\Encuesta  $encuesta
-     * @return \Illuminate\Http\Response
-     */
     public function show($id)
     {
         $preguntas = DB::table('preguntas')
@@ -286,7 +264,6 @@ class EncuestaController extends Controller
             ->get();
 
         if (count($preguntas) == 0) {
-            # code...
             $preguntas = DB::table('preguntas')
                 ->select('id_pregunta', 'preguntas.pregunta')
                 ->where('encuesta', $id)
@@ -319,6 +296,7 @@ class EncuestaController extends Controller
             if (count($promedio_respuesta) < 5) {
                 for ($i = 1; $i <= 5; $i++) {
                     $exists = false;
+
                     foreach ($promedio_respuesta as $key => $respuesta) {
                         if ($i == $respuesta->respuesta) {
                             $exists = true;
@@ -332,8 +310,8 @@ class EncuestaController extends Controller
                         $data->promedio = 0;
                         $promedio_respuesta->push($data);
                     }
-
                 }
+
                 $pregunta->promedio_respuestas = $promedio_respuesta;
             }
         }
@@ -366,21 +344,14 @@ class EncuestaController extends Controller
         ], 200);
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Entities\Encuesta  $encuesta
-     * @return \Illuminate\Http\Response
-     */
     public function update(Request $request, Encuesta $encuesta)
     {
         $request->validate([
-            'codigo' => 'required',
-            'catalogo' => 'required',
-            'tipo' => 'required',
-            'estado' => 'required',
-            'preguntas' => 'required|array',
+            'codigo' => ['required'],
+            'catalogo' => ['required'],
+            'tipo' => ['required'],
+            'estado' => ['required'],
+            'preguntas' => ['required', 'array'],
         ]);
 
         try {

@@ -28,8 +28,23 @@ class Pedido extends Model implements Auditable
         'estado',
     ];
 
-    public function products()
+    public function detalles()
     {
-        return $this->belongsToMany('App\Entities\Producto', 'pedido_productos', 'pedido', 'producto');
+        return $this->hasMany(PedidoProduct::class, 'pedido', 'id_pedido');
+    }
+
+    public function pedidoVendedor()
+    {
+        return $this->belongsTo(User::class, 'vendedor');
+    }
+
+    public function pedidoCliente()
+    {
+        return $this->belongsTo(User::class, 'cliente');
+    }
+
+    public function pedidoEstado()
+    {
+        return $this->belongsTo(Estado::class, 'estado', 'id_estado');
     }
 }

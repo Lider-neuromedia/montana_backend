@@ -7,6 +7,7 @@ use App\Entities\Novedades;
 use App\Entities\Pedido;
 use App\Entities\PedidoProduct;
 use App\Entities\Producto;
+use App\Entities\Tienda;
 use App\Entities\User;
 use App\Exports\PedidoExport;
 use DB;
@@ -87,12 +88,6 @@ class PedidoController extends Controller
         ], 200);
     }
 
-    public function tiendaCliente($id)
-    {
-        $tiendas = DB::table('tiendas')->where('cliente', $id)->get();
-        return response()->json($tiendas, 200);
-    }
-
     public function generateCodePedido()
     {
         $code = uniqid();
@@ -116,23 +111,23 @@ class PedidoController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'cliente' => 'required|integer|exists:users,id',
-            'vendedor' => 'required|integer|exists:users,id',
-            'codigo_pedido' => 'required|unique:pedidos,codigo',
-            'total_pedido' => 'required|numeric',
-            'descuento' => 'required|numeric',
-            'forma_pago' => 'required|string|max:100|in:contado,credito',
+            'cliente' => ['required', 'integer', 'exists:users,id'],
+            'vendedor' => ['required', 'integer', 'exists:users,id'],
+            'codigo_pedido' => ['required', 'unique:pedidos,codigo'],
+            'total_pedido' => ['required', 'numeric'],
+            'descuento' => ['required', 'numeric'],
+            'forma_pago' => ['required', 'string', 'max:100', 'in:contado,credito'],
             'notas' => ['nullable', 'string', 'max:250'],
             'notas_facturacion' => ['nullable', 'string', 'max:250'],
-            'firma' => 'required|image',
-            'productos' => 'required|array',
+            'firma' => ['required', 'file', 'max:2000'],
+            'productos' => ['required', 'array', 'min:1'],
             'productos.*.id_producto' => [
                 'required',
                 Rule::exists('productos', 'id_producto')->whereNull('deleted_at'),
             ],
-            'productos.*.tiendas' => 'required|array',
-            'productos.*.tiendas.*.cantidad' => 'required|integer|min:1',
-            'productos.*.tiendas.*.id_tienda' => 'required|exists:tiendas,id_tiendas',
+            'productos.*.tiendas' => ['required', 'array', 'min:1'],
+            'productos.*.tiendas.*.cantidad' => ['required', 'integer', 'min:1'],
+            'productos.*.tiendas.*.id_tienda' => ['required', 'exists:tiendas,id_tiendas'],
         ]);
 
         try {
@@ -261,9 +256,9 @@ class PedidoController extends Controller
     public function storeNovedades(Request $request)
     {
         $request->validate([
-            'tipo' => 'required',
-            'descripcion' => 'required',
-            'pedido' => 'required',
+            'tipo' => ['required'],
+            'descripcion' => ['required'],
+            'pedido' => ['required'],
         ]);
 
         $novedad = new Novedades();
@@ -313,22 +308,22 @@ class PedidoController extends Controller
     public function update(Request $request)
     {
         $request->validate([
-            'id_pedido' => 'required|exists:pedidos,id_pedido',
-            'metodo_pago' => 'required|string|max:100|in:contado,credito',
-            'total' => 'required|numeric',
-            'firma' => 'nullable|image',
+            'id_pedido' => ['required', 'exists:pedidos,id_pedido'],
+            'metodo_pago' => ['required', 'string', 'max:100', 'in:contado,credito'],
+            'total' => ['required', 'numeric'],
+            'firma' => ['nullable', 'file', 'max:2000'],
             'notas' => ['nullable', 'string', 'max:250'],
             'notas_facturacion' => ['nullable', 'string', 'max:250'],
 
-            'productos' => 'required|array',
+            'productos' => ['required', 'array', 'min:1'],
             'productos.*.producto' => [
                 'required',
                 Rule::exists('productos', 'id_producto')->whereNull('deleted_at'),
             ],
-            'productos.*.stock' => 'required|integer|min:1',
-            'productos.*.tiendas' => 'required|array',
-            'productos.*.tiendas.*.cantidad_producto' => 'required|integer|min:1',
-            'productos.*.tiendas.*.id_pedido_prod' => 'required|exists:pedido_productos,id_pedido_prod',
+            'productos.*.stock' => ['required', 'integer', 'min:1'],
+            'productos.*.tiendas' => ['required', 'array', 'min:1'],
+            'productos.*.tiendas.*.cantidad_producto' => ['required', 'integer', 'min:1'],
+            'productos.*.tiendas.*.id_pedido_prod' => ['required', 'exists:pedido_productos,id_pedido_prod'],
         ]);
 
         try {

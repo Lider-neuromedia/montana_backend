@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Entities\AmpliacionCupo;
+use App\Entities\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -41,9 +42,9 @@ class AmpliacionCupoController extends Controller
         ], 200);
     }
 
-    public function getUserSmall($rol_id)
+    public function usersByRole($rol_id)
     {
-        $users = \DB::table('users')
+        $users = User::query()
             ->select('id', 'name', 'apellidos')
             ->where('rol_id', $rol_id)
             ->get();
@@ -76,12 +77,12 @@ class AmpliacionCupoController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'vendedor' => 'required|exists:App\Entities\User,id',
-            'cliente' => 'required|exists:App\Entities\User,id',
-            'doc_identidad' => 'required|file',
-            'doc_rut' => 'required|file',
-            'doc_camara_com' => 'required|file',
-            'monto' => 'required|integer',
+            'vendedor' => ['required', 'exists:users,id'],
+            'cliente' => ['required', 'exists:users,id'],
+            'doc_identidad' => ['required', 'file', 'max:2000'],
+            'doc_rut' => ['required', 'file', 'max:2000'],
+            'doc_camara_com' => ['required', 'file', 'max:2000'],
+            'monto' => ['required', 'integer'],
         ]);
 
         $solicitud = new AmpliacionCupo();
@@ -108,9 +109,9 @@ class AmpliacionCupoController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'vendedor' => 'exists:App\Entities\User,id|required',
-            'cliente' => 'exists:App\Entities\User,id|required',
-            'monto' => 'required',
+            'vendedor' => ['required', 'exists:users,id'],
+            'cliente' => ['required', 'exists:users,id'],
+            'monto' => ['required'],
         ]);
 
         $solicitud = AmpliacionCupo::findOrFail($id);

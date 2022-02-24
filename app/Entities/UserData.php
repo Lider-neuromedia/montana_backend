@@ -21,4 +21,9 @@ class UserData extends Model implements Auditable
         'created_at',
         'updated_at',
     ];
+
+    public function usuario()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 }

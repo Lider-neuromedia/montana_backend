@@ -55,17 +55,17 @@ class ProductoController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nombre' => 'required',
-            'codigo' => 'required',
-            'referencia' => 'required',
-            'stock' => 'required|numeric',
+            'nombre' => ['required'],
+            'codigo' => ['required'],
+            'referencia' => ['required'],
+            'stock' => ['required', 'numeric'],
             'marca' => ['required', 'exists:marcas,id_marca'],
-            'descripcion' => 'required',
-            'precio' => 'required|numeric',
-            'catalogo' => 'required',
-            'imagenes' => 'required|array|min:1',
-            'imagenes.*.image' => 'required|image',
-            'imagenes.*.destacada' => 'in:0,1',
+            'descripcion' => ['required'],
+            'precio' => ['required', 'numeric'],
+            'catalogo' => ['required'],
+            'imagenes' => ['required', 'array', 'min:1'],
+            'imagenes.*.image' => ['required', 'file', 'max:2000'],
+            'imagenes.*.destacada' => ['in:0,1'],
         ]);
 
         $producto = new Producto();
@@ -154,20 +154,20 @@ class ProductoController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'id_producto' => 'required|exists:productos,id_producto',
-            'nombre' => 'required',
-            'codigo' => 'required',
-            'referencia' => 'required',
-            'stock' => 'required|numeric',
+            'id_producto' => ['required', 'exists:productos,id_producto'],
+            'nombre' => ['required'],
+            'codigo' => ['required'],
+            'referencia' => ['required'],
+            'stock' => ['required', 'numeric'],
             'marca' => ['required', 'exists:marcas,id_marca'],
-            'descripcion' => 'required',
-            'precio' => 'required|numeric',
-            'catalogo' => 'required',
-            'imagenes' => 'nullable|array|min:1',
-            'imagenes.*.image' => 'nullable|image',
-            'imagenes.*.destacada' => 'in:0,1',
-            'imagenes.*.id_galeria_prod' => 'nullable|exists:galeria_productos,id_galeria_prod',
-            'imagenes.*.delete' => 'nullable|integer|in:0,1',
+            'descripcion' => ['required'],
+            'precio' => ['required', 'numeric'],
+            'catalogo' => ['required'],
+            'imagenes' => ['nullable', 'array', 'min:1'],
+            'imagenes.*.image' => ['nullable', 'file', 'max:2000'],
+            'imagenes.*.destacada' => ['in:0,1'],
+            'imagenes.*.id_galeria_prod' => ['nullable', 'exists:galeria_productos,id_galeria_prod'],
+            'imagenes.*.delete' => ['nullable', 'integer', 'in:0,1'],
         ]);
 
         try {

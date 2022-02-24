@@ -19,4 +19,19 @@ class PedidoProduct extends Model implements Auditable
         'cantidad_producto',
         'tienda',
     ];
+
+    public function detallePedido()
+    {
+        return $this->belongsTo(Pedido::class, 'pedido');
+    }
+
+    public function detalleProducto()
+    {
+        return $this->belongsTo(Producto::class, 'producto');
+    }
+
+    public function detalleTienda()
+    {
+        return $this->belongsTo(Tienda::class, 'tienda');
+    }
 }

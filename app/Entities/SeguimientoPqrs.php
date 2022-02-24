@@ -19,4 +19,14 @@ class SeguimientoPqrs extends Model implements Auditable
         'mensaje',
         'hora',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'usuario');
+    }
+
+    public function pqrsGroup()
+    {
+        return $this->belongsTo(Pqrs::class, 'pqrs');
+    }
 }

@@ -73,10 +73,10 @@ class PqrsController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'vendedor' => 'exists:App\Entities\User,id|required',
-            'cliente' => 'exists:App\Entities\User,id|required',
-            'tipo' => 'required',
-            'mensaje' => 'required',
+            'vendedor' => ['required', 'exists:users,id'],
+            'cliente' => ['required', 'exists:users,id'],
+            'tipo' => ['required'],
+            'mensaje' => ['required'],
         ]);
 
         try {
@@ -204,9 +204,9 @@ class PqrsController extends Controller
     public function NewMessage(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'mensaje' => 'required',
-            'usuario' => 'exists:App\Entities\User,id|required',
-            'pqrs' => 'exists:App\Entities\Pqrs,id_pqrs|required',
+            'mensaje' => ['required'],
+            'usuario' => ['required', 'exists:users,id'],
+            'pqrs' => ['required', 'exists:pqrs,id_pqrs'],
         ]);
 
         if ($validator->fails()) {

@@ -29,6 +29,8 @@ class User extends Authenticatable implements Auditable
     protected $hidden = [
         'password',
         'remember_token',
+        'device_token',
+        'email_verified_at',
     ];
 
     protected $casts = [
@@ -40,7 +42,7 @@ class User extends Authenticatable implements Auditable
      */
     public function vendedores()
     {
-        return $this->belongsToMany(Tienda::class, 'vendedor_cliente', 'cliente', 'vendedor');
+        return $this->belongsToMany(User::class, 'vendedor_cliente', 'cliente', 'vendedor');
     }
 
     /**
@@ -48,7 +50,7 @@ class User extends Authenticatable implements Auditable
      */
     public function clientes()
     {
-        return $this->belongsToMany(Tienda::class, 'vendedor_cliente', 'vendedor', 'cliente');
+        return $this->belongsToMany(User::class, 'vendedor_cliente', 'vendedor', 'cliente');
     }
 
     /**
@@ -59,6 +61,9 @@ class User extends Authenticatable implements Auditable
         return $this->belongsToMany(Tienda::class, 'tienda_vendedor', 'vendedor_id', 'tienda_id');
     }
 
+    /**
+     * Obtener mis tiendas asignadas como cliente.
+     */
     public function tiendas()
     {
         return $this->hasMany(Tienda::class, 'cliente');
@@ -67,5 +72,37 @@ class User extends Authenticatable implements Auditable
     public function datos()
     {
         return $this->hasMany(UserData::class);
+    }
+
+    public function clientePedidos()
+    {
+        return $this->hasMany(Pedido::class, 'cliente');
+    }
+
+    public function vendedorPedidos()
+    {
+        return $this->hasMany(Pedido::class, 'vendedor');
+    }
+
+    public function clienteTickets()
+    {
+        return $this->hasMany(Pqrs::class, 'cliente');
+    }
+
+    public function vendedorTickets()
+    {
+        return $this->hasMany(Pqrs::class, 'vendedor');
+    }
+
+    public function getNombreCompletoAttribute()
+    {
+        return trim("{$this->name} {$this->apellidos}");
+    }
+
+    public function getInicialesAttribute()
+    {
+        $a = substr($this->name, 0, 1);
+        $b = substr($this->apellidos, 0, 1);
+        return trim("{$a}{$b}");
     }
 }

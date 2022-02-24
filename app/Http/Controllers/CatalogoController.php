@@ -11,8 +11,6 @@ class CatalogoController extends Controller
 {
     /**
      * Listado de todos los catalogos.
-     *
-     * @return \Illuminate\Http\Response
      */
     public function index(Request $request)
     {
@@ -74,19 +72,16 @@ class CatalogoController extends Controller
 
     /**
      * Crear un nuevo catalogo.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
     {
         $request->validate([
-            'nombre' => 'required',
-            'estado' => 'required',
-            'tipo' => 'required',
-            'image' => 'required',
-            'etiqueta' => 'required|string|max:100|in:adultos,niños',
-            'descuento' => 'nullable|integer|min:0|max:99',
+            'nombre' => ['required'],
+            'estado' => ['required'],
+            'tipo' => ['required'],
+            'image' => ['required', 'file', 'max:2000'],
+            'etiqueta' => ['required', 'string', 'max:100', 'in:adultos,niños'],
+            'descuento' => ['nullable', 'integer', 'min:0', 'max:99'],
         ]);
 
         $catalogo = new Catalogo();
@@ -135,46 +130,27 @@ class CatalogoController extends Controller
         return $filename;
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Entities\Catalogo  $catalogo
-     * @return \Illuminate\Http\Response
-     */
     public function show($id)
     {
         $catalogo = Catalogo::findOrFail($id);
         return $catalogo;
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Entities\Catalogo  $catalogo
-     * @return \Illuminate\Http\Response
-     */
     public function edit(Catalogo $catalogo)
     {
         //
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Entities\Catalogo  $catalogo
-     * @return \Illuminate\Http\Response
-     */
     public function update(Request $request)
     {
         $request->validate([
-            'id_catalogo' => 'required|exists:catalogos,id_catalogo',
-            'titulo' => 'required',
-            'estado' => 'required',
-            'tipo' => 'required',
-            'imagen' => 'nullable|image',
-            'etiqueta' => 'required|string|max:100|in:adultos,niños',
-            'descuento' => 'nullable|integer|min:0|max:99',
+            'id_catalogo' => ['required', 'exists:catalogos,id_catalogo'],
+            'titulo' => ['required'],
+            'estado' => ['required'],
+            'tipo' => ['required'],
+            'imagen' => ['nullable', 'file', 'max:2000'],
+            'etiqueta' => ['required', 'string', 'max:100', 'in:adultos,niños'],
+            'descuento' => ['nullable', 'integer', 'min:0', 'max:99'],
         ]);
 
         $catalogo = Catalogo::findOrFail($request['id_catalogo']);
@@ -225,12 +201,6 @@ class CatalogoController extends Controller
         ], 200);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Entities\Catalogo  $catalogo
-     * @return \Illuminate\Http\Response
-     */
     public function destroy($id)
     {
         $catalogo = Catalogo::findOrFail($id);

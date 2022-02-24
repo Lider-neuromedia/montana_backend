@@ -50,7 +50,7 @@ class PasswordController extends Controller
 
         $request->validate([
             'email' => ['required', 'string', 'email', 'max:255', 'exists:users,email'],
-            'password' => ['required', 'confirmed', 'min:6', 'max:20'],
+            'password' => ['required', 'confirmed', 'min:8', 'max:50'],
             'token' => [
                 'required',
                 'min:' . self::TOKEN_LENGTH,
