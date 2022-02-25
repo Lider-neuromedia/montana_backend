@@ -14,9 +14,19 @@ class GaleriaProducto extends Model implements Auditable
     protected $primaryKey = 'id_galeria_prod';
 
     protected $fillable = [
-        'producto',
-        'img',
+        'image',
         'name_img',
         'destacada',
+        'producto',
     ];
+
+    protected $hidden = [
+        'created_at',
+        'updated_at',
+    ];
+
+    public function imagenProducto()
+    {
+        return $this->belongsTo(Producto::class, 'producto');
+    }
 }

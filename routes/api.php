@@ -80,13 +80,13 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::get('consumerCatalogos', 'CatalogoController@catalogosActivos'); // DOC
 
     // PRODUCTO
-    Route::get('getProductsShowRoom', 'ProductoController@getProductsShowRoom');
-    Route::get('/productos/{catalogo}', 'ProductoController@index');
-    Route::get('/producto/{id}', 'ProductoController@detalleProducto');
-    Route::get('/marcas', 'ProductoController@getMarcas');
-    Route::post('/productos', 'ProductoController@store');
-    Route::put('/producto/{id}', 'ProductoController@update');
-    Route::delete('/producto/{id}', 'ProductoController@destroy');
+    Route::get('/marcas', 'ProductoController@marcas'); // DOC
+    Route::get('getProductsShowRoom', 'ProductoController@productosShowRoom'); // DOC
+    Route::post('/productos', 'ProductoController@store'); // DOC
+    Route::get('/productos/{catalogo}', 'ProductoController@index'); // DOC
+    Route::get('/producto/{producto}', 'ProductoController@show'); // DOC
+    Route::match(['put', 'patch'], '/producto/{producto}', 'ProductoController@update'); // DOC
+    Route::delete('/producto/{producto}', 'ProductoController@destroy'); // DOC
 
     // PEDIDOS
     Route::apiResource('/pedidos', 'PedidoController');
@@ -111,28 +111,27 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::get('getUserSmall/{rol_id}', 'AmpliacionCupoController@usersByRole');
     Route::get('cambiar-estado/{solicitud}/{estado}', 'AmpliacionCupoController@changeState');
 
-    // ENCUESTAS
-    Route::apiResource('encuestas', 'EncuestaController', ['index', 'store', 'update']);
-    Route::get('editEncuesta/{id}', 'EncuestaController@edit');
-
-    // INTEGRACIÓN ENCUESTAS - PRODUCTOS
-    Route::get('getPreguntas/{catalogo}', 'EncuestaController@getPreguntas');
-    Route::get('getValoraciones/{catalogo}', 'EncuestaController@getValoraciones');
-    Route::get('getProductoValoraciones/{producto}', 'EncuestaController@getProductoValoraciones');
-
-    Route::post('storeRespuestas', 'EncuestaController@storePreguntas');
-    Route::get('eliminarPregunta/{pregunta}', 'EncuestaController@destroyPregunta');
-
-    // PQRS
-    Route::apiResource('pqrs', 'PqrsController');
-    Route::post('newMessage', 'PqrsController@NewMessage');
-    Route::get('changeState/{id}/{state}', 'PqrsController@changeState');
-    Route::get('getPqrsUser', 'PqrsController@getPqrsUserSesion');
-
     // IMPORTAR DB
     Route::post('batch/importar-marcas', 'BatchDataController@importarMarcas');
     Route::post('batch/importar-productos', 'BatchDataController@importarProductos');
     Route::post('batch/importar-vendedores', 'BatchDataController@importarVendedores');
     Route::post('batch/importar-clientes', 'BatchDataController@importarClientes');
     Route::post('batch/importar-cartera', 'BatchDataController@importarCartera');
+
+    // // ENCUESTAS
+    // Route::apiResource('encuestas', 'EncuestaController', ['index', 'store', 'update']);
+    // Route::get('editEncuesta/{id}', 'EncuestaController@edit');
+
+    // // INTEGRACIÓN ENCUESTAS - PRODUCTOS
+    // Route::get('getPreguntas/{catalogo}', 'EncuestaController@getPreguntas');
+    // Route::get('getValoraciones/{catalogo}', 'EncuestaController@getValoraciones');
+    // Route::get('getProductoValoraciones/{producto}', 'EncuestaController@getProductoValoraciones');
+    // Route::post('storeRespuestas', 'EncuestaController@storePreguntas');
+    // Route::get('eliminarPregunta/{pregunta}', 'EncuestaController@destroyPregunta');
+
+    // // PQRS
+    // Route::apiResource('pqrs', 'PqrsController');
+    // Route::post('newMessage', 'PqrsController@NewMessage');
+    // Route::get('changeState/{id}/{state}', 'PqrsController@changeState');
+    // Route::get('getPqrsUser', 'PqrsController@getPqrsUserSesion');
 });

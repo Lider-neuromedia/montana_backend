@@ -29,4 +29,28 @@ class Producto extends Model implements Auditable
         'catalogo',
         'marca',
     ];
+
+    protected $hidden = [
+        'deleted_at',
+    ];
+
+    public function productoMarca()
+    {
+        return $this->belongsTo(Marca::class, 'marca');
+    }
+
+    public function productoCatalogo()
+    {
+        return $this->belongsTo(Catalogo::class, 'catalogo');
+    }
+
+    public function imagenes()
+    {
+        return $this->hasMany(GaleriaProducto::class, 'producto');
+    }
+
+    public function detalles()
+    {
+        return $this->hasMany(PedidoProduct::class, 'producto', 'id_producto');
+    }
 }

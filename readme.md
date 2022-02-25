@@ -21,3 +21,4 @@ const apiUrl = "http://montanabackend.test/api";
 |[API de Usuarios Clientes](documentation/UsuariosClientes.md)              |
 |[API de Usuarios Vendedores](documentation/UsuariosVendedores.md)          |
 |[API de Catálogos](documentation/Catalogos.md)                             |
+|[API de Productos](documentation/Productos.md)                             |
