@@ -230,15 +230,3 @@ axios.post(`${apiUrl}/vendedores/3/tiendas/50/quitar`, {});
     "status": 200
 }
 ```
-
-------------------------------------------
-
-#####
-
-```js
-// Request
-```
-
-```json
-// Respuesta
-```

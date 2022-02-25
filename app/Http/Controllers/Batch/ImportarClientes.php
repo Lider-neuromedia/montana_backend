@@ -118,6 +118,7 @@ class ImportarClientes extends Importar
         }
 
         try {
+
             \DB::beginTransaction();
 
             foreach ($diccionario as $nit => $grupoClientes) {
@@ -125,6 +126,7 @@ class ImportarClientes extends Importar
             }
 
             \DB::commit();
+
         } catch (\Exception $ex) {
             \Log::info($ex->getMessage());
             \Log::info($ex->getTraceAsString());

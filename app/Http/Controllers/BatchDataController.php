@@ -51,6 +51,7 @@ class BatchDataController extends Controller
             $resultados = $objetoImportar->importar($contenido);
 
             \DB::commit();
+
             return response()->json(compact('resultados'));
 
         } catch (\Exception $ex) {

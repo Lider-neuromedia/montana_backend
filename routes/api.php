@@ -76,11 +76,11 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::get('/vendedores-asignados/{cliente_id}', 'UserController@vendedoresAsignados'); // DOC
 
     // CATALOGOS
-    Route::apiResource('/catalogos', 'CatalogoController');
-    Route::get('consumerCatalogos', 'CatalogoController@consumerCatalogos');
-    Route::get('getProductsShowRoom', 'ProductoController@getProductsShowRoom');
+    Route::apiResource('/catalogos', 'CatalogoController', ['only' => ['index', 'store', 'show', 'update', 'destroy']]); // DOC
+    Route::get('consumerCatalogos', 'CatalogoController@catalogosActivos'); // DOC
 
     // PRODUCTO
+    Route::get('getProductsShowRoom', 'ProductoController@getProductsShowRoom');
     Route::get('/productos/{catalogo}', 'ProductoController@index');
     Route::get('/producto/{id}', 'ProductoController@detalleProducto');
     Route::get('/marcas', 'ProductoController@getMarcas');

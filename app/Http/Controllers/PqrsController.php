@@ -7,7 +7,6 @@ use App\Entities\SeguimientoPqrs;
 use App\Entities\User;
 use App\Utils\Notifications;
 use Carbon\Carbon;
-use DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -80,7 +79,8 @@ class PqrsController extends Controller
         ]);
 
         try {
-            DB::beginTransaction();
+
+            \DB::beginTransaction();
 
             $now = Carbon::now();
 
@@ -93,14 +93,14 @@ class PqrsController extends Controller
             $pqrs->estado = 'abierto';
             $pqrs->save();
 
-            DB::table('seguimiento_pqrs')->insert([
+            \DB::table('seguimiento_pqrs')->insert([
                 'usuario' => $request['cliente'],
                 'pqrs' => $pqrs->id_pqrs,
                 'mensaje' => $request['mensaje'],
                 'hora' => $now->format('H:i:s'),
             ]);
 
-            DB::commit();
+            \DB::commit();
 
             return response()->json([
                 'response' => 'success',
@@ -110,7 +110,7 @@ class PqrsController extends Controller
         } catch (\Exception $ex) {
             \Log::info($ex->getMessage());
             \Log::info($ex->getTraceAsString());
-            DB::rollBack();
+            \DB::rollBack();
 
             return response()->json([
                 'response' => 'error',
@@ -141,7 +141,7 @@ class PqrsController extends Controller
             return abort(404);
         }
 
-        $messages_pqrs = DB::table('seguimiento_pqrs')
+        $messages_pqrs = \DB::table('seguimiento_pqrs')
             ->select('seguimiento_pqrs.*', 'users.name', 'users.apellidos', 'users.rol_id')
             ->join('users', 'usuario', '=', 'id')
             ->where('pqrs', $id)
@@ -180,7 +180,7 @@ class PqrsController extends Controller
         $pqrs->messages_pqrs = $messages_pqrs;
 
         // Busqueda de los pedidos en base al vendedor y cliente registrados en la pqrs.
-        $pedidos = DB::table('pedidos')
+        $pedidos = \DB::table('pedidos')
             ->select('pedidos.*', 'users.name', 'users.apellidos', 'users.rol_id')
             ->join('users', 'cliente', '=', 'id')
             ->where('vendedor', $pqrs->vendedor)

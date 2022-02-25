@@ -60,6 +60,8 @@ class ImportarProductos extends Importar
             }
         }
 
+        Catalogo::corregirCantidadDeProductosEnCatalogos();
+
         return [
             'registros_ingresados' => $count,
             'productos_guardados' => $count_productos,

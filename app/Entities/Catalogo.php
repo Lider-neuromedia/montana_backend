@@ -16,16 +16,52 @@ class Catalogo extends Model implements Auditable
     protected $primaryKey = 'id_catalogo';
 
     protected $fillable = [
-        'descuento_id',
+        'titulo',
         'estado',
         'tipo',
         'imagen',
-        'titulo',
         'etiqueta',
+        'descuento',
+        'cantidad',
     ];
+
+    protected $hidden = [
+        'deleted_at',
+    ];
+
+    public function productos()
+    {
+        return $this->hasMany(Producto::class, 'catalogo');
+    }
 
     public function descuento()
     {
         return $this->hasOne(Descuento::class);
+    }
+
+    /**
+     * Actualizar stock de productos en cantidades de catalogos.
+     */
+    public static function corregirCantidadDeProductosEnCatalogos()
+    {
+        Catalogo::query()
+            ->whereNull('deleted_at')
+            ->update([
+                'cantidad' => 0,
+            ]);
+
+        $cantidades = Producto::query()
+            ->select('catalogo', \DB::raw('count(*) as cantidad'))
+            ->whereNull('deleted_at')
+            ->groupBy('catalogo')
+            ->get();
+
+        foreach ($cantidades as $x) {
+            \DB::table('catalogos')
+                ->where('id_catalogo', $x->catalogo)
+                ->update([
+                    'cantidad' => $x->cantidad,
+                ]);
+        }
     }
 }
