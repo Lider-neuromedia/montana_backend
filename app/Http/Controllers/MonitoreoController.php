@@ -21,7 +21,7 @@ class MonitoreoController extends Controller
             ->with(['user' => function ($q) {
                 $q->select('id', 'rol_id', 'name', 'apellidos', 'dni', 'tipo_identificacion');
             }])
-            ->paginate(10);
+            ->paginate(20);
 
         return response()->json([
             'audits' => $audits,

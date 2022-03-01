@@ -20,7 +20,7 @@ class UserController extends Controller
 
     public function index()
     {
-        $users = User::paginate(4);
+        $users = User::paginate(20);
         return response()->json($users, 200);
     }
 
@@ -30,7 +30,7 @@ class UserController extends Controller
             ->where('rol_id', $rol_id)
             ->orderBy('name', 'asc')
             ->orderBy('apellidos', 'asc')
-            ->paginate(10);
+            ->paginate(20);
         return response()->json($users, 200);
     }
 
@@ -49,7 +49,7 @@ class UserController extends Controller
             ->when($es_simple == false, function ($q) use ($rol_id) {
                 $q->with('datos');
             })
-            ->paginate(10);
+            ->paginate(20);
 
         return $users;
     }

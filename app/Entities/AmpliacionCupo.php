@@ -18,20 +18,25 @@ class AmpliacionCupo extends Model implements Auditable
         'fecha_solicitud',
         'vendedor',
         'cliente',
-        'file_doc_identidad',
-        'file_rut',
-        'file_camara_comercio',
+        'doc_identidad',
+        'doc_rut',
+        'doc_camara_com',
         'monto',
         'estado',
     ];
 
-    public function vendedor()
+    protected $hidden = [
+        'created_at',
+        'updated_at',
+    ];
+
+    public function ampliacionVendedor()
     {
-        return $this->hasOne('App\Entities\User', 'vendedor');
+        return $this->belongsTo(User::class, 'vendedor');
     }
 
-    public function cliente()
+    public function ampliacionCliente()
     {
-        return $this->hasOne('App\Entities\User', 'cliente');
+        return $this->belongsTo(User::class, 'cliente');
     }
 }

@@ -1,4 +1,4 @@
-# API - Sesión
+# API - Usuario
 
 ```js
 const apiUrl = "http://montanabackend.test/api";

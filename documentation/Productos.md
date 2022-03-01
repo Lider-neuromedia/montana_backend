@@ -1,4 +1,4 @@
-# API - Catálogos
+# API - Productos
 
 ```js
 const apiUrl = "http://montanabackend.test/api";

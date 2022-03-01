@@ -107,16 +107,16 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::post('delete-tiendas', 'TiendaController@eliminarTiendas'); // DOC
 
     // AMPLIACION CUPO
-    Route::apiResource('ampliacion-cupo', 'AmpliacionCupoController', ['only' => ['index', 'store', 'update']]);
-    Route::get('getUserSmall/{rol_id}', 'AmpliacionCupoController@usersByRole');
-    Route::get('cambiar-estado/{solicitud}/{estado}', 'AmpliacionCupoController@changeState');
+    Route::apiResource('ampliacion-cupo', 'AmpliacionCupoController', ['only' => ['index', 'store', 'update']]); // DOC
+    Route::get('getUserSmall/{rol_id}', 'AmpliacionCupoController@usuariosPorRol'); // DOC
+    Route::post('cambiar-estado/{solicitud}/{estado}', 'AmpliacionCupoController@changeState'); // DOC
 
     // IMPORTAR DB
-    Route::post('batch/importar-marcas', 'BatchDataController@importarMarcas');
-    Route::post('batch/importar-productos', 'BatchDataController@importarProductos');
-    Route::post('batch/importar-vendedores', 'BatchDataController@importarVendedores');
-    Route::post('batch/importar-clientes', 'BatchDataController@importarClientes');
-    Route::post('batch/importar-cartera', 'BatchDataController@importarCartera');
+    Route::post('batch/importar-marcas', 'BatchDataController@importarMarcas'); // DOC
+    Route::post('batch/importar-productos', 'BatchDataController@importarProductos'); // DOC
+    Route::post('batch/importar-vendedores', 'BatchDataController@importarVendedores'); // DOC
+    Route::post('batch/importar-clientes', 'BatchDataController@importarClientes'); // DOC
+    Route::post('batch/importar-cartera', 'BatchDataController@importarCartera'); // DOC
 
     // // ENCUESTAS
     // Route::apiResource('encuestas', 'EncuestaController', ['index', 'store', 'update']);

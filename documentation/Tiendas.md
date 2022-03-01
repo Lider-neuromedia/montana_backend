@@ -1,4 +1,4 @@
-# API - Monitoreo
+# API - Tiendas
 
 ```js
 const apiUrl = "http://montanabackend.test/api";
