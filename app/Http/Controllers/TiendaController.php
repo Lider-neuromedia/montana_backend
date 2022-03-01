@@ -4,11 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Entities\Tienda;
 use App\Entities\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class TiendaController extends Controller
 {
-    public function clienteTiendas($cliente_id)
+    public function clienteTiendas(User $cliente)
     {
         $user = auth()->user();
         $tiendas = [];
@@ -16,9 +17,7 @@ class TiendaController extends Controller
         if ($user->rol_id == 3) {
             $tiendas = $user->tiendas()->get();
         } else {
-            $tiendas = Tienda::query()
-                ->where('cliente', $cliente_id)
-                ->get();
+            $tiendas = $cliente->tiendas()->get();
         }
 
         return response()->json($tiendas, 200);
@@ -47,7 +46,7 @@ class TiendaController extends Controller
         return response()->json($tienda, 200);
     }
 
-    public function nuevaTienda(Request $request, $cliente)
+    public function nuevaTienda(Request $request, User $cliente)
     {
         $request->validate([
             'nombre' => ['required', 'string', 'max:60'],
@@ -71,37 +70,35 @@ class TiendaController extends Controller
             'vendedores.*' => ['required', 'integer', 'exists:users,id'],
         ]);
 
-        $tiendaData = $request->only('nombre', 'lugar', 'direccion', 'local', 'telefono',
-            'nombre', 'lugar', 'local', 'direccion', 'telefono', 'sucursal', 'fecha_ingreso',
-            'fecha_ultima_compra', 'cupo', 'ciudad_codigo', 'zona', 'bloqueado', 'bloqueado_fecha',
-            'nombre_representante', 'plazo', 'escala_factura', 'observaciones');
+        try {
 
-        $tiendaData['local'] = $tiendaData['local'] ?: '';
-        $tiendaData['telefono'] = $tiendaData['telefono'] ?: '';
-        $tiendaData['direccion'] = $tiendaData['direccion'] ?: '';
-        $tiendaData['sucursal'] = $tiendaData['sucursal'] ?: '';
-        $tiendaData['zona'] = $tiendaData['zona'] ?: '';
-        $tiendaData['nombre_representante'] = $tiendaData['nombre_representante'] ?: '';
-        $tiendaData['escala_factura'] = $tiendaData['escala_factura'] ?: '';
-        $tiendaData['observaciones'] = $tiendaData['observaciones'] ?: '';
-        $tiendaData['bloqueado_fecha'] = $tiendaData['bloqueado_fecha'] ?: null;
+            \DB::beginTransaction();
 
-        $cliente = User::findOrFail($cliente);
-        $tienda = new Tienda($tiendaData);
-        $tienda->propietario()->associate($cliente);
-        $tienda->save();
+            $tiendaId = $this->saveOrUpdateTienda($request->all(), $cliente);
 
-        $tienda->vendedores()->sync($request->get('vendedores'));
-        $cliente->vendedores()->syncWithoutDetaching($request->get('vendedores'));
+            \DB::commit();
 
-        return response()->json([
-            'response' => 'success',
-            'status' => 200,
-        ], 200);
+            return response()->json([
+                'tienda_id' => $tiendaId,
+                'response' => 'success',
+                'status' => 200,
+            ], 200);
+
+        } catch (\Exception $ex) {
+            \Log::info($ex->getMessage());
+            \Log::info($ex->getTraceAsString());
+            \DB::rollBack();
+
+            return response()->json([
+                'response' => 'error',
+                'message' => $ex->getMessage(),
+                'status' => 500,
+            ], 500);
+        }
     }
 
     /**
-     * Guardar tiendas.
+     * Guardar multiples tiendas.
      */
     public function store(Request $request)
     {
@@ -133,41 +130,17 @@ class TiendaController extends Controller
 
             \DB::beginTransaction();
 
-            $cliente = User::query()
-                ->where('rol_id', 3)
-                ->where('id', $request->get('cliente'))
-                ->firstOrFail();
+            $cliente = User::findOrFail($request->get('cliente'));
+            $tiendas_ids = [];
 
             foreach ($request->get('tiendas') as $tiendaData) {
-                $tienda = new Tienda([
-                    'nombre' => $tiendaData['nombre'],
-                    'lugar' => $tiendaData['lugar'],
-                    'local' => $tiendaData['local'] ?: '',
-                    'direccion' => $tiendaData['direccion'] ?: '',
-                    'telefono' => $tiendaData['telefono'] ?: '',
-                    'sucursal' => $tiendaData['sucursal'] ?: '',
-                    'fecha_ingreso' => $tiendaData['fecha_ingreso'],
-                    'fecha_ultima_compra' => $tiendaData['fecha_ultima_compra'],
-                    'cupo' => $tiendaData['cupo'],
-                    'ciudad_codigo' => $tiendaData['ciudad_codigo'],
-                    'zona' => $tiendaData['zona'] ?: '',
-                    'bloqueado' => $tiendaData['bloqueado'],
-                    'bloqueado_fecha' => $tiendaData['bloqueado_fecha'] ?: null,
-                    'nombre_representante' => $tiendaData['nombre_representante'] ?: '',
-                    'plazo' => $tiendaData['plazo'],
-                    'escala_factura' => $tiendaData['escala_factura'] ?: '',
-                    'observaciones' => $tiendaData['observaciones'] ?: '',
-                ]);
-                $tienda->propietario()->associate($cliente);
-                $tienda->save();
-
-                $tienda->vendedores()->sync($tiendaData['vendedores']);
-                $cliente->vendedores()->syncWithoutDetaching($tiendaData['vendedores']);
+                $tiendas_ids[] = $this->saveOrUpdateTienda($tiendaData, $cliente);
             }
 
             \DB::commit();
 
             return response()->json([
+                'tiendas_ids' => $tiendas_ids,
                 'response' => 'success',
                 'status' => 200,
             ], 200);
@@ -185,7 +158,7 @@ class TiendaController extends Controller
         }
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, Tienda $tienda)
     {
         $request->validate([
             'nombre' => ['required', 'string', 'max:60'],
@@ -213,38 +186,22 @@ class TiendaController extends Controller
 
             \DB::beginTransaction();
 
-            $user = auth()->user();
-            $tienda = Tienda::findOrFail($id);
+            $cliente = auth()->user();
 
-            if ($user->rol_id == 3 && $tienda->propietario->id != $user->id) {
+            if ($cliente->rol_id == 3 && $tienda->propietario->id != $cliente->id) {
                 throw new \Exception("No tiene permiso para actualizar la tienda seleccionada.", 403);
             }
 
-            $tiendaData = $request->only('nombre', 'lugar', 'direccion', 'local', 'telefono',
-                'nombre', 'lugar', 'local', 'direccion', 'telefono', 'sucursal', 'fecha_ingreso',
-                'fecha_ultima_compra', 'cupo', 'ciudad_codigo', 'zona', 'bloqueado', 'bloqueado_fecha',
-                'nombre_representante', 'plazo', 'escala_factura', 'observaciones');
-
-            $tiendaData['local'] = $tiendaData['local'] ?: '';
-            $tiendaData['telefono'] = $tiendaData['telefono'] ?: '';
-            $tiendaData['direccion'] = $tiendaData['direccion'] ?: '';
-            $tiendaData['sucursal'] = $tiendaData['sucursal'] ?: '';
-            $tiendaData['zona'] = $tiendaData['zona'] ?: '';
-            $tiendaData['nombre_representante'] = $tiendaData['nombre_representante'] ?: '';
-            $tiendaData['escala_factura'] = $tiendaData['escala_factura'] ?: '';
-            $tiendaData['observaciones'] = $tiendaData['observaciones'] ?: '';
-            $tiendaData['bloqueado_fecha'] = $tiendaData['bloqueado_fecha'] ?: null;
-
-            $tienda->update($tiendaData);
-            $tienda->vendedores()->sync($request->get('vendedores'));
-            $user->vendedores()->syncWithoutDetaching($request->get('vendedores'));
+            $tiendaId = $this->saveOrUpdateTienda($request->all(), $cliente, $tienda);
 
             \DB::commit();
 
             return response()->json([
+                'tienda_id' => $tiendaId,
                 'response' => 'success',
                 'status' => 200,
             ], 200);
+
         } catch (\Exception $ex) {
             \Log::info($ex->getMessage());
             \Log::info($ex->getTraceAsString());
@@ -256,6 +213,44 @@ class TiendaController extends Controller
                 'message' => 'Error al actualizar la tienda.',
             ], 500);
         }
+    }
+
+    private function saveOrUpdateTienda($data, User $cliente, Tienda $tienda = null)
+    {
+        $tiendaData = [
+            'nombre' => $data['nombre'],
+            'lugar' => $data['lugar'],
+            'local' => $data['local'] ?: '',
+            'direccion' => $data['direccion'] ?: '',
+            'telefono' => $data['telefono'] ?: '',
+            'sucursal' => $data['sucursal'] ?: '',
+            'fecha_ingreso' => $data['fecha_ingreso'] ?: Carbon::now()->format('Y-m-d'),
+            'fecha_ultima_compra' => $data['fecha_ultima_compra'] ?: Carbon::now()->format('Y-m-d'),
+            'cupo' => $data['cupo'],
+            'ciudad_codigo' => $data['ciudad_codigo'],
+            'zona' => $data['zona'] ?: '',
+            'bloqueado' => $data['bloqueado'] ?: 'N',
+            'bloqueado_fecha' => $data['bloqueado_fecha'] ?: null,
+            'nombre_representante' => $data['nombre_representante'] ?: '',
+            'plazo' => $data['plazo'],
+            'escala_factura' => $data['escala_factura'] ?: '',
+            'observaciones' => $data['observaciones'] ?: '',
+        ];
+
+        if ($tienda == null) {
+            $tienda = new Tienda($tiendaData);
+            $tienda->propietario()->associate($cliente);
+            $tienda->save();
+        } else {
+            $tienda->update($tiendaData);
+            $tienda->propietario()->associate($cliente);
+            $tienda->save();
+        }
+
+        $tienda->vendedores()->sync($data['vendedores']);
+        $cliente->vendedores()->syncWithoutDetaching($data['vendedores']);
+
+        return $tienda->id_tiendas;
     }
 
     /**
@@ -300,7 +295,7 @@ class TiendaController extends Controller
             return response()->json([
                 'response' => 'success',
                 'status' => 500,
-                'message' => 'Error al borrar la(s) tienda(s).',
+                'message' => 'Error al borrar la(s) tienda(s). ' . $ex->getMessage(),
             ], 500);
         }
     }

@@ -21,7 +21,7 @@ Route::get('/unauthenticated', function () {
 
 Route::group(['middleware' => 'auth:api'], function () {
 
-    Route::get('monitoreo', 'MonitoreoController@index');
+    Route::get('monitoreo', 'MonitoreoController@index'); // DOC
 
 });
 
@@ -101,10 +101,10 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::get('changeDescuentoPedido/{pedido}/{descuento}', 'PedidoController@changeDescuentoPedido');
 
     // TIENDAS
-    Route::apiResource('tiendas', 'TiendaController', ['only' => ['store', 'update', 'show']]);
-    Route::get('tiendas-cliente/{cliente_id}', 'TiendaController@clienteTiendas');
-    Route::post('newTienda/{cliente}', 'TiendaController@nuevaTienda');
-    route::post('delete-tiendas', 'TiendaController@eliminarTiendas');
+    Route::apiResource('tiendas', 'TiendaController', ['only' => ['store', 'update', 'show']]); // DOC
+    Route::get('tiendas-cliente/{cliente}', 'TiendaController@clienteTiendas'); // DOC
+    Route::post('newTienda/{cliente}', 'TiendaController@nuevaTienda'); // DOC
+    Route::post('delete-tiendas', 'TiendaController@eliminarTiendas'); // DOC
 
     // AMPLIACION CUPO
     Route::apiResource('ampliacion-cupo', 'AmpliacionCupoController', ['only' => ['index', 'store', 'update']]);
