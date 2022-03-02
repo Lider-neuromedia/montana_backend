@@ -11,6 +11,8 @@ class Estado extends Model implements Auditable
 
     protected $table = 'estados';
 
+    protected $primaryKey = 'id_estado';
+
     protected $fillable = [
         'estado',
     ];

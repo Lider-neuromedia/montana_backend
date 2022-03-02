@@ -2,9 +2,7 @@
 
 namespace App\Utils;
 
-use DB;
 use Illuminate\Support\Facades\Schema;
-use Storage;
 
 class TestData
 {
@@ -45,8 +43,8 @@ class TestData
     {
         foreach (self::TABLES as $table) {
             if (Schema::hasTable($table)) {
-                $data = DB::table($table)->get()->toArray();
-                Storage::put("database/$table.json", json_encode($data));
+                $data = \DB::table($table)->get()->toArray();
+                \Storage::put("database/$table.json", json_encode($data));
             }
         }
     }
@@ -75,11 +73,11 @@ class TestData
     {
         \Log::info("seed: $path");
 
-        if (Storage::exists($path) && Schema::hasTable($table)) {
-            $rows = (Array) json_decode(Storage::get($path));
+        if (\Storage::exists($path) && Schema::hasTable($table)) {
+            $rows = (Array) json_decode(\Storage::get($path));
 
             foreach ($rows as $data) {
-                DB::table($table)->insert((Array) $data);
+                \DB::table($table)->insert((Array) $data);
             }
         }
     }

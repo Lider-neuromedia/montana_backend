@@ -28,6 +28,12 @@ class Pedido extends Model implements Auditable
         'estado',
     ];
 
+    protected $hidden = [
+        'created_at',
+        'updated_at',
+        'descuento',
+    ];
+
     public function detalles()
     {
         return $this->hasMany(PedidoProduct::class, 'pedido', 'id_pedido');
@@ -46,5 +52,10 @@ class Pedido extends Model implements Auditable
     public function pedidoEstado()
     {
         return $this->belongsTo(Estado::class, 'estado', 'id_estado');
+    }
+
+    public function novedades()
+    {
+        return $this->hasMany(Novedades::class, 'pedido', 'id_pedido');
     }
 }

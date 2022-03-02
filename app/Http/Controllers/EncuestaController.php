@@ -7,7 +7,6 @@ use App\Entities\Encuesta;
 use App\Entities\Preguntas;
 use App\Entities\User;
 use App\Entities\Valoracion;
-use DB;
 use Illuminate\Http\Request;
 
 class EncuestaController extends Controller
@@ -256,15 +255,15 @@ class EncuestaController extends Controller
 
     public function show($id)
     {
-        $preguntas = DB::table('preguntas')
-            ->select('id_pregunta', 'preguntas.pregunta', DB::raw('COUNT(id_pregunta) AS cant_respuestas, round(avg(respuesta)) AS promedio'))
+        $preguntas = \DB::table('preguntas')
+            ->select('id_pregunta', 'preguntas.pregunta', \DB::raw('COUNT(id_pregunta) AS cant_respuestas, round(avg(respuesta)) AS promedio'))
             ->join('valoraciones', 'valoraciones.pregunta', '=', 'id_pregunta')
             ->where('encuesta', $id)
             ->groupBy('id_pregunta', 'preguntas.pregunta')
             ->get();
 
         if (count($preguntas) == 0) {
-            $preguntas = DB::table('preguntas')
+            $preguntas = \DB::table('preguntas')
                 ->select('id_pregunta', 'preguntas.pregunta')
                 ->where('encuesta', $id)
                 ->groupBy('id_pregunta', 'preguntas.pregunta')
@@ -272,7 +271,7 @@ class EncuestaController extends Controller
         }
 
         // Estadistica de Dona - cantidad de usuarios.
-        $usuarios_diligenciados = DB::table('preguntas')
+        $usuarios_diligenciados = \DB::table('preguntas')
             ->select('usuario')
             ->join('valoraciones', 'valoraciones.pregunta', '=', 'id_pregunta')
             ->where('encuesta', $id)
@@ -286,8 +285,8 @@ class EncuestaController extends Controller
 
         foreach ($preguntas as $key => $pregunta) {
             // Estadistica de barras - promedio de respuesta.
-            $promedio_respuesta = DB::table('preguntas')
-                ->select('id_pregunta', 'respuesta', DB::raw('round(AVG(respuesta)) AS promedio'))
+            $promedio_respuesta = \DB::table('preguntas')
+                ->select('id_pregunta', 'respuesta', \DB::raw('round(AVG(respuesta)) AS promedio'))
                 ->join('valoraciones', 'valoraciones.pregunta', '=', 'preguntas.id_pregunta')
                 ->where('id_pregunta', $pregunta->id_pregunta)
                 ->groupBy('respuesta', 'id_pregunta')

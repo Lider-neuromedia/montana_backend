@@ -26,3 +26,4 @@ const apiUrl = "http://montanabackend.test/api";
 |[API de Tiendas](documentation/Tiendas.md)                                 |
 |[API de Ampliación de Cúpo](documentation/AmpliacionCupo.md)               |
 |[API de Importar base de datos](documentation/ImportarDB.md)               |
+|[API de Pedidos](documentation/Pedidos.md)                                 |

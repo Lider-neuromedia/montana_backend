@@ -18,4 +18,9 @@ class Novedades extends Model implements Auditable
         'descripcion',
         'pedido',
     ];
+
+    public function novedadPedido()
+    {
+        return $this->belongsTo(Pedido::class, 'pedido');
+    }
 }

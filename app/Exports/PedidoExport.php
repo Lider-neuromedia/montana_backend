@@ -30,11 +30,19 @@ class PedidoExport implements FromQuery, WithHeadings
     public function query()
     {
         return Pedido::query()
-            ->select('cli.name AS cliente,', 'fecha', 'codigo',
-                'metodo_pago', 'total', 'vend.name AS vendedor',
-                'descuento', 'notas', 'notas_facturacion', 'estados.estado')
-            ->join('estados', 'pedidos.estado', '=', 'id_estado')
-            ->join('users as vend', 'pedidos.vendedor', '=', 'vend.id')
-            ->join('users as cli', 'pedidos.cliente', '=', 'cli.id');
+            ->select(
+                'c.name AS cliente,',
+                'fecha',
+                'codigo',
+                'metodo_pago',
+                'total',
+                'v.name AS vendedor',
+                'descuento',
+                'notas',
+                'notas_facturacion',
+                'e.estado')
+            ->join('estados as e', 'pedidos.estado', '=', 'e.id_estado')
+            ->join('users as v', 'pedidos.vendedor', '=', 'v.id')
+            ->join('users as c', 'pedidos.cliente', '=', 'c.id');
     }
 }

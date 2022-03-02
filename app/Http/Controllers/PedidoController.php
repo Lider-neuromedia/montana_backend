@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Entities\Catalogo;
+use App\Entities\Estado;
 use App\Entities\Novedades;
 use App\Entities\Pedido;
 use App\Entities\PedidoProduct;
@@ -10,7 +11,7 @@ use App\Entities\Producto;
 use App\Entities\Tienda;
 use App\Entities\User;
 use App\Exports\PedidoExport;
-use DB;
+use Carbon\Carbon;
 use Excel;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -19,168 +20,276 @@ class PedidoController extends Controller
 {
     public function index(Request $request)
     {
-        $search = $request['search'];
-        $date = $request['date'];
+        $search = $request->get('search') ?: false;
+        $date = $request->get('date') ?: false;
         $user = auth()->user();
 
-        $pedidos = Pedido::select('id_pedido', 'fecha', 'firma', 'codigo', 'total', 'ven.name AS name_vendedor',
-            'ven.apellidos AS apellido_vendedor', 'cli.name AS name_cliente', 'cli.apellidos AS apellido_cliente', 'estados.estado', 'estados.id_estado')
-            ->join('estados', 'pedidos.estado', '=', 'estados.id_estado')
-            ->join('users AS ven', 'vendedor', '=', 'ven.id')
-            ->join('users AS cli', 'cliente', '=', 'cli.id')
+        $pedidos = Pedido::query()
             ->when($user->rol_id == 3, function ($q) use ($user) {
                 $q->where('cliente', $user->id);
             })
             ->when($user->rol_id == 2, function ($q) use ($user) {
                 $q->where('vendedor', $user->id);
-            });
+            })
+            ->when($date == 'hoy', function ($q) {
+                $q->whereDate('fecha', Carbon::now()->format('Y-m-d'));
+            })
+            ->when($date == 'ayer', function ($q) {
+                $q->whereDate('fecha', Carbon::now()->sub('days', 1)->format('Y-m-d'));
+            })
+            ->when($search, function ($q) use ($search) {
+                $q->where(function ($q) use ($search) {
+                    $q->where('codigo', 'like', "%$search%")
+                        ->orWhere('total', 'like', "%$search%")
+                        ->orWhereHas('pedidoVendedor', function ($q) use ($search) {
+                            $q->where('name', 'like', "%$search%")
+                                ->orWhere('apellidos', 'like', "%$search%")
+                                ->orWhere('email', 'like', "%$search%")
+                                ->orWhere('dni', 'like', "%$search%");
+                        })
+                        ->orWhereHas('pedidoCliente', function ($q) use ($search) {
+                            $q->where('name', 'like', "%$search%")
+                                ->orWhere('apellidos', 'like', "%$search%")
+                                ->orWhere('email', 'like', "%$search%")
+                                ->orWhere('dni', 'like', "%$search%");
+                        });
+                });
+            })
+            ->with('pedidoVendedor', 'pedidoCliente', 'pedidoEstado')
+            ->orderBy('fecha', 'desc')
+            ->paginate(20);
 
-        if ($date == 'hoy') {
+        $pedidos->setCollection(
+            $pedidos->getCollection()
+                ->map(function ($x) {
+                    $x->vendedor = [
+                        'id_vendedor' => $x->vendedor,
+                        'nombre' => $x->pedidoVendedor->nombre_completo,
+                    ];
+                    $x->cliente = [
+                        'id_cliente' => $x->cliente,
+                        'nombre' => $x->pedidoCliente->nombre_completo,
+                    ];
+                    $x->estado = $x->pedidoEstado;
 
-            // Estamos la zona horaria en caso de que no funcione la configuracion del servidor.
-            date_default_timezone_set('America/Bogota');
-            $date_filter = date('Y-m-d');
-            $pedidos = $pedidos->where('fecha', '=', $date_filter);
+                    if ($x->firma != null) {
+                        $x->firma = url($x->firma);
+                    }
 
-        } else if ($date == 'ayer') {
-
-            date_default_timezone_set('America/Bogota');
-            $current_day = date('Y-m-d');
-            $date_filter = date("Y-m-d", strtotime($current_day . "- 1 days"));
-            $pedidos = $pedidos->where('fecha', '=', $date_filter);
-
-        } else {
-
-            $pedidos = $pedidos->where(function ($q) use ($search) {
-                $q->where('codigo', 'like', "%$search%")
-                    ->orWhere('total', 'like', "%$search%")
-                    ->orWhere('ven.name', 'like', "%$search%")
-                    ->orWhere('ven.apellidos', 'like', "%$search%")
-                    ->orWhere('cli.name', 'like', "%$search%");
-            });
-
-        }
-
-        $pedidos = $pedidos->get();
+                    unset($x->sub_total);
+                    unset($x->metodo_pago);
+                    unset($x->descuento);
+                    unset($x->notas);
+                    unset($x->notas_facturacion);
+                    unset($x->pedidoVendedor);
+                    unset($x->pedidoCliente);
+                    unset($x->pedidoEstado);
+                    return $x;
+                })
+        );
 
         return response()->json([
-            'response' => 'success',
-            'status' => 200,
             'pedidos' => $pedidos,
-        ], 200);
-    }
-
-    public function resourcesCreate()
-    {
-        $vendedores = User::where('rol_id', 2)->get();
-        $clientes = User::where('rol_id', 3)->get();
-        $catalogos = Catalogo::query()
-            ->where('estado', 'activo')
-            ->where('cantidad', '!=', 0)
-            ->get();
-
-        return response()->json([
             'response' => 'success',
             'status' => 200,
-            'vendedores' => $vendedores,
-            'clientes' => $clientes,
-            'catalogos' => $catalogos,
         ], 200);
     }
 
-    public function generateCodePedido()
+    public function show(Pedido $pedido)
     {
-        $code = uniqid();
-        $validate_code = Pedido::where('codigo', $code)->exists();
+        $pedido = Pedido::query()
+            ->where('id_pedido', $pedido->id_pedido)
+            ->with(
+                'pedidoVendedor',
+                'pedidoVendedor.datos',
+                'pedidoCliente',
+                'pedidoCliente.datos',
+                'detalles',
+                'detalles.detalleProducto',
+                'detalles.detalleTienda',
+                'novedades')
+            ->firstOrFail();
 
-        if (!$validate_code) {
-            return response()->json([
-                'response' => 'success',
-                'status' => 200,
-                'code' => $code,
-            ], 200);
+        if ($pedido->firma != null) {
+            $pedido->firma = url($pedido->firma);
         }
 
+        $pedido->estado_id = $pedido->pedidoEstado->id_estado;
+        $pedido->estado = $pedido->pedidoEstado;
+        unset($pedido->pedidoEstado);
+
+        $pedido->vendedor_id = $pedido->pedidoVendedor->id;
+        $pedido->vendedor = $pedido->pedidoVendedor;
+        unset($pedido->pedidoVendedor);
+
+        $pedido->cliente_id = $pedido->pedidoCliente->id;
+        $pedido->cliente = $pedido->pedidoCliente;
+        unset($pedido->pedidoCliente);
+
+        $pedido->detalles = $pedido->detalles->map(function ($x) {
+            $x->referencia = $x->detalleProducto->referencia;
+            $x->lugar = $x->detalleTienda->lugar;
+
+            $x->id = $x->id_pedido_prod;
+            unset($x->id_pedido_prod);
+
+            $x->pedido_id = $x->pedido;
+            unset($x->pedido);
+
+            $x->tienda_id = $x->tienda;
+            $x->tienda = $x->detalleTienda;
+            unset($x->detalleTienda);
+
+            $x->producto_id = $x->producto;
+            $x->producto = $x->detalleProducto;
+            unset($x->detalleProducto);
+
+            return $x;
+        });
+
         return response()->json([
-            'response' => 'error',
-            'status' => 403,
-            'message' => 'El codigo esta registrado. Intenta de nuevo.',
-        ], 403);
+            'status' => 200,
+            'response' => 'success',
+            'pedido' => $pedido,
+        ], 200);
     }
 
     public function store(Request $request)
     {
         $request->validate([
+            'codigo_pedido' => ['required', 'unique:pedidos,codigo'],
             'cliente' => ['required', 'integer', 'exists:users,id'],
             'vendedor' => ['required', 'integer', 'exists:users,id'],
-            'codigo_pedido' => ['required', 'unique:pedidos,codigo'],
-            'total_pedido' => ['required', 'numeric'],
-            'descuento' => ['required', 'numeric'],
-            'forma_pago' => ['required', 'string', 'max:100', 'in:contado,credito'],
+            'descuento' => ['required', 'integer', 'min:0'],
+            'metodo_pago' => ['required', 'string', 'max:100', 'in:contado,credito'],
+            'total' => ['required', 'integer', 'min:0'],
             'notas' => ['nullable', 'string', 'max:250'],
             'notas_facturacion' => ['nullable', 'string', 'max:250'],
             'firma' => ['required', 'file', 'max:2000'],
             'productos' => ['required', 'array', 'min:1'],
-            'productos.*.id_producto' => [
+            'productos.*.producto_id' => [
                 'required',
                 Rule::exists('productos', 'id_producto')->whereNull('deleted_at'),
             ],
             'productos.*.tiendas' => ['required', 'array', 'min:1'],
-            'productos.*.tiendas.*.cantidad' => ['required', 'integer', 'min:1'],
+            'productos.*.tiendas.*.cantidad_producto' => ['required', 'integer', 'min:1'],
             'productos.*.tiendas.*.id_tienda' => ['required', 'exists:tiendas,id_tiendas'],
         ]);
 
+        return $this->saveOrUpdate($request);
+    }
+
+    public function update(Request $request, Pedido $pedido)
+    {
+        $request->validate([
+            'cliente' => ['required', 'integer', 'exists:users,id'],
+            'vendedor' => ['required', 'integer', 'exists:users,id'],
+            'descuento' => ['required', 'integer', 'min:0'],
+            'metodo_pago' => ['required', 'string', 'max:100', 'in:contado,credito'],
+            'total' => ['required', 'integer', 'min:0'],
+            'notas' => ['nullable', 'string', 'max:250'],
+            'notas_facturacion' => ['nullable', 'string', 'max:250'],
+            'firma' => ['nullable', 'file', 'max:2000'],
+            'productos' => ['required', 'array', 'min:1'],
+            'productos.*.producto_id' => [
+                'required',
+                Rule::exists('productos', 'id_producto')->whereNull('deleted_at'),
+            ],
+            'productos.*.tiendas' => ['required', 'array', 'min:1'],
+            'productos.*.tiendas.*.cantidad_producto' => ['required', 'integer', 'min:1'],
+            'productos.*.tiendas.*.id_tienda' => ['required', 'exists:tiendas,id_tiendas'],
+        ]);
+
+        return $this->saveOrUpdate($request, $pedido);
+    }
+
+    private function saveOrUpdate(Request $request, Pedido $pedido = null)
+    {
         try {
 
             \DB::beginTransaction();
 
-            $pedido = new Pedido();
-            $pedido->fecha = date('Y-m-d');
-            $pedido->codigo = $request['codigo_pedido'];
-            $pedido->metodo_pago = $request['forma_pago'];
-            $pedido->sub_total = $request['total_pedido'];
-            $pedido->descuento = $request['descuento'];
+            $esNuevoPedido = $pedido == null;
+
+            $pedidoData = $request->only('metodo_pago', 'total', 'notas', 'notas_facturacion', 'descuento');
+            $pedidoData['sub_total'] = $request->get('total');
+
+            $cliente = User::findOrFail($request->get('cliente'));
+            $vendedor = User::findOrFail($request->get('vendedor'));
 
             // Guardar firma.
             if ($request->hasFile('firma')) {
+                if (!$esNuevoPedido && $pedido->firma) { // Borrar firma actual.
+                    $file = array_reverse(explode('/', $pedido->firma))[0];
+                    \Storage::delete("public/firmas/$file");
+                }
+
                 $path = $request->file('firma')->store('public/firmas');
-                $public_path = str_replace('public/firmas', 'storage/firmas', $path);
-                $pedido->firma = $public_path;
+                $pedidoData['firma'] = str_replace('public/firmas', 'storage/firmas', $path);
             }
 
-            // Sacamos el descuento si lo tiene.
-            if ($request['descuento'] != 0) {
-                $descuento = $request['total_pedido'] * ($request['descuento'] / 100);
-                $total = $request['total_pedido'] - $descuento;
+            // Calcular descuento.
+            $descuento = $pedidoData['descuento'];
+            $total = $pedidoData['total'];
+
+            if ($descuento > 0) {
+                $pedidoData['total'] = $total - ($total * ($descuento / 100));
+            }
+
+            if ($esNuevoPedido) {
+                $pedidoData['fecha'] = Carbon::now()->format('Y-m-d');
+                $pedidoData['codigo'] = $request->get('codigo_pedido');
+                $estado = Estado::findOrFail(2);
+
+                $pedido = new Pedido($pedidoData);
+                $pedido->pedidoCliente()->associate($cliente);
+                $pedido->pedidoVendedor()->associate($vendedor);
+                $pedido->pedidoEstado()->associate($estado);
+                $pedido->save();
             } else {
-                $total = $request['total_pedido'];
+                $pedido->update($pedidoData);
             }
 
-            $pedido->total = $total;
-            $pedido->notas = $request['notas'];
-            $pedido->notas_facturacion = $request['notas_facturacion'];
-            $pedido->vendedor = $request['vendedor'];
-            $pedido->cliente = $request['cliente'];
-            $pedido->estado = 2;
-            $pedido->save();
+            // Reiniciar stock de productos.
+            if (!$esNuevoPedido) {
+                foreach ($pedido->detalles as $detalle) {
+                    $cantidad = $detalle->cantidad_producto;
+                    $producto = $detalle->detalleProducto;
 
-            // Creamos la relacion con productos.
+                    if ($producto != null) {
+                        $producto->update([
+                            'stock' => $producto->stock + $cantidad,
+                        ]);
+                    }
+                }
 
-            foreach ($request['productos'] as $product) {
-                foreach ($product['tiendas'] as $tienda) {
+                $pedido->detalles()->delete();
+            }
 
-                    $pedido_product = new PedidoProduct();
-                    $pedido_product->pedido = $pedido->id_pedido;
-                    $pedido_product->producto = $product['id_producto'];
-                    $pedido_product->cantidad_producto = $tienda['cantidad'];
-                    $pedido_product->tienda = $tienda['id_tienda'];
-                    $pedido_product->save();
+            // Productos
+            foreach ($request['productos'] as $productoData) {
+                $producto = Producto::findOrFail($productoData['producto_id']);
+
+                foreach ($productoData['tiendas'] as $tiendaData) {
+                    $tienda = $cliente->tiendas()->findOrFail($tiendaData['id_tienda']);
+                    $cantidad = $tiendaData['cantidad_producto'];
+
+                    $detalle = new PedidoProduct([
+                        'cantidad_producto' => $cantidad,
+                    ]);
+                    $detalle->detallePedido()->associate($pedido);
+                    $detalle->detalleProducto()->associate($producto);
+                    $detalle->detalleTienda()->associate($tienda);
+                    $detalle->save();
 
                     // Reducir stock
-                    $producto = Producto::findOrFail($product['id_producto']);
-                    $producto->stock = $producto->stock - $tienda['cantidad'];
-                    $producto->save();
+                    $producto->update([
+                        'stock' => $producto->stock - $cantidad,
+                    ]);
+                }
 
+                if ($producto->stock < 0) {
+                    throw new \Exception("No hay stock suficiente en el producto {$producto->id_producto}.", 1);
                 }
             }
 
@@ -189,7 +298,8 @@ class PedidoController extends Controller
             return response()->json([
                 'status' => 200,
                 'response' => 'success',
-                'message' => 'Pedido creado.',
+                'message' => 'Pedido guardado correctamente.',
+                'pedido_id' => $pedido->id_pedido,
             ], 200);
 
         } catch (\Exception $ex) {
@@ -200,50 +310,111 @@ class PedidoController extends Controller
             return response()->json([
                 'status' => 500,
                 'response' => 'error',
-                'message' => 'Error interno del servidor, no se pudo guardar el pedido.',
+                'message' => $ex->getMessage(),
             ], 500);
         }
     }
 
-    public function show($id)
+    public function exportPedido()
     {
-        $pedido = Pedido::select('id_pedido', 'fecha', 'firma', 'codigo', 'metodo_pago', 'sub_total', 'total',
-            'descuento', 'notas', 'notas_facturacion', 'vendedor', 'estados.estado', 'id_estado', 'cliente')
-            ->join('estados', 'pedidos.estado', '=', 'id_estado')
-            ->where('id_pedido', $id)
-            ->first();
+        return Excel::download(new PedidoExport(), 'pedidos.xlsx');
+    }
 
-        // Consulta del cliente asignado.
-        $cliente = User::findOrFail($pedido->cliente);
-        $data_admin = DB::table('user_data')->where('user_id', $pedido->cliente)->first();
-        $cliente->nit = $data_admin->value_key;
-
-        $pedido->info_cliente = $cliente;
-
-        // Consulta de productos.
-        $productos = PedidoProduct::select('referencia', 'cantidad_producto', 'lugar')
-            ->where('pedido', $pedido->id_pedido)
-            ->join('productos', 'producto', '=', 'id_producto')
-            ->join('tiendas', 'tienda', '=', 'id_tiendas')
-            ->get();
-
-        $pedido->productos = $productos;
-
-        // Consulta de novedades.
-        $novedades = Novedades::where('pedido', $pedido->id_pedido)->get();
-        $pedido->novedades = $novedades;
+    public function pedidoPorCodigo($codigo)
+    {
+        $pedido = Pedido::query()
+            ->select('id_pedido', 'fecha', 'codigo', 'descuento', 'total', 'ven.name AS name_vendedor', 'cliente', 'vendedor',
+                'ven.apellidos AS apellido_vendedor', 'cli.name AS name_cliente', 'cli.apellidos AS apellido_cliente', 'estado')
+            ->join('users AS ven', 'vendedor', '=', 'ven.id')
+            ->join('users AS cli', 'cliente', '=', 'cli.id')
+            ->where('codigo', $codigo)
+            ->firstOrFail();
 
         return response()->json([
-            'status' => 200,
             'response' => 'success',
+            'status' => 200,
             'pedido' => $pedido,
         ], 200);
     }
 
-    public function changeState(Request $request)
+    public function cambiarDescuentoPedido(Pedido $pedido, $descuento)
     {
+        $descuentoValor = intval($descuento);
+
+        if ("$descuento" != "$descuentoValor") {
+            throw new \Exception("Valor de descuento no valido", 1);
+
+        }
+
+        $pedido->descuento = $descuento;
+        $pedido->total = $pedido->sub_total - ($pedido->sub_total * ($descuento / 100));
+        $pedido->save();
+
+        return response()->json([
+            'message' => 'Descuento actualizado',
+            'response' => 'success',
+            'status' => 200,
+        ], 200);
+    }
+
+    public function recursosCrearPedido()
+    {
+        $vendedores = User::query()
+            ->select('id', \DB::raw('TRIM(CONCAT(name, " ", apellidos)) as nombre'))
+            ->where('rol_id', 2)
+            ->get();
+
+        $clientes = User::query()
+            ->select('id', \DB::raw('TRIM(CONCAT(name, " ", apellidos)) as nombre'))
+            ->where('rol_id', 3)
+            ->get();
+
+        $catalogos = Catalogo::query()
+            ->where('estado', 'activo')
+            ->where('cantidad', '!=', 0)
+            ->get()
+            ->map(function ($x) {
+                $x->imagen = url($x->imagen);
+                return $x;
+            });
+
+        return response()->json([
+            'vendedores' => $vendedores,
+            'clientes' => $clientes,
+            'catalogos' => $catalogos,
+            'response' => 'success',
+            'status' => 200,
+        ], 200);
+    }
+
+    public function generarCodigoPedido()
+    {
+        $codigo = null;
+
+        do {
+
+            $codigo = uniqid();
+            $yaExisteCodigo = Pedido::where('codigo', $codigo)->exists();
+
+        } while ($yaExisteCodigo);
+
+        return response()->json([
+            'code' => $codigo,
+            'response' => 'success',
+            'status' => 200,
+        ], 200);
+    }
+
+    public function cambiarEstadoPedido(Request $request)
+    {
+        $request->validate([
+            'pedido' => ['required', 'integer', 'exists:pedidos,id_pedido'],
+            'state' => ['required', 'integer', 'exists:estados,id_estado'],
+        ]);
+
+        $estado = Estado::findOrFail($request['state']);
         $pedido = Pedido::findOrFail($request['pedido']);
-        $pedido->estado = $request['state'];
+        $pedido->pedidoEstado()->associate($estado);
         $pedido->save();
 
         return response()->json([
@@ -253,18 +424,18 @@ class PedidoController extends Controller
         ], 200);
     }
 
-    public function storeNovedades(Request $request)
+    public function crearNovedad(Request $request)
     {
         $request->validate([
-            'tipo' => ['required'],
-            'descripcion' => ['required'],
-            'pedido' => ['required'],
+            'tipo' => ['required', 'string', 'max:250'],
+            'descripcion' => ['required', 'string', 'max:10000'],
+            'pedido' => ['required', 'integer', 'exists:pedidos,id_pedido'],
         ]);
 
-        $novedad = new Novedades();
-        $novedad->tipo = $request['tipo'];
-        $novedad->descripcion = $request['descripcion'];
-        $novedad->pedido = $request['pedido'];
+        $pedido = Pedido::findOrFail($request->get('pedido'));
+
+        $novedad = new Novedades($request->only('tipo', 'descripcion'));
+        $novedad->novedadPedido()->associate($pedido);
         $novedad->save();
 
         return response()->json([
@@ -272,170 +443,5 @@ class PedidoController extends Controller
             'response' => 'success',
             'message' => 'Novedad creada.',
         ], 200);
-    }
-
-    public function edit($id)
-    {
-        $pedido = Pedido::select('id_pedido', 'fecha', 'firma', 'codigo', 'metodo_pago', 'sub_total', 'total',
-            'descuento', 'notas', 'notas_facturacion', 'vendedor', 'estados.estado', 'id_estado', 'cliente')
-            ->join('estados', 'pedidos.estado', '=', 'id_estado')
-            ->where('id_pedido', $id)
-            ->first();
-
-        // Consulta de productos.
-        $productos = PedidoProduct::select('pedido', 'producto', 'referencia', 'stock', 'productos.total')
-            ->where('pedido', $pedido->id_pedido)
-            ->join('productos', 'producto', '=', 'id_producto')
-            ->groupBy('producto')
-            ->get();
-
-        foreach ($productos as $product) {
-            $product->tiendas = PedidoProduct::select('id_pedido_prod', 'cantidad_producto', 'tienda', 'lugar', 'local')
-                ->join('tiendas', 'tienda', '=', 'id_tiendas')
-                ->where('producto', $product->producto)
-                ->get();
-        }
-
-        $pedido->productos = $productos;
-
-        return response()->json([
-            'status' => 200,
-            'response' => 'success',
-            'pedido' => $pedido,
-        ], 200);
-    }
-
-    public function update(Request $request)
-    {
-        $request->validate([
-            'id_pedido' => ['required', 'exists:pedidos,id_pedido'],
-            'metodo_pago' => ['required', 'string', 'max:100', 'in:contado,credito'],
-            'total' => ['required', 'numeric'],
-            'firma' => ['nullable', 'file', 'max:2000'],
-            'notas' => ['nullable', 'string', 'max:250'],
-            'notas_facturacion' => ['nullable', 'string', 'max:250'],
-
-            'productos' => ['required', 'array', 'min:1'],
-            'productos.*.producto' => [
-                'required',
-                Rule::exists('productos', 'id_producto')->whereNull('deleted_at'),
-            ],
-            'productos.*.stock' => ['required', 'integer', 'min:1'],
-            'productos.*.tiendas' => ['required', 'array', 'min:1'],
-            'productos.*.tiendas.*.cantidad_producto' => ['required', 'integer', 'min:1'],
-            'productos.*.tiendas.*.id_pedido_prod' => ['required', 'exists:pedido_productos,id_pedido_prod'],
-        ]);
-
-        try {
-
-            \DB::beginTransaction();
-
-            $pedido = Pedido::findOrFail($request['id_pedido']);
-            $pedido->metodo_pago = $request['metodo_pago'];
-            $pedido->sub_total = $request['total'];
-            $pedido->total = $request['total'];
-            $pedido->notas = $request['notas'];
-            $pedido->notas_facturacion = $request['notas_facturacion'];
-
-            // Guardar firma.
-            if ($request->hasFile('firma')) {
-                // Borrar firma actual.
-                $firma_actual = $pedido->firma;
-
-                if ($firma_actual) {
-                    $file = array_reverse(explode('/', $firma_actual))[0];
-                    \Storage::delete("public/firmas/$file");
-                }
-
-                $path = $request->file('firma')->store('public/firmas');
-                $public_path = str_replace('public/firmas', 'storage/firmas', $path);
-                $pedido->firma = $public_path;
-            }
-
-            $pedido->save();
-
-            foreach ($request['productos'] as $producto) {
-                $update_producto = Producto::findOrFail($producto['producto']);
-                $update_producto->stock = $producto['stock'];
-                $update_producto->save();
-                foreach ($producto['tiendas'] as $tiendas) {
-                    $pedido_prod = PedidoProduct::findOrFail($tiendas['id_pedido_prod']);
-                    $pedido_prod->cantidad_producto = $tiendas['cantidad_producto'];
-                    $pedido_prod->save();
-                }
-            }
-
-            \DB::commit();
-
-            return response()->json([
-                'status' => 200,
-                'response' => 'success',
-                'message' => 'Pedido actualizado.',
-            ], 200);
-
-        } catch (\Exception $ex) {
-            \Log::info($ex->getMessage());
-            \Log::info($ex->getTraceAsString());
-            \DB::rollBack();
-
-            return response()->json([
-                'status' => 500,
-                'response' => 'success',
-                'message' => 'Error interno del servidor, no se pudo actualizar el pedido.',
-            ], 500);
-        }
-    }
-
-    public function exportPedido()
-    {
-        return Excel::download(new PedidoExport(), 'pedido.xlsx');
-    }
-
-    public function getPedidoWithCode($code)
-    {
-        $pedido = Pedido::where('codigo', $code);
-
-        if ($pedido->exists()) {
-            $pedido = $pedido->select('id_pedido', 'fecha', 'codigo', 'descuento', 'total', 'ven.name AS name_vendedor', 'cliente', 'vendedor',
-                'ven.apellidos AS apellido_vendedor', 'cli.name AS name_cliente', 'cli.apellidos AS apellido_cliente', 'estado')
-                ->join('users AS ven', 'vendedor', '=', 'ven.id')
-                ->join('users AS cli', 'cliente', '=', 'cli.id')
-                ->first();
-
-            return response()->json([
-                'response' => 'success',
-                'status' => 200,
-                'pedido' => $pedido,
-            ], 200);
-        }
-
-        return response()->json([
-            'response' => 'error',
-            'status' => 403,
-            'message' => 'El pedido ingresado no existe en base de datos.',
-        ], 403);
-    }
-
-    public function changeDescuentoPedido($pedido, $descuento)
-    {
-        $validate_pedido = Pedido::where('id_pedido', $pedido);
-
-        if ($validate_pedido->exists()) {
-            $pedido = Pedido::findOrFail($pedido);
-            $pedido->descuento = $descuento;
-            $pedido->total = $pedido->sub_total - ($pedido->sub_total * ($descuento / 100));
-            $pedido->save();
-
-            return response()->json([
-                'response' => 'success',
-                'status' => 200,
-            ], 200);
-        }
-
-        return response()->json([
-            'response' => 'error',
-            'status' => 403,
-            'message' => 'El pedido ingresado no existe en base de datos.',
-        ], 403);
     }
 }

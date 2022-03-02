@@ -20,6 +20,11 @@ class PedidoProduct extends Model implements Auditable
         'tienda',
     ];
 
+    protected $hidden = [
+        'created_at',
+        'updated_at',
+    ];
+
     public function detallePedido()
     {
         return $this->belongsTo(Pedido::class, 'pedido');
