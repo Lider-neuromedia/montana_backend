@@ -20,7 +20,7 @@ Route::get('/unauthenticated', function () {
 })->name('unauthenticated');
 
 Route::group(['middleware' => 'auth:api'], function () {
-    Route::get('monitoreo', 'MonitoreoController@index');
+    Route::middleware(['rol:administrador'])->get('monitoreo', 'MonitoreoController@index');
 });
 
 Route::group(['namespace' => 'Auth'], function () {
@@ -43,33 +43,34 @@ Route::group(['prefix' => 'auth'], function () {
 Route::group(['middleware' => 'auth:api'], function () {
 
     // OTROS
-    Route::post('devices', 'DevicesController@post');
-    Route::get('/dashboard-resumen', 'ResumenController@dashboardResumen');
+    Route::post('devices', 'DevicesController@post')->name('devices.store');
+    Route::get('/dashboard-resumen', 'ResumenController@dashboardResumen')->name('resume.show');
 
     // USUARIOS
-    Route::apiResource('/users', 'UserController', ['only' => ['index', 'store']]);
-    Route::post('/update-user/{id}', 'UserController@actualizarUsuario');
-    Route::post('/delete-users', 'UserController@eliminarUsuarios');
-    Route::get('/user-rol/{rol_id}', 'UserController@usuariosPorRol');
-    Route::get('/roles', 'UserController@roles');
+    Route::middleware(['rol:administrador|vendedor'])->get('/users', 'UserController@index')->name('users.index');
+    Route::middleware(['rol:administrador|vendedor'])->post('/users', 'UserController@store')->name('users.store');
+    Route::middleware(['rol:administrador|vendedor'])->post('/update-user/{id}', 'UserController@actualizarUsuario')->name('users.update');
+    Route::middleware(['rol:administrador|vendedor'])->post('/delete-users', 'UserController@eliminarUsuarios')->name('users.destroy');
+    Route::middleware(['rol:administrador|vendedor'])->get('/user-rol/{rol_id}', 'UserController@usuariosPorRol')->name('roles.users.index');
+    Route::middleware(['rol:administrador|vendedor'])->get('/roles', 'UserController@roles')->name('roles.index');
 
     // ADMINISTRADORES
-    Route::get('/admins', 'UserController@administradores');
-    Route::get('/admin/{id}', 'UserController@administrador');
+    Route::middleware(['rol:administrador'])->get('/admins', 'UserController@administradores')->name('admins.index');
+    Route::middleware(['rol:administrador'])->get('/admin/{id}', 'UserController@administrador')->name('admins.show');
 
     // VENDEDORES
-    Route::get('/vendedores', 'UserController@vendedores');
-    Route::get('/vendedor/{id}', 'UserController@vendedor');
-    Route::get('/searchClientes', 'UserController@buscarClientes');
-    Route::get('/clientes-asignados/{vendedor_id}', 'UserController@clientesAsignados');
-    Route::post('vendedores/{vendedor_id}/tiendas/{tienda_id}/asignar', 'UserController@asignarVendedorTienda');
-    Route::post('vendedores/{vendedor_id}/tiendas/{tienda_id}/quitar', 'UserController@quitarVendedorTienda');
+    Route::get('/vendedores', 'UserController@vendedores')->name('sellers.index');
+    Route::get('/vendedor/{id}', 'UserController@vendedor')->name('sellers.show');
+    Route::get('/searchClientes', 'UserController@buscarClientes')->name('sellers.clients.search');
+    Route::get('/clientes-asignados/{vendedor_id}', 'UserController@clientesAsignados')->name('sellers.clients.index');
+    Route::middleware(['rol:administrador'])->post('vendedores/{vendedor_id}/tiendas/{tienda_id}/asignar', 'UserController@asignarVendedorTienda')->name('sellers.attach');
+    Route::middleware(['rol:administrador'])->post('vendedores/{vendedor_id}/tiendas/{tienda_id}/quitar', 'UserController@quitarVendedorTienda')->name('sellers.detach');
 
     // CLIENTES
-    Route::get('/clientes', 'UserController@clientes');
-    Route::get('/cliente/{id}', 'UserController@cliente');
-    Route::get('/searchVendedor', 'UserController@buscarVendedor');
-    Route::get('/vendedores-asignados/{cliente_id}', 'UserController@vendedoresAsignados');
+    Route::get('/clientes', 'UserController@clientes')->name('clients.index');
+    Route::get('/cliente/{id}', 'UserController@cliente')->name('clients.show');
+    Route::get('/searchVendedor', 'UserController@buscarVendedor')->name('clients.sellers.search');
+    Route::get('/vendedores-asignados/{cliente_id}', 'UserController@vendedoresAsignados')->name('clients.sellers.index');
 
     // CATALOGOS
     Route::apiResource('/catalogos', 'CatalogoController', ['only' => ['index', 'store', 'show', 'update', 'destroy']]);
@@ -106,11 +107,11 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::post('cambiar-estado/{solicitud}/{estado}', 'AmpliacionCupoController@changeState');
 
     // IMPORTAR DB
-    Route::post('batch/importar-marcas', 'BatchDataController@importarMarcas');
-    Route::post('batch/importar-productos', 'BatchDataController@importarProductos');
-    Route::post('batch/importar-vendedores', 'BatchDataController@importarVendedores');
-    Route::post('batch/importar-clientes', 'BatchDataController@importarClientes');
-    Route::post('batch/importar-cartera', 'BatchDataController@importarCartera');
+    Route::middleware(['rol:administrador'])->post('batch/importar-marcas', 'BatchDataController@importarMarcas');
+    Route::middleware(['rol:administrador'])->post('batch/importar-productos', 'BatchDataController@importarProductos');
+    Route::middleware(['rol:administrador'])->post('batch/importar-vendedores', 'BatchDataController@importarVendedores');
+    Route::middleware(['rol:administrador'])->post('batch/importar-clientes', 'BatchDataController@importarClientes');
+    Route::middleware(['rol:administrador'])->post('batch/importar-cartera', 'BatchDataController@importarCartera');
 
     // // ENCUESTAS
     // Route::apiResource('encuestas', 'EncuestaController', ['index', 'store', 'update']);

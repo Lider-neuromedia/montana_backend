@@ -37,6 +37,11 @@ class User extends Authenticatable implements Auditable
         'email_verified_at' => 'datetime',
     ];
 
+    public function rol()
+    {
+        return $this->belongsTo(Rol::class);
+    }
+
     /**
      * Obtener vendedores asignados a mi (como cliente).
      */
