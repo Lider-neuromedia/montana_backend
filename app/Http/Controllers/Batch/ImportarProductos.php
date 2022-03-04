@@ -22,7 +22,7 @@ class ImportarProductos extends Importar
 
         $defaultMarca = Marca::firstOrFail();
         $marcas = Marca::all();
-        $defaultCatalogo = Catalogo::firstOrFail();
+        $defaultCatalogo = Catalogo::where('estado', 'activo')->firstOrFail();
 
         for ($page = 0; $page < $pages; $page++) {
             $stmt = Statement::create()
