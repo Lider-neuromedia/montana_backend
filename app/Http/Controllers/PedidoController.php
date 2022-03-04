@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Entities\Catalogo;
 use App\Entities\Detalle;
 use App\Entities\Estado;
-use App\Entities\Novedades;
+use App\Entities\Novedad;
 use App\Entities\Pedido;
 use App\Entities\Producto;
 use App\Entities\Tienda;
@@ -434,7 +434,7 @@ class PedidoController extends Controller
 
         $pedido = Pedido::findOrFail($request->get('pedido'));
 
-        $novedad = new Novedades($request->only('tipo', 'descripcion'));
+        $novedad = new Novedad($request->only('tipo', 'descripcion'));
         $novedad->novedadPedido()->associate($pedido);
         $novedad->save();
 

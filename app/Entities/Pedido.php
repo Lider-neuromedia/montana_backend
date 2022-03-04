@@ -56,6 +56,6 @@ class Pedido extends Model implements Auditable
 
     public function novedades()
     {
-        return $this->hasMany(Novedades::class, 'pedido', 'id_pedido');
+        return $this->hasMany(Novedad::class, 'pedido', 'id_pedido');
     }
 }
