@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Entities\Catalogo;
 use App\Entities\Encuesta;
-use App\Entities\Preguntas;
+use App\Entities\Pregunta;
 use App\Entities\User;
 use App\Entities\Valoracion;
 use Illuminate\Http\Request;
@@ -65,7 +65,7 @@ class EncuestaController extends Controller
             $encuesta->save();
 
             foreach ($request['preguntas'] as $pregunta) {
-                $pregunta_db = new Preguntas();
+                $pregunta_db = new Pregunta();
                 $pregunta_db->encuesta = $encuesta->id_form;
                 $pregunta_db->pregunta = $pregunta['name'];
                 $pregunta_db->save();
@@ -244,7 +244,7 @@ class EncuestaController extends Controller
             ], 403);
         }
 
-        $pregunta = Preguntas::findOrFail($id_pregunta);
+        $pregunta = Pregunta::findOrFail($id_pregunta);
         $pregunta->delete();
 
         return response()->json([
@@ -364,9 +364,9 @@ class EncuestaController extends Controller
 
             foreach ($request['preguntas'] as $data) {
                 if (isset($data['id_pregunta'])) {
-                    $pregunta = Preguntas::find($data['id_pregunta']);
+                    $pregunta = Pregunta::find($data['id_pregunta']);
                 } else {
-                    $pregunta = new Preguntas();
+                    $pregunta = new Pregunta();
                 }
 
                 $pregunta->pregunta = $data['pregunta'];

@@ -5,7 +5,7 @@ namespace App\Entities;
 use Illuminate\Database\Eloquent\Model;
 use OwenIt\Auditing\Contracts\Auditable;
 
-class Preguntas extends Model implements Auditable
+class Pregunta extends Model implements Auditable
 {
     use \OwenIt\Auditing\Auditable;
 
