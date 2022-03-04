@@ -2,7 +2,7 @@
 
 ##### Desplegar a pruebas en Caprover
 ```
-caprover deploy -n captain-01 -a montana -b back
+caprover deploy -n captain-01 -a montana -b master
 ```
 
 ------------------------------------------
@@ -12,6 +12,8 @@ caprover deploy -n captain-01 -a montana -b back
 ```js
 const apiUrl = "http://montanabackend.test/api";
 ```
+
+[Archivo Postman](documentation/Montana.postman_collection.json)
 
 |APIs                                                                       |
 |---------------------------------------------------------------------------|

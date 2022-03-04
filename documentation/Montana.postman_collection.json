@@ -1,0 +1,4173 @@
+{
+	"info": {
+		"_postman_id": "b003c2c1-eb04-4de8-9953-7b13c5c44eb1",
+		"name": "Montana",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Sesion",
+			"item": [
+				{
+					"name": "POST Iniciar Sesión",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var token = pm.response.json().access_token;",
+									"pm.environment.set('token', token);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "email",
+									"value": "admin@montana.com",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "montana000",
+									"type": "text"
+								},
+								{
+									"key": "email",
+									"value": "carlos@gmail.com",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "password",
+									"value": "montana000",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "email",
+									"value": "emanuel@gmail.com",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "password",
+									"value": "montana000",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{url}}/api/auth/login",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST Registrar usuario",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var token = pm.response.json().access_token;",
+									"pm.environment.set('token', token);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "email",
+									"value": "admin2@montana.com",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "montana000",
+									"type": "text"
+								},
+								{
+									"key": "password_confirmation",
+									"value": "montana000",
+									"type": "text"
+								},
+								{
+									"key": "rol_id",
+									"value": "3",
+									"type": "text"
+								},
+								{
+									"key": "name",
+									"value": "John Doe",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{url}}/api/auth/signup",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"signup"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET Cerrar Sesión",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/auth/logout",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"logout"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET Obtener Usuario",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/auth/user",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"user"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET Obtener Sesión de Usuario",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/auth/getUserSesion",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"getUserSesion"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST Solicitar cambiar contraseña",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "email",
+									"value": "admin@montana.com",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{url}}/api/password/email",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"password",
+								"email"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST Recuperar Contraseña",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "token",
+									"value": "qTE9lSHMicvwQk5oLQ0dG7Zs",
+									"type": "text"
+								},
+								{
+									"key": "email",
+									"value": "admin@montana.com",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "montana000",
+									"type": "text"
+								},
+								{
+									"key": "password_confirmation",
+									"value": "montana000",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{url}}/api/password/reset",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"password",
+								"reset"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST Guardar token de dispositivo",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "device_token",
+									"value": "e9_F_ZgeQkqmZrNBT8oSOn:APA91bHCG-20nzFpWw03RXR7ILVrGP7pFQhWrPF3tCkUKn5H1rsT9eX9hALolGQK0g9O5MfKE5M30bg73r1WgKKJtLvCTnWK-FbzbHmh5CnLN0MCClAJcDFHiZIUMKXmzNTjVGxFSW5A",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{url}}/api/devices",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"devices"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET Dashboard Resumen",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/dashboard-resumen?fecha_atendidos=2020-02",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"dashboard-resumen"
+							],
+							"query": [
+								{
+									"key": "fecha_atendidos",
+									"value": "2020-02"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Usuarios",
+			"item": [
+				{
+					"name": "GET Obtener roles de usuario",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/roles",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"roles"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET Obtener usuarios",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/users?page=2",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"users"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "2"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST crear usuario",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "rol_id",
+									"value": "2",
+									"type": "text"
+								},
+								{
+									"key": "name",
+									"value": "John",
+									"type": "text"
+								},
+								{
+									"key": "apellidos",
+									"value": "Doe",
+									"type": "text"
+								},
+								{
+									"key": "email",
+									"value": "johndoe2@mail.com",
+									"type": "text"
+								},
+								{
+									"key": "tipo_identificacion",
+									"value": "Cedula",
+									"type": "text"
+								},
+								{
+									"key": "dni",
+									"value": "613481684",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "montana000",
+									"type": "text"
+								},
+								{
+									"key": "user_data[0][field_key]",
+									"value": "telefono",
+									"type": "text"
+								},
+								{
+									"key": "user_data[0][value_key]",
+									"value": "3100201245",
+									"type": "text"
+								},
+								{
+									"key": "user_data[1][field_key]",
+									"value": "codigo",
+									"type": "text"
+								},
+								{
+									"key": "user_data[1][value_key]",
+									"value": "1",
+									"type": "text"
+								},
+								{
+									"key": "clientes[0][cliente_id]",
+									"value": "4",
+									"type": "text"
+								},
+								{
+									"key": "clientes[0][tienda_id]",
+									"value": "1",
+									"type": "text"
+								},
+								{
+									"key": "clientes[1][cliente_id]",
+									"value": "4",
+									"type": "text"
+								},
+								{
+									"key": "clientes[1][tienda_id]",
+									"value": "2",
+									"type": "text"
+								},
+								{
+									"key": "clientes[2][cliente_id]",
+									"value": "133",
+									"type": "text"
+								},
+								{
+									"key": "clientes[2][tienda_id]",
+									"value": "17",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][nombre]",
+									"value": "Evacol",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][lugar]",
+									"value": "Bogotá calima",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][local]",
+									"value": "CC Llanogrande",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][direccion]",
+									"value": "C.C LLANO GRANDE LOCAL 130 CL 31 44-239 VIA LAS PL",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][telefono]",
+									"value": "2439232 EXT 201",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][sucursal]",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][fecha_ingreso]",
+									"value": "2017-08-23",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][fecha_ultima_compra]",
+									"value": "2017-09-29",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][cupo]",
+									"value": "0",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][ciudad_codigo]",
+									"value": "001",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][zona]",
+									"value": "11",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][bloqueado]",
+									"value": "N",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][bloqueado_fecha]",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][nombre_representante]",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][plazo]",
+									"value": "0",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][escala_factura]",
+									"value": "A",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][observaciones]",
+									"value": "Texto de observación",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][vendedores][0]",
+									"value": "3",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][vendedores][1]",
+									"value": "136",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{url}}/api/users",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST Actualizar usuario",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "rol_id",
+									"value": "2",
+									"type": "text"
+								},
+								{
+									"key": "name",
+									"value": "John",
+									"type": "text"
+								},
+								{
+									"key": "apellidos",
+									"value": "Doe",
+									"type": "text"
+								},
+								{
+									"key": "email",
+									"value": "johndoe2@mail.com",
+									"type": "text"
+								},
+								{
+									"key": "tipo_identificacion",
+									"value": "Cedula",
+									"type": "text"
+								},
+								{
+									"key": "dni",
+									"value": "613481684",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "montana000",
+									"type": "text"
+								},
+								{
+									"key": "user_data[0][field_key]",
+									"value": "telefono",
+									"type": "text"
+								},
+								{
+									"key": "user_data[0][value_key]",
+									"value": "3100201245",
+									"type": "text"
+								},
+								{
+									"key": "user_data[1][field_key]",
+									"value": "codigo",
+									"type": "text"
+								},
+								{
+									"key": "user_data[1][value_key]",
+									"value": "1",
+									"type": "text"
+								},
+								{
+									"key": "clientes[0][cliente_id]",
+									"value": "4",
+									"type": "text"
+								},
+								{
+									"key": "clientes[0][tienda_id]",
+									"value": "1",
+									"type": "text"
+								},
+								{
+									"key": "clientes[1][cliente_id]",
+									"value": "4",
+									"type": "text"
+								},
+								{
+									"key": "clientes[1][tienda_id]",
+									"value": "2",
+									"type": "text"
+								},
+								{
+									"key": "clientes[2][cliente_id]",
+									"value": "133",
+									"type": "text"
+								},
+								{
+									"key": "clientes[2][tienda_id]",
+									"value": "17",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][nombre]",
+									"value": "Evacol",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][lugar]",
+									"value": "Bogotá calima",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][local]",
+									"value": "CC Llanogrande",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][direccion]",
+									"value": "C.C LLANO GRANDE LOCAL 130 CL 31 44-239 VIA LAS PL",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][telefono]",
+									"value": "2439232 EXT 201",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][sucursal]",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][fecha_ingreso]",
+									"value": "2017-08-23",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][fecha_ultima_compra]",
+									"value": "2017-09-29",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][cupo]",
+									"value": "0",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][ciudad_codigo]",
+									"value": "001",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][zona]",
+									"value": "11",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][bloqueado]",
+									"value": "N",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][bloqueado_fecha]",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][nombre_representante]",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][plazo]",
+									"value": "0",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][escala_factura]",
+									"value": "A",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][observaciones]",
+									"value": "Texto de observación",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][vendedores][0]",
+									"value": "3",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][vendedores][1]",
+									"value": "136",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{url}}/api/update-user/1413",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"update-user",
+								"1413"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET Obtener usuarios por rol",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/user-rol/3?page=50",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"user-rol",
+								"3"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "50"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "DELETE Borrar usuarios",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "usuarios[0]",
+									"value": "108",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "usuarios[1]",
+									"value": "1411",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{url}}/api/delete-users",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"delete-users"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Administradores",
+			"item": [
+				{
+					"name": "GET Obtener administradores",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/admins?page=1&search=juan",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"admins"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "search",
+									"value": "juan"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET Obtener administrador",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/admin/145",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"145"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Clientes",
+			"item": [
+				{
+					"name": "GET Obtener clientes",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/clientes?page=50&search=a",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"clientes"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "50"
+								},
+								{
+									"key": "search",
+									"value": "a"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET Buscar vendedores",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/searchVendedor?search=a&page=1",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"searchVendedor"
+							],
+							"query": [
+								{
+									"key": "search",
+									"value": "a"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET Obtener cliente",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/cliente/1267",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"cliente",
+								"1267"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET Obtener vendedores asignados",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/vendedores-asignados/142",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"vendedores-asignados",
+								"142"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Vendedores",
+			"item": [
+				{
+					"name": "GET Obtener vendedores",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/vendedores?search=&page=1",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"vendedores"
+							],
+							"query": [
+								{
+									"key": "search",
+									"value": ""
+								},
+								{
+									"key": "page",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET Buscar clientes",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/searchClientes?search=juan&page=1",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"searchClientes"
+							],
+							"query": [
+								{
+									"key": "search",
+									"value": "juan"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET Obtener vendedor",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/vendedor/3",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"vendedor",
+								"3"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET Obtener clientes asignados a un vendedor",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/clientes-asignados/3",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"clientes-asignados",
+								"3"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST Actualizar vendedor",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "{{url}}/api/update-vendedor/3",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"update-vendedor",
+								"3"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST Asignar vendedor a tienda",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "{{url}}/api/vendedores/3/tiendas/50/asignar",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"vendedores",
+								"3",
+								"tiendas",
+								"50",
+								"asignar"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST Quitar vendedor de tienda",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "{{url}}/api/vendedores/3/tiendas/50/quitar",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"vendedores",
+								"3",
+								"tiendas",
+								"50",
+								"quitar"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "PQRS",
+			"item": [
+				{
+					"name": "GET Obtener  preguntas",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/pqrs",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"pqrs"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET Obtener pregunta",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/pqrs/10",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"pqrs",
+								"10"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET Cambiar estado de pregunta",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/changeState/1/cerrado",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"changeState",
+								"1",
+								"cerrado"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST Enviar mensaje",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "mensaje",
+									"value": "Prueba de notificacion push 2000",
+									"type": "text"
+								},
+								{
+									"key": "usuario",
+									"value": "142",
+									"type": "text"
+								},
+								{
+									"key": "pqrs",
+									"value": "20",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{url}}/api/newMessage",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"newMessage"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST Crear pqrs",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "vendedor",
+									"value": "3",
+									"type": "text"
+								},
+								{
+									"key": "cliente",
+									"value": "4",
+									"type": "text"
+								},
+								{
+									"key": "tipo",
+									"value": "queja_retraso",
+									"type": "text"
+								},
+								{
+									"key": "mensaje",
+									"value": "Mensaje de prueba postman",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{url}}/api/pqrs",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"pqrs"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Catalogo",
+			"item": [
+				{
+					"name": "GET Obtener marcas",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/marcas",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"marcas"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener catálogos",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/catalogos?search={\"general\":1,\"show_room\":0,\"public\":1,\"private\":1,\"ninos\":0,\"adultos\":1}",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"catalogos"
+							],
+							"query": [
+								{
+									"key": "search",
+									"value": "{\"general\":1,\"show_room\":0,\"public\":1,\"private\":1,\"ninos\":0,\"adultos\":1}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener catálogos activos",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/consumerCatalogos",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"consumerCatalogos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET Obtener detalle de catálogo",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/catalogos/31",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"catalogos",
+								"31"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST Crear catálogo",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "estado",
+									"value": "activo",
+									"type": "text"
+								},
+								{
+									"key": "tipo",
+									"value": "general",
+									"type": "text"
+								},
+								{
+									"key": "etiqueta",
+									"value": "adultos",
+									"type": "text"
+								},
+								{
+									"key": "titulo",
+									"value": "Zapatos de Prueba",
+									"type": "text"
+								},
+								{
+									"key": "imagen",
+									"type": "file",
+									"src": "/home/neuromedia/Downloads/catalogo.png"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{url}}/api/catalogos",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"catalogos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "PUT Actualizar catálogo",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "_method",
+									"value": "PUT",
+									"type": "text"
+								},
+								{
+									"key": "estado",
+									"value": "activo",
+									"type": "text"
+								},
+								{
+									"key": "tipo",
+									"value": "general",
+									"type": "text"
+								},
+								{
+									"key": "etiqueta",
+									"value": "adultos",
+									"type": "text"
+								},
+								{
+									"key": "titulo",
+									"value": "Zapatos de Prueba 2",
+									"type": "text"
+								},
+								{
+									"key": "imagen",
+									"type": "file",
+									"src": "/home/neuromedia/Downloads/catalogo.png"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{url}}/api/catalogos/66",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"catalogos",
+								"66"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "DELETE Borrar catalogo",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/catalogos/64",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"catalogos",
+								"64"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Productos",
+			"item": [
+				{
+					"name": "GET Obtener Marcas",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/marcas",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"marcas"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET Obtener Productos por catalogo",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/productos/3?page=1",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"productos",
+								"3"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET Obtener productos ShowRoom",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/getProductsShowRoom?page=1",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"getProductsShowRoom"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET Obtener Producto",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/producto/2764",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"producto",
+								"2764"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "PUT Actualizar Producto",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "_method",
+									"value": "PUT",
+									"type": "text"
+								},
+								{
+									"key": "nombre",
+									"value": "Tenis Puma Adulto1",
+									"type": "text"
+								},
+								{
+									"key": "codigo",
+									"value": "030303871",
+									"type": "text"
+								},
+								{
+									"key": "referencia",
+									"value": "ATH-505041",
+									"type": "text"
+								},
+								{
+									"key": "sku",
+									"value": "505041",
+									"type": "text"
+								},
+								{
+									"key": "descripcion",
+									"value": "Tenis Puma Adulto Home, descripción de prueba1",
+									"type": "text"
+								},
+								{
+									"key": "stock",
+									"value": "501",
+									"type": "text"
+								},
+								{
+									"key": "precio",
+									"value": "2700001",
+									"type": "text"
+								},
+								{
+									"key": "total",
+									"value": "2700001",
+									"type": "text"
+								},
+								{
+									"key": "iva",
+									"value": "19",
+									"type": "text"
+								},
+								{
+									"key": "marca_id",
+									"value": "2",
+									"type": "text"
+								},
+								{
+									"key": "catalogo_id",
+									"value": "3",
+									"type": "text"
+								},
+								{
+									"key": "imagenes[0][id]",
+									"value": "61",
+									"type": "text"
+								},
+								{
+									"key": "imagenes[0][destacada]",
+									"value": "1",
+									"type": "text"
+								},
+								{
+									"key": "imagenes[0][file]",
+									"type": "file",
+									"src": [],
+									"disabled": true
+								},
+								{
+									"key": "imagenes[1][id]",
+									"value": "62",
+									"type": "text"
+								},
+								{
+									"key": "imagenes[1][destacada]",
+									"value": "0",
+									"type": "text"
+								},
+								{
+									"key": "imagenes[1][file]",
+									"type": "file",
+									"src": [],
+									"disabled": true
+								},
+								{
+									"key": "imagenes[2][id]",
+									"value": "63",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "imagenes[2][destacada]",
+									"value": "0",
+									"type": "text"
+								},
+								{
+									"key": "imagenes[2][file]",
+									"type": "file",
+									"src": "/home/neuromedia/Downloads/catalogo.png"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{url}}/api/producto/2764",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"producto",
+								"2764"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST Crear Producto",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "nombre",
+									"value": "Tenis Puma Adulto",
+									"type": "text"
+								},
+								{
+									"key": "codigo",
+									"value": "03030387",
+									"type": "text"
+								},
+								{
+									"key": "referencia",
+									"value": "ATH-50504",
+									"type": "text"
+								},
+								{
+									"key": "sku",
+									"value": "50504",
+									"type": "text"
+								},
+								{
+									"key": "descripcion",
+									"value": "Tenis Puma Adulto Home, descripción de prueba",
+									"type": "text"
+								},
+								{
+									"key": "stock",
+									"value": "50",
+									"type": "text"
+								},
+								{
+									"key": "precio",
+									"value": "270000",
+									"type": "text"
+								},
+								{
+									"key": "total",
+									"value": "270000",
+									"type": "text"
+								},
+								{
+									"key": "iva",
+									"value": "19",
+									"type": "text"
+								},
+								{
+									"key": "marca_id",
+									"value": "2",
+									"type": "text"
+								},
+								{
+									"key": "catalogo_id",
+									"value": "3",
+									"type": "text"
+								},
+								{
+									"key": "imagenes[0][file]",
+									"type": "file",
+									"src": "/home/neuromedia/Downloads/producto-0.jpg"
+								},
+								{
+									"key": "imagenes[0][destacada]",
+									"value": "1",
+									"type": "text"
+								},
+								{
+									"key": "imagenes[1][file]",
+									"type": "file",
+									"src": "/home/neuromedia/Downloads/producto-1.jpg"
+								},
+								{
+									"key": "imagenes[1][destacada]",
+									"value": "0",
+									"type": "text"
+								},
+								{
+									"key": "imagenes[2][file]",
+									"type": "file",
+									"src": "/home/neuromedia/Downloads/producto-2.jpg"
+								},
+								{
+									"key": "imagenes[2][destacada]",
+									"value": "0",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{url}}/api/productos",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"productos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "DELETE Borrar Producto",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/producto/22",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"producto",
+								"22"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Pedidos",
+			"item": [
+				{
+					"name": "GET Obtener Pedidos",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/pedidos?page=1",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"pedidos"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET Obtener Pedido",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/pedidos/23",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"pedidos",
+								"23"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST Crear Pedido",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "codigo_pedido",
+									"value": "f392hy3082yr1",
+									"type": "text"
+								},
+								{
+									"key": "cliente",
+									"value": "1267",
+									"type": "text"
+								},
+								{
+									"key": "vendedor",
+									"value": "141",
+									"type": "text"
+								},
+								{
+									"key": "descuento",
+									"value": "0",
+									"type": "text"
+								},
+								{
+									"key": "metodo_pago",
+									"value": "contado",
+									"type": "text"
+								},
+								{
+									"key": "total",
+									"value": "5000000",
+									"type": "text"
+								},
+								{
+									"key": "notas",
+									"value": "Nota de descuentos",
+									"type": "text"
+								},
+								{
+									"key": "notas_facturacion",
+									"value": "Nota de facturación",
+									"type": "text"
+								},
+								{
+									"key": "firma",
+									"type": "file",
+									"src": "/home/neuromedia/Downloads/catalogo.png"
+								},
+								{
+									"key": "productos[0][producto_id]",
+									"value": "22",
+									"type": "text"
+								},
+								{
+									"key": "productos[0][tiendas][0][cantidad_producto]",
+									"value": "20",
+									"type": "text"
+								},
+								{
+									"key": "productos[0][tiendas][0][id_tienda]",
+									"value": "1075",
+									"type": "text"
+								},
+								{
+									"key": "productos[1][producto_id]",
+									"value": "33",
+									"type": "text"
+								},
+								{
+									"key": "productos[1][tiendas][0][cantidad_producto]",
+									"value": "8",
+									"type": "text"
+								},
+								{
+									"key": "productos[1][tiendas][0][id_tienda]",
+									"value": "1075",
+									"type": "text"
+								},
+								{
+									"key": "productos[2][producto_id]",
+									"value": "30",
+									"type": "text"
+								},
+								{
+									"key": "productos[2][tiendas][0][cantidad_producto]",
+									"value": "5",
+									"type": "text"
+								},
+								{
+									"key": "productos[2][tiendas][0][id_tienda]",
+									"value": "1075",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{url}}/api/pedidos",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"pedidos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST Cambiar estado de pedido",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "pedido",
+									"value": "23",
+									"type": "text"
+								},
+								{
+									"key": "state",
+									"value": "1",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{url}}/api/change-state-pedido",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"change-state-pedido"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST Cambiar descuento de pedido",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "pedido",
+									"value": "23",
+									"type": "text"
+								},
+								{
+									"key": "state",
+									"value": "1",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{url}}/api/changeDescuentoPedido/23/12",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"changeDescuentoPedido",
+								"23",
+								"12"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST Crear novedad",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "tipo",
+									"value": "retraso en envio",
+									"type": "text"
+								},
+								{
+									"key": "descripcion",
+									"value": "Nueva novedad de prueba 123",
+									"type": "text"
+								},
+								{
+									"key": "pedido",
+									"value": "23",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{url}}/api/crear-novedad",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"crear-novedad"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "PUT Actualizar Pedido",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "_method",
+									"value": "PUT",
+									"type": "text"
+								},
+								{
+									"key": "cliente",
+									"value": "1267",
+									"type": "text"
+								},
+								{
+									"key": "vendedor",
+									"value": "141",
+									"type": "text"
+								},
+								{
+									"key": "descuento",
+									"value": "0",
+									"type": "text"
+								},
+								{
+									"key": "metodo_pago",
+									"value": "contado",
+									"type": "text"
+								},
+								{
+									"key": "total",
+									"value": "5000000",
+									"type": "text"
+								},
+								{
+									"key": "notas",
+									"value": "Nota de descuentos",
+									"type": "text"
+								},
+								{
+									"key": "notas_facturacion",
+									"value": "Nota de facturación",
+									"type": "text"
+								},
+								{
+									"key": "firma",
+									"type": "file",
+									"src": []
+								},
+								{
+									"key": "productos[0][producto_id]",
+									"value": "22",
+									"type": "text"
+								},
+								{
+									"key": "productos[0][tiendas][0][cantidad_producto]",
+									"value": "20",
+									"type": "text"
+								},
+								{
+									"key": "productos[0][tiendas][0][id_tienda]",
+									"value": "1075",
+									"type": "text"
+								},
+								{
+									"key": "productos[1][producto_id]",
+									"value": "33",
+									"type": "text"
+								},
+								{
+									"key": "productos[1][tiendas][0][cantidad_producto]",
+									"value": "8",
+									"type": "text"
+								},
+								{
+									"key": "productos[1][tiendas][0][id_tienda]",
+									"value": "1075",
+									"type": "text"
+								},
+								{
+									"key": "productos[2][producto_id]",
+									"value": "30",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "productos[2][tiendas][0][cantidad_producto]",
+									"value": "5",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "productos[2][tiendas][0][id_tienda]",
+									"value": "1075",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{url}}/api/pedidos/42",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"pedidos",
+								"42"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET Obtener nuevo código",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/generate-code",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"generate-code"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET Obtener recursos para crear pedido",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/recursos-crear-pedido",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"recursos-crear-pedido"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET Exportar pedidos",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/export-pedido",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"export-pedido"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Ampliación Cupo",
+			"item": [
+				{
+					"name": "GET Obtener Cupos",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/ampliacion-cupo?page=1",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"ampliacion-cupo"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET Obtener usuarios por rol",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/getUserSmall/3",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"getUserSmall",
+								"3"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST Crear amplicación de cupo",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "vendedor",
+									"value": "3",
+									"type": "text"
+								},
+								{
+									"key": "cliente",
+									"value": "4",
+									"type": "text"
+								},
+								{
+									"key": "monto",
+									"value": "300000",
+									"type": "text"
+								},
+								{
+									"key": "doc_identidad",
+									"type": "file",
+									"src": "/home/neuromedia/Downloads/producto-1.jpg"
+								},
+								{
+									"key": "doc_rut",
+									"type": "file",
+									"src": "/home/neuromedia/Downloads/catalogo.png"
+								},
+								{
+									"key": "doc_camara_com",
+									"type": "file",
+									"src": "/home/neuromedia/Downloads/producto-0.jpg"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{url}}/api/ampliacion-cupo",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"ampliacion-cupo"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "PUT Actualizar ampliacion de cupo",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "_method",
+									"value": "PUT",
+									"type": "text"
+								},
+								{
+									"key": "vendedor",
+									"value": "3",
+									"type": "text"
+								},
+								{
+									"key": "cliente",
+									"value": "4",
+									"type": "text"
+								},
+								{
+									"key": "doc_identidad",
+									"type": "file",
+									"src": []
+								},
+								{
+									"key": "doc_rut",
+									"type": "file",
+									"src": "/home/neuromedia/Downloads/catalogo.png"
+								},
+								{
+									"key": "doc_camara_com",
+									"type": "file",
+									"src": []
+								},
+								{
+									"key": "monto",
+									"value": "450000",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{url}}/api/ampliacion-cupo/23",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"ampliacion-cupo",
+								"23"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST Actualizar estado de solicitud de ampliación de cúpo",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "vendedor",
+									"value": "3",
+									"type": "text"
+								},
+								{
+									"key": "cliente",
+									"value": "4",
+									"type": "text"
+								},
+								{
+									"key": "doc_identidad",
+									"type": "file",
+									"src": "/home/neuromedia/Code/docs/athletic_backend/imgs/z15.jpg"
+								},
+								{
+									"key": "doc_rut",
+									"type": "file",
+									"src": "/home/neuromedia/Code/docs/athletic_backend/imgs/z14.jpg"
+								},
+								{
+									"key": "doc_camara_com",
+									"type": "file",
+									"src": "/home/neuromedia/Code/docs/athletic_backend/imgs/z13.jpg"
+								},
+								{
+									"key": "monto",
+									"value": "300000",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{url}}/api/cambiar-estado/7/rechazado",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"cambiar-estado",
+								"7",
+								"rechazado"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Valoraciones",
+			"item": [
+				{
+					"name": "GET Obtener preguntas",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/getPreguntas/3",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"getPreguntas",
+								"3"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET Obtener valoraciones",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/getValoraciones/3",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"getValoraciones",
+								"3"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET Obtener valoraciones por producto",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/getProductoValoraciones/22",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"getProductoValoraciones",
+								"22"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST Crear valoración",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "usuario",
+									"value": "222",
+									"type": "text"
+								},
+								{
+									"key": "producto",
+									"value": "22",
+									"type": "text"
+								},
+								{
+									"key": "preguntas[0][pregunta]",
+									"value": "1",
+									"type": "text"
+								},
+								{
+									"key": "preguntas[0][respuesta]",
+									"value": "3",
+									"type": "text"
+								},
+								{
+									"key": "preguntas[1][pregunta]",
+									"value": "2",
+									"type": "text"
+								},
+								{
+									"key": "preguntas[1][respuesta]",
+									"value": "5",
+									"type": "text"
+								},
+								{
+									"key": "preguntas[2][pregunta]",
+									"value": "3",
+									"type": "text"
+								},
+								{
+									"key": "preguntas[2][respuesta]",
+									"value": "5",
+									"type": "text"
+								},
+								{
+									"key": "preguntas[3][pregunta]",
+									"value": "4",
+									"type": "text"
+								},
+								{
+									"key": "preguntas[3][respuesta]",
+									"value": "2",
+									"type": "text"
+								},
+								{
+									"key": "preguntas[4][pregunta]",
+									"value": "5",
+									"type": "text"
+								},
+								{
+									"key": "preguntas[4][respuesta]",
+									"value": "1",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{url}}/api/storeRespuestas",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"storeRespuestas"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Tiendas",
+			"item": [
+				{
+					"name": "Obtener tiendas por cliente",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/tiendas-cliente/1267",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"tiendas-cliente",
+								"1267"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET Obtener tienda",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "{{url}}/api/tiendas/1243",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"tiendas",
+								"1243"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST crear tienda",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "nombre",
+									"value": "El Cid",
+									"type": "text"
+								},
+								{
+									"key": "lugar",
+									"value": "Palmeto",
+									"type": "text"
+								},
+								{
+									"key": "local",
+									"value": "L 202",
+									"type": "text"
+								},
+								{
+									"key": "direccion",
+									"value": "Calle 8 # 2 - 3",
+									"type": "text"
+								},
+								{
+									"key": "telefono",
+									"value": "+573001254875",
+									"type": "text"
+								},
+								{
+									"key": "sucursal",
+									"value": "L",
+									"type": "text"
+								},
+								{
+									"key": "fecha_ingreso",
+									"value": "2022-02-12",
+									"type": "text"
+								},
+								{
+									"key": "fecha_ultima_compra",
+									"value": "2022-02-12",
+									"type": "text"
+								},
+								{
+									"key": "cupo",
+									"value": "0",
+									"type": "text"
+								},
+								{
+									"key": "ciudad_codigo",
+									"value": "001",
+									"type": "text"
+								},
+								{
+									"key": "zona",
+									"value": "11",
+									"type": "text"
+								},
+								{
+									"key": "bloqueado",
+									"value": "N",
+									"type": "text"
+								},
+								{
+									"key": "bloqueado_fecha",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "nombre_representante",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "plazo",
+									"value": "0",
+									"type": "text"
+								},
+								{
+									"key": "escala_factura",
+									"value": "A",
+									"type": "text"
+								},
+								{
+									"key": "observaciones",
+									"value": "texto de observación",
+									"type": "text"
+								},
+								{
+									"key": "vendedores[0]",
+									"value": "3",
+									"type": "text"
+								},
+								{
+									"key": "vendedores[1]",
+									"value": "141",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{url}}/api/newTienda/4",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"newTienda",
+								"4"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST crear tiendas",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "cliente",
+									"value": "214",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][nombre]",
+									"value": "El Cid",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][lugar]",
+									"value": "Palmeto",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][local]",
+									"value": "L 202",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][direccion]",
+									"value": "Calle 8 # 2 - 3",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][telefono]",
+									"value": "+573001254875",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][sucursal]",
+									"value": "L",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][fecha_ingreso]",
+									"value": "2022-02-12",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][fecha_ultima_compra]",
+									"value": "2022-02-12",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][cupo]",
+									"value": "0",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][ciudad_codigo]",
+									"value": "001",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][zona]",
+									"value": "11",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][bloqueado]",
+									"value": "N",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][bloqueado_fecha]",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][nombre_representante]",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][plazo]",
+									"value": "0",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][escala_factura]",
+									"value": "A",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][observaciones]",
+									"value": "texto de observación 1",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][vendedores][0]",
+									"value": "3",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[0][vendedores][1]",
+									"value": "141",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[1][nombre]",
+									"value": "El Paramo",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[1][lugar]",
+									"value": "Limonar",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[1][local]",
+									"value": "L 101",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[1][direccion]",
+									"value": "Carrear 10 # 2 - 3",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[1][telefono]",
+									"value": "+573103214875",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[1][sucursal]",
+									"value": "K",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[1][fecha_ingreso]",
+									"value": "2021-02-12",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[1][fecha_ultima_compra]",
+									"value": "2021-02-12",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[1][cupo]",
+									"value": "60",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[1][ciudad_codigo]",
+									"value": "002",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[1][zona]",
+									"value": "11",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[1][bloqueado]",
+									"value": "S",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[1][bloqueado_fecha]",
+									"value": "2022-01-01",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[1][nombre_representante]",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[1][plazo]",
+									"value": "0",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[1][escala_factura]",
+									"value": "A",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[1][observaciones]",
+									"value": "texto de observación 2",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[1][vendedores][0]",
+									"value": "3",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{url}}/api/tiendas",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"tiendas"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "PUT Actualizar tienda",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "_method",
+									"value": "PUT",
+									"type": "text"
+								},
+								{
+									"key": "nombre",
+									"value": "El Cid abc",
+									"type": "text"
+								},
+								{
+									"key": "lugar",
+									"value": "Palmeto 123",
+									"type": "text"
+								},
+								{
+									"key": "local",
+									"value": "L 202",
+									"type": "text"
+								},
+								{
+									"key": "direccion",
+									"value": "Calle 8 # 2 - 3",
+									"type": "text"
+								},
+								{
+									"key": "telefono",
+									"value": "+573001254875",
+									"type": "text"
+								},
+								{
+									"key": "sucursal",
+									"value": "L",
+									"type": "text"
+								},
+								{
+									"key": "fecha_ingreso",
+									"value": "2022-02-12",
+									"type": "text"
+								},
+								{
+									"key": "fecha_ultima_compra",
+									"value": "2022-02-12",
+									"type": "text"
+								},
+								{
+									"key": "cupo",
+									"value": "0",
+									"type": "text"
+								},
+								{
+									"key": "ciudad_codigo",
+									"value": "001",
+									"type": "text"
+								},
+								{
+									"key": "zona",
+									"value": "11",
+									"type": "text"
+								},
+								{
+									"key": "bloqueado",
+									"value": "N",
+									"type": "text"
+								},
+								{
+									"key": "bloqueado_fecha",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "nombre_representante",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "plazo",
+									"value": "0",
+									"type": "text"
+								},
+								{
+									"key": "escala_factura",
+									"value": "A",
+									"type": "text"
+								},
+								{
+									"key": "observaciones",
+									"value": "texto de observación1",
+									"type": "text"
+								},
+								{
+									"key": "vendedores[0]",
+									"value": "3",
+									"type": "text"
+								},
+								{
+									"key": "vendedores[1]",
+									"value": "141",
+									"type": "text"
+								},
+								{
+									"key": "vendedores[2]",
+									"value": "1413",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{url}}/api/tiendas/1243",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"tiendas",
+								"1243"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "DELETE Borrar tiendas",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "tiendas[0]",
+									"value": "1236",
+									"type": "text"
+								},
+								{
+									"key": "tiendas[1]",
+									"value": "22",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{url}}/api/delete-tiendas",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"delete-tiendas"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Importar Exportar Información",
+			"item": [
+				{
+					"name": "1. Importar Marcas",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "archivo",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{url}}/api/batch/importar-marcas",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"batch",
+								"importar-marcas"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "2. Importar Productos",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "archivo",
+									"type": "file",
+									"src": "/home/neuromedia/Code-Docs/montana/batch/LPRODU.TXT"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{url}}/api/batch/importar-productos",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"batch",
+								"importar-productos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3. Importar Vendedores",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "archivo",
+									"type": "file",
+									"src": "/home/neuromedia/Code-Docs/montana/batch/LVENDE.TXT"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{url}}/api/batch/importar-vendedores",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"batch",
+								"importar-vendedores"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "4. Importar Clientes",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "archivo",
+									"type": "file",
+									"src": "/home/neuromedia/Code-Docs/montana/batch/LCLIEN.csv"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{url}}/api/batch/importar-clientes",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"batch",
+								"importar-clientes"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "5. Importar Cartera",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "archivo",
+									"type": "file",
+									"src": "/home/neuromedia/Code-Docs/montana/batch/LCARTE.csv"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{url}}/api/batch/importar-cartera",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"batch",
+								"importar-cartera"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Monitoreo",
+			"item": [
+				{
+					"name": "Obtener Log de Monitoreo",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/monitoreo",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"monitoreo"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
