@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Entities\Catalogo;
+use App\Entities\Detalle;
 use App\Entities\Estado;
 use App\Entities\Novedades;
 use App\Entities\Pedido;
-use App\Entities\PedidoProduct;
 use App\Entities\Producto;
 use App\Entities\Tienda;
 use App\Entities\User;
@@ -274,7 +274,7 @@ class PedidoController extends Controller
                     $tienda = $cliente->tiendas()->findOrFail($tiendaData['id_tienda']);
                     $cantidad = $tiendaData['cantidad_producto'];
 
-                    $detalle = new PedidoProduct([
+                    $detalle = new Detalle([
                         'cantidad_producto' => $cantidad,
                     ]);
                     $detalle->detallePedido()->associate($pedido);

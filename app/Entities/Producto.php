@@ -51,6 +51,6 @@ class Producto extends Model implements Auditable
 
     public function detalles()
     {
-        return $this->hasMany(PedidoProduct::class, 'producto', 'id_producto');
+        return $this->hasMany(Detalle::class, 'producto', 'id_producto');
     }
 }

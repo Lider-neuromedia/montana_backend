@@ -36,7 +36,7 @@ class Pedido extends Model implements Auditable
 
     public function detalles()
     {
-        return $this->hasMany(PedidoProduct::class, 'pedido', 'id_pedido');
+        return $this->hasMany(Detalle::class, 'pedido', 'id_pedido');
     }
 
     public function pedidoVendedor()

@@ -52,6 +52,6 @@ class Tienda extends Model implements Auditable
 
     public function detallesProductos()
     {
-        return $this->hasMany(PedidoProduct::class, 'tienda', 'id_tiendas');
+        return $this->hasMany(Detalle::class, 'tienda', 'id_tiendas');
     }
 }
