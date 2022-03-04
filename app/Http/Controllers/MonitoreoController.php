@@ -13,7 +13,7 @@ class MonitoreoController extends Controller
                 'message' => 'Usted no tiene permisos para acceder a esta información.',
                 'response' => 'error',
                 'status' => 401,
-            ], 200);
+            ], 401);
         }
 
         $audits = Audit::query()

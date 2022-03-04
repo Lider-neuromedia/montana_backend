@@ -8,7 +8,6 @@ use App\Entities\User;
 use App\Utils\Notifications;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 
 class PqrsController extends Controller
 {
@@ -203,15 +202,11 @@ class PqrsController extends Controller
 
     public function NewMessage(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $request->validate([
             'mensaje' => ['required'],
             'usuario' => ['required', 'exists:users,id'],
             'pqrs' => ['required', 'exists:pqrs,id_pqrs'],
         ]);
-
-        if ($validator->fails()) {
-            return response()->json($validator->messages(), 403);
-        }
 
         try {
 

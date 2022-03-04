@@ -52,7 +52,7 @@ class BatchDataController extends Controller
 
             \DB::commit();
 
-            return response()->json(compact('resultados'));
+            return response()->json(compact('resultados'), 200);
 
         } catch (\Exception $ex) {
             \Log::info($ex->getMessage());
