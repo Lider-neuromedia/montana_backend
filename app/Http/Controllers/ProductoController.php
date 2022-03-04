@@ -183,6 +183,8 @@ class ProductoController extends Controller
                 }
             }
 
+            Catalogo::refrescarCantidadDeProductos($catalogo);
+
             \DB::commit();
 
             return response()->json([
@@ -216,6 +218,8 @@ class ProductoController extends Controller
         $catalogo->save();
 
         $producto->delete();
+
+        Catalogo::refrescarCantidadDeProductos($catalogo);
 
         return response()->json([
             'response' => 'success',

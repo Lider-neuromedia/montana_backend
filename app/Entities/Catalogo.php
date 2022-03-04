@@ -44,24 +44,17 @@ class Catalogo extends Model implements Auditable
      */
     public static function corregirCantidadDeProductosEnCatalogos()
     {
-        Catalogo::query()
-            ->whereNull('deleted_at')
-            ->update([
-                'cantidad' => 0,
-            ]);
+        $catalogos = Catalogo::all();
 
-        $cantidades = Producto::query()
-            ->select('catalogo', \DB::raw('count(*) as cantidad'))
-            ->whereNull('deleted_at')
-            ->groupBy('catalogo')
-            ->get();
-
-        foreach ($cantidades as $x) {
-            \DB::table('catalogos')
-                ->where('id_catalogo', $x->catalogo)
-                ->update([
-                    'cantidad' => $x->cantidad,
-                ]);
+        foreach ($catalogos as $catalogo) {
+            self::refrescarCantidadDeProductos($catalogo);
         }
+    }
+
+    public static function refrescarCantidadDeProductos(Catalogo $catalogo)
+    {
+        $catalogo->update([
+            'cantidad' => $catalogo()->productos()->count(),
+        ]);
     }
 }

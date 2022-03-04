@@ -162,6 +162,8 @@ class CatalogoController extends Controller
                 ]);
             }
 
+            Catalogo::refrescarCantidadDeProductos($catalogo);
+
             \DB::commit();
 
             return response()->json([

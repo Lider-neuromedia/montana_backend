@@ -34,24 +34,23 @@ class ImportarProductos extends Importar
             foreach ($records as $record) {
                 $marca = $marcas->where('codigo', $record[0])->first();
                 $marca = $marca ?: $defaultMarca;
-                $catalogo = $defaultCatalogo;
+                $catalogo = $defaultCatalogo; // TODO: el producto viene sin catálogo
 
                 $data = [
-                    // TODO: Revisar. valores no usados en la plataforma.
-                    // 'ubicacion' => $record[4],
-                    // 'peso' => $record[5],
-                    // 'saldo' => $record[9],
+                    // 'ubicacion' => $record[4], // TODO: valor no usado
+                    // 'peso' => $record[5], // TODO: valor no usado
+                    // 'saldo' => $record[9], // TODO: valor no usado
                     'nombre' => $record[2],
                     'codigo' => $record[1],
                     'referencia' => $record[3],
                     'precio' => $record[7], // TODO: Revisar. precio_a
                     'total' => $record[8], // TODO: Revisar. precio_e
-                    'stock' => 0, // revisar vacio
-                    'descripcion' => '', // revisar vacio
-                    'sku' => '', // revisar vacio
-                    'descuento' => 0, // revisar vacio
+                    'stock' => 100, // TODO: el producto viene sin stock
+                    'descripcion' => '', // TODO: el producto viene sin descripción
+                    'sku' => '', // TODO: el producto viene sin sku
+                    'descuento' => 0, // TODO: el producto viene sin descuento
                     'iva' => $record[6],
-                    'catalogo' => $catalogo->id_catalogo, // revisar vacio
+                    'catalogo' => $catalogo->id_catalogo,
                     'marca' => $marca->id_marca,
                 ];
 
