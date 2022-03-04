@@ -54,7 +54,7 @@ class Catalogo extends Model implements Auditable
     public static function refrescarCantidadDeProductos(Catalogo $catalogo)
     {
         $catalogo->update([
-            'cantidad' => $catalogo()->productos()->count(),
+            'cantidad' => $catalogo->productos()->count(),
         ]);
     }
 }
