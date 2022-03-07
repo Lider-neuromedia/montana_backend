@@ -36,7 +36,7 @@ class ProductoController extends Controller
                     $q->where('destacada', 1);
                 },
             ])
-            ->orderBy('name', 'asc')
+            ->orderBy('nombre', 'asc')
             ->paginate(20);
 
         $productos->setCollection(
@@ -275,6 +275,7 @@ class ProductoController extends Controller
                     $q->where('destacada', 1);
                 },
             ])
+            ->orderBy('nombre', 'asc')
             ->paginate(20);
 
         $productos->setCollection(
