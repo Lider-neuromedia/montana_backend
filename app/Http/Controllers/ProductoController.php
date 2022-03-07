@@ -13,13 +13,30 @@ class ProductoController extends Controller
 {
     public function index(Request $request, Catalogo $catalogo)
     {
+        $search = $request->get('search') ?: false;
+
         $productos = $catalogo->productos()
+            ->when($search, function ($q) use ($search) {
+                $q->where('nombre', 'like', "%$search%")
+                    ->orWhere('codigo', 'like', "%$search%")
+                    ->orWhere('referencia', 'like', "%$search%")
+                    ->orWhere('stock', 'like', "%$search%")
+                    ->orWhere('descripcion', 'like', "%$search%")
+                    ->orWhere('sku', 'like', "%$search%")
+                    ->orWhere('precio', 'like', "%$search%")
+                    ->orWhere('total', 'like', "%$search%")
+                    ->orWhereHas('productoMarca', function ($q) use ($search) {
+                        $q->where('nombre_marca', 'like', "%$search%")
+                            ->orWhere('codigo', 'like', "%$search%");
+                    });
+            })
             ->with([
                 'productoMarca',
                 'imagenes' => function ($q) {
                     $q->where('destacada', 1);
                 },
             ])
+            ->orderBy('name', 'asc')
             ->paginate(20);
 
         $productos->setCollection(
@@ -228,14 +245,30 @@ class ProductoController extends Controller
         ], 200);
     }
 
-    public function productosShowRoom()
+    public function productosShowRoom(Request $request)
     {
+        $search = $request->get('search') ?: false;
+
         $catalogo = Catalogo::query()
             ->where('tipo', 'show room')
             ->where('estado', 'activo')
             ->firstOrFail();
 
         $productos = $catalogo->productos()
+            ->when($search, function ($q) use ($search) {
+                $q->where('nombre', 'like', "%$search%")
+                    ->orWhere('codigo', 'like', "%$search%")
+                    ->orWhere('referencia', 'like', "%$search%")
+                    ->orWhere('stock', 'like', "%$search%")
+                    ->orWhere('descripcion', 'like', "%$search%")
+                    ->orWhere('sku', 'like', "%$search%")
+                    ->orWhere('precio', 'like', "%$search%")
+                    ->orWhere('total', 'like', "%$search%")
+                    ->orWhereHas('productoMarca', function ($q) use ($search) {
+                        $q->where('nombre_marca', 'like', "%$search%")
+                            ->orWhere('codigo', 'like', "%$search%");
+                    });
+            })
             ->with([
                 'productoMarca',
                 'imagenes' => function ($q) {

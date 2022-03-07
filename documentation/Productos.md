@@ -35,11 +35,11 @@ axios.get(`${apiUrl}/marcas`);
 
 ------------------------------------------
 
-##### Obtener productos por categoría
+##### Obtener productos por categoría (se puede filtrar con search)
 
 ```js
 // Request
-axios.get(`${apiUrl}/productos/3?page=1`);
+axios.get(`${apiUrl}/productos/3?page=1&search=ath`);
 ```
 
 ```json
@@ -90,11 +90,11 @@ axios.get(`${apiUrl}/productos/3?page=1`);
 
 ------------------------------------------
 
-##### Obtener productos de Show Room
+##### Obtener productos de Show Room (puede filtrar con search)
 
 ```js
 // Request
-axios.get(`${apiUrl}/getProductsShowRoom?page=50`);
+axios.get(`${apiUrl}/getProductsShowRoom?page=50&search=ath`);
 ```
 
 ```json
