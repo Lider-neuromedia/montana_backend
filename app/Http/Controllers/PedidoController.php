@@ -126,24 +126,20 @@ class PedidoController extends Controller
         $pedido->cliente = $pedido->pedidoCliente;
         unset($pedido->pedidoCliente);
 
-        $pedido->detalles = $pedido->detalles->map(function ($x) {
+        $cliente_id = $pedido->cliente_id;
+
+        $pedido->detalles = $pedido->detalles->map(function ($x) use ($cliente_id) {
             $x->referencia = $x->detalleProducto->referencia;
             $x->lugar = $x->detalleTienda->lugar;
 
             $x->id = $x->id_pedido_prod;
             unset($x->id_pedido_prod);
 
+            // Pedido
             $x->pedido_id = $x->pedido;
             unset($x->pedido);
 
-            $x->tienda_id = $x->tienda;
-            $tienda = $x->detalleTienda;
-            unset($x->detalleTienda);
-
-            $tienda->client_id = $tienda->client;
-            unset($tienda->client);
-            $x->tienda = $tienda;
-
+            // Producto
             $x->producto_id = $x->producto;
             $producto = $x->detalleProducto;
             unset($x->detalleProducto);
@@ -154,6 +150,16 @@ class PedidoController extends Controller
             unset($producto->marca);
 
             $x->producto = $producto;
+
+            // Tienda
+            $x->tienda_id = $x->tienda;
+            $tienda = $x->detalleTienda;
+            unset($x->detalleTienda);
+
+            $tienda->cliente_id = $cliente_id;
+            unset($tienda->cliente);
+
+            $x->tienda = $tienda;
 
             return $x;
         });
