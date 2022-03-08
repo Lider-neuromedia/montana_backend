@@ -142,24 +142,26 @@ class PedidoController extends Controller
             // Producto
             $x->producto_id = $x->producto;
             $producto = $x->detalleProducto;
-            unset($x->detalleProducto);
+            $catalogo_id = intval("{$x->detalleProducto->catalogo}");
+            $marca_id = intval("{$x->detalleProducto->marca}");
 
-            $producto->catalogo_id = $producto->catalogo;
-            $producto->marca_id = $producto->marca;
+            $producto->catalogo_id = $catalogo_id;
+            $producto->marca_id = $marca_id;
             unset($producto->catalogo);
             unset($producto->marca);
-
             $x->producto = $producto;
 
             // Tienda
             $x->tienda_id = $x->tienda;
             $tienda = $x->detalleTienda;
-            unset($x->detalleTienda);
 
             $tienda->cliente_id = $cliente_id;
             unset($tienda->cliente);
 
             $x->tienda = $tienda;
+
+            unset($x->detalleProducto);
+            unset($x->detalleTienda);
 
             return $x;
         });
