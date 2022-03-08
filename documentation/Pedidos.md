@@ -162,8 +162,8 @@ axios.get(`${apiUrl}/pedidos/23`);
                     "total": 35000,
                     "descuento": 0,
                     "iva": 0,
-                    "catalogo": 3,
-                    "marca": 1,
+                    "catalogo_id": 3,
+                    "marca_id": 1,
                     "created_at": "2020-10-27 08:08:49",
                     "updated_at": "2022-02-18 14:57:30"
                 },
@@ -187,7 +187,7 @@ axios.get(`${apiUrl}/pedidos/23`);
                     "plazo": 0,
                     "escala_factura": "",
                     "observaciones": null,
-                    "cliente": 4,
+                    "cliente_id": 4,
                     "created_at": "2020-10-30 05:42:35",
                     "updated_at": "2021-03-30 22:03:24"
                 },
@@ -211,8 +211,8 @@ axios.get(`${apiUrl}/pedidos/23`);
                     "total": 35000,
                     "descuento": 0,
                     "iva": 0,
-                    "catalogo": 3,
-                    "marca": 1,
+                    "catalogo_id": 3,
+                    "marca_id": 1,
                     "created_at": "2020-10-27 08:08:49",
                     "updated_at": "2022-02-18 14:57:30"
                 },
@@ -235,7 +235,7 @@ axios.get(`${apiUrl}/pedidos/23`);
                     "plazo": 0,
                     "escala_factura": "",
                     "observaciones": "",
-                    "cliente": 4,
+                    "cliente_id": 4,
                     "created_at": "2020-10-30 05:42:35",
                     "updated_at": "2020-10-30 05:42:35"
                 },
