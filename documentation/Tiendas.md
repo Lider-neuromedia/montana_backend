@@ -35,7 +35,7 @@ axios.get(`${apiUrl}/tiendas-cliente/142`);
         "plazo": 45,
         "escala_factura": "A",
         "observaciones": "SIEMPRE  SE LES MANEJA DESC 5%",
-        "cliente": 586,
+        "cliente_id": 586,
         "created_at": "2022-02-18 15:01:18",
         "updated_at": "2022-02-18 18:09:56"
     }
@@ -72,10 +72,10 @@ axios.get(`${apiUrl}/tiendas-cliente/50`);
     "plazo": 60,
     "escala_factura": "A",
     "observaciones": "",
-    "cliente": 293,
+    "cliente_id": 293,
     "created_at": "2022-02-18 15:01:07",
     "updated_at": "2022-02-18 18:09:40",
-    "propietario": {
+    "cliente": {
         "id": 293,
         "rol_id": 3,
         "name": "2MYW SAS",

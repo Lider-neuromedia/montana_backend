@@ -12,13 +12,19 @@ class TiendaController extends Controller
     public function clienteTiendas(User $cliente)
     {
         $user = auth()->user();
-        $tiendas = [];
+        $tiendas = collect([]);
 
         if ($user->rol_id == 3) {
             $tiendas = $user->tiendas()->get();
         } else {
             $tiendas = $cliente->tiendas()->get();
         }
+
+        $tiendas = $tiendas->map(function ($x) {
+            $x->cliente_id = $x->cliente;
+            unset($x->cliente);
+            return $x;
+        });
 
         return response()->json($tiendas, 200);
     }
@@ -41,6 +47,12 @@ class TiendaController extends Controller
                 ->where('id_tiendas', $id)
                 ->with('propietario', 'vendedores')
                 ->firstOrFail();
+        }
+
+        if ($tienda != null);{
+            $tienda->cliente_id = $tienda->cliente;
+            $tienda->cliente = $tienda->propietario;
+            unset($tienda->propietario);
         }
 
         return response()->json($tienda, 200);
