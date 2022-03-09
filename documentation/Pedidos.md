@@ -26,15 +26,15 @@ axios.get(`${apiUrl}/pedidos?page=1&search=7000`);
                 "total": 300000,
                 "firma": "http://montanabackend.test/storage/firmas/ZARYLDF6aUlkbKOEVyyQrSkylUx02Oh2YI7tWh0C.png",
                 "vendedor": {
-                    "id_vendedor": 3,
+                    "id": 3,
                     "nombre": "Carlos Duque"
                 },
                 "cliente": {
-                    "id_cliente": 133,
+                    "id": 133,
                     "nombre": "Daniel Martinez"
                 },
                 "estado": {
-                    "id_estado": 2,
+                    "id": 2,
                     "estado": "pendiente"
                 }
             }
@@ -142,7 +142,7 @@ axios.get(`${apiUrl}/pedidos/23`);
             ]
         },
         "estado": {
-            "id_estado": 3,
+            "id": 3,
             "estado": "cancelado"
         },
         "estado_id": 3,

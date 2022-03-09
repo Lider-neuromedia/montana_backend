@@ -62,15 +62,22 @@ class PedidoController extends Controller
         $pedidos->setCollection(
             $pedidos->getCollection()
                 ->map(function ($x) {
+                    $x->vendedor_id = intval("{$x->vendedor}");
+                    $x->cliente_id = intval("{$x->cliente}");
+                    $x->estado_id = intval("{$x->pedidoEstado->id_estado}");
+
                     $x->vendedor = [
-                        'id_vendedor' => $x->vendedor,
+                        'id' => $x->vendedor,
                         'nombre' => $x->pedidoVendedor->nombre_completo,
                     ];
                     $x->cliente = [
-                        'id_cliente' => $x->cliente,
+                        'id' => $x->cliente,
                         'nombre' => $x->pedidoCliente->nombre_completo,
                     ];
-                    $x->estado = $x->pedidoEstado;
+                    $x->estado = [
+                        'id' => $x->pedidoEstado->id_estado,
+                        'estado' => $x->pedidoEstado->estado,
+                    ];
 
                     if ($x->firma != null) {
                         $x->firma = url($x->firma);
@@ -115,7 +122,10 @@ class PedidoController extends Controller
         }
 
         $pedido->estado_id = $pedido->pedidoEstado->id_estado;
-        $pedido->estado = $pedido->pedidoEstado;
+        $pedido->estado = [
+            'id' => $pedido->pedidoEstado->id_estado,
+            'estado' => $pedido->pedidoEstado->estado,
+        ];
         unset($pedido->pedidoEstado);
 
         $pedido->vendedor_id = $pedido->pedidoVendedor->id;
