@@ -27,11 +27,11 @@ axios.get(`${apiUrl}/pedidos?page=1&search=7000`);
                 "firma": "http://montanabackend.test/storage/firmas/ZARYLDF6aUlkbKOEVyyQrSkylUx02Oh2YI7tWh0C.png",
                 "vendedor": {
                     "id": 3,
-                    "nombre": "Carlos Duque"
+                    "name": "Carlos Duque"
                 },
                 "cliente": {
                     "id": 133,
-                    "nombre": "Daniel Martinez"
+                    "name": "Daniel Martinez"
                 },
                 "estado": {
                     "id": 2,
@@ -295,13 +295,13 @@ axios.get(`${apiUrl}/`);
     "vendedores": [
         {
             "id": 237,
-            "nombre": "RUBEN DARIO PIEDRAHITA"
+            "name": "RUBEN DARIO PIEDRAHITA"
         }
     ],
     "clientes": [
         {
             "id": 4,
-            "nombre": "Juan Jose Borrero"
+            "name": "Juan Jose Borrero"
         }
     ],
     "catalogos": [

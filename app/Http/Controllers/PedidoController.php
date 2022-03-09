@@ -68,11 +68,11 @@ class PedidoController extends Controller
 
                     $x->vendedor = [
                         'id' => $x->vendedor,
-                        'nombre' => $x->pedidoVendedor->nombre_completo,
+                        'name' => $x->pedidoVendedor->nombre_completo,
                     ];
                     $x->cliente = [
                         'id' => $x->cliente,
-                        'nombre' => $x->pedidoCliente->nombre_completo,
+                        'name' => $x->pedidoCliente->nombre_completo,
                     ];
                     $x->estado = [
                         'id' => $x->pedidoEstado->id_estado,
@@ -390,12 +390,12 @@ class PedidoController extends Controller
     public function recursosCrearPedido()
     {
         $vendedores = User::query()
-            ->select('id', \DB::raw('TRIM(CONCAT(name, " ", apellidos)) as nombre'))
+            ->select('id', \DB::raw('TRIM(CONCAT(name, " ", apellidos)) as name'))
             ->where('rol_id', 2)
             ->get();
 
         $clientes = User::query()
-            ->select('id', \DB::raw('TRIM(CONCAT(name, " ", apellidos)) as nombre'))
+            ->select('id', \DB::raw('TRIM(CONCAT(name, " ", apellidos)) as name'))
             ->where('rol_id', 3)
             ->get();
 
