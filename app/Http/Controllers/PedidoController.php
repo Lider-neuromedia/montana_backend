@@ -21,6 +21,7 @@ class PedidoController extends Controller
     public function index(Request $request)
     {
         $search = $request->get('search') ?: false;
+        $sort = $request->get('sort') ?: false;
         $date = $request->get('date') ?: false;
         $user = auth()->user();
 
@@ -56,7 +57,20 @@ class PedidoController extends Controller
                 });
             })
             ->with('pedidoVendedor', 'pedidoCliente', 'pedidoEstado')
-            ->orderBy('fecha', 'desc')
+            ->when($sort, function ($q) use ($sort) {
+                if ($sort == 'recientes') {
+                    $q->orderBy('fecha', 'desc');
+                } else if ($sort == 'ultimos') {
+                    $q->orderBy('fecha', 'asc');
+                } else if ($sort == 'entregados') {
+                    $q->orderBy('estado', 'asc');
+                } else if ($sort == 'cancelados') {
+                    $q->orderBy('estado', 'desc');
+                }
+            })
+            ->when(!$sort, function ($q) {
+                $q->orderBy('fecha', 'desc');
+            })
             ->paginate(20);
 
         $pedidos->setCollection(

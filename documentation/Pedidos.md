@@ -8,9 +8,14 @@ const apiUrl = "http://montanabackend.test/api";
 
 ##### Obtener pedidos
 
+- **sort=recientes:** Recientes Primero
+- **sort=ultimos:** Últimos Primero
+- **sort=entregados:** Entregados Primero
+- **sort=cancelados:** Cancelados Primero
+
 ```js
 // Request
-axios.get(`${apiUrl}/pedidos?page=1&search=7000`);
+axios.get(`${apiUrl}/pedidos?page=1&sort=recientes&search=7000`);
 ```
 
 ```json
