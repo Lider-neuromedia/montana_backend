@@ -208,9 +208,9 @@ class OfflineController extends Controller
 
         $tiendas = Tienda::query()
             ->whereIn('cliente', $request->get('clientes_ids'))
-            ->when($user->rol_id == 2, function ($q) {
-                $q->whereHas('propietario', function ($q) {
-                    $q->whereHas('vendedores', function ($q) {
+            ->when($user->rol_id == 2, function ($q) use ($user) {
+                $q->whereHas('propietario', function ($q) use ($user) {
+                    $q->whereHas('vendedores', function ($q) use ($user) {
                         $q->where('id', $user->id);
                     });
                 });
