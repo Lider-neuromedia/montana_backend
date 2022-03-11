@@ -64,9 +64,9 @@ class ProductoController extends Controller
         );
 
         return response()->json([
+            'productos' => $productos,
             'response' => 'success',
             'status' => 200,
-            'productos' => $productos,
         ], 200);
     }
 

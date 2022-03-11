@@ -113,6 +113,14 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::middleware(['rol:administrador'])->post('batch/importar-clientes', 'BatchDataController@importarClientes');
     Route::middleware(['rol:administrador'])->post('batch/importar-cartera', 'BatchDataController@importarCartera');
 
+    // OFFLINE
+    Route::middleware(['rol:administrador|vendedor'])->get("offline/catalogos", "OfflineController@catalogos");
+    Route::middleware(['rol:administrador|vendedor'])->get("offline/clientes", "OfflineController@clientes");
+    Route::middleware(['rol:administrador|vendedor'])->get("offline/tiendas", "OfflineController@tiendas");
+    Route::middleware(['rol:administrador|vendedor'])->get("offline/pedidos", "OfflineController@pedidos");
+    Route::middleware(['rol:administrador|vendedor'])->get("offline/productos", "OfflineController@productos");
+    Route::middleware(['rol:administrador|vendedor'])->get("offline/imagenes", "OfflineController@imagenes");
+
     // // ENCUESTAS
     // Route::apiResource('encuestas', 'EncuestaController', ['index', 'store', 'update']);
     // Route::get('editEncuesta/{id}', 'EncuestaController@edit');

@@ -1651,19 +1651,13 @@
 							}
 						],
 						"url": {
-							"raw": "{{url}}/api/catalogos?search={\"general\":1,\"show_room\":0,\"public\":1,\"private\":1,\"ninos\":0,\"adultos\":1}",
+							"raw": "{{url}}/api/catalogos",
 							"host": [
 								"{{url}}"
 							],
 							"path": [
 								"api",
 								"catalogos"
-							],
-							"query": [
-								{
-									"key": "search",
-									"value": "{\"general\":1,\"show_room\":0,\"public\":1,\"private\":1,\"ninos\":0,\"adultos\":1}"
-								}
 							]
 						}
 					},
@@ -1715,14 +1709,14 @@
 							}
 						],
 						"url": {
-							"raw": "{{url}}/api/catalogos/31",
+							"raw": "{{url}}/api/catalogos/23",
 							"host": [
 								"{{url}}"
 							],
 							"path": [
 								"api",
 								"catalogos",
-								"31"
+								"23"
 							]
 						}
 					},
@@ -1933,14 +1927,14 @@
 							}
 						],
 						"url": {
-							"raw": "{{url}}/api/productos/3?page=1",
+							"raw": "{{url}}/api/productos/31?page=1",
 							"host": [
 								"{{url}}"
 							],
 							"path": [
 								"api",
 								"productos",
-								"3"
+								"31"
 							],
 							"query": [
 								{
@@ -2004,14 +1998,14 @@
 							}
 						],
 						"url": {
-							"raw": "{{url}}/api/producto/2764",
+							"raw": "{{url}}/api/producto/22",
 							"host": [
 								"{{url}}"
 							],
 							"path": [
 								"api",
 								"producto",
-								"2764"
+								"22"
 							]
 						}
 					},
@@ -2331,7 +2325,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{url}}/api/pedidos?page=1",
+							"raw": "{{url}}/api/pedidos?page=1&sort=ultimos",
 							"host": [
 								"{{url}}"
 							],
@@ -2343,6 +2337,10 @@
 								{
 									"key": "page",
 									"value": "1"
+								},
+								{
+									"key": "sort",
+									"value": "ultimos"
 								}
 							]
 						}
@@ -2400,7 +2398,7 @@
 							"formdata": [
 								{
 									"key": "codigo_pedido",
-									"value": "f392hy3082yr1",
+									"value": "3h20r38930",
 									"type": "text"
 								},
 								{
@@ -2410,7 +2408,7 @@
 								},
 								{
 									"key": "vendedor",
-									"value": "141",
+									"value": "3",
 									"type": "text"
 								},
 								{
@@ -2420,12 +2418,12 @@
 								},
 								{
 									"key": "metodo_pago",
-									"value": "contado",
+									"value": "credito",
 									"type": "text"
 								},
 								{
 									"key": "total",
-									"value": "5000000",
+									"value": "4380000",
 									"type": "text"
 								},
 								{
@@ -2450,12 +2448,12 @@
 								},
 								{
 									"key": "productos[0][tiendas][0][cantidad_producto]",
-									"value": "20",
+									"value": "2",
 									"type": "text"
 								},
 								{
 									"key": "productos[0][tiendas][0][id_tienda]",
-									"value": "1075",
+									"value": "1079",
 									"type": "text"
 								},
 								{
@@ -2465,28 +2463,31 @@
 								},
 								{
 									"key": "productos[1][tiendas][0][cantidad_producto]",
-									"value": "8",
+									"value": "3",
 									"type": "text"
 								},
 								{
 									"key": "productos[1][tiendas][0][id_tienda]",
-									"value": "1075",
+									"value": "1079",
 									"type": "text"
 								},
 								{
 									"key": "productos[2][producto_id]",
 									"value": "30",
-									"type": "text"
+									"type": "text",
+									"disabled": true
 								},
 								{
 									"key": "productos[2][tiendas][0][cantidad_producto]",
-									"value": "5",
-									"type": "text"
+									"value": "1",
+									"type": "text",
+									"disabled": true
 								},
 								{
 									"key": "productos[2][tiendas][0][id_tienda]",
-									"value": "1075",
-									"type": "text"
+									"value": "1079",
+									"type": "text",
+									"disabled": true
 								}
 							]
 						},
@@ -3375,14 +3376,14 @@
 							"formdata": []
 						},
 						"url": {
-							"raw": "{{url}}/api/tiendas/1243",
+							"raw": "{{url}}/api/tiendas/1079",
 							"host": [
 								"{{url}}"
 							],
 							"path": [
 								"api",
 								"tiendas",
-								"1243"
+								"1079"
 							]
 						}
 					},
@@ -3955,7 +3956,7 @@
 								{
 									"key": "archivo",
 									"type": "file",
-									"src": []
+									"src": "/home/neuromedia/Code-Docs/montana/batch/LGRUPO.TXT"
 								}
 							]
 						},
@@ -4162,6 +4163,201 @@
 							"path": [
 								"api",
 								"monitoreo"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Offline",
+			"item": [
+				{
+					"name": "GET Obtener Catálogos",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/offline/catalogos",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"offline",
+								"catalogos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET Obtener Imagenes",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/offline/imagenes",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"offline",
+								"imagenes"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET Obtener Clientes",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/offline/clientes",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"offline",
+								"clientes"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET Obtener Productos",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/offline/productos",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"offline",
+								"productos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET Obtener Pedidos",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/offline/pedidos",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"offline",
+								"pedidos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET Obtener Tiendas",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/offline/tiendas?clientes_ids[0]=4&clientes_ids[1]=133",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"offline",
+								"tiendas"
+							],
+							"query": [
+								{
+									"key": "clientes_ids[0]",
+									"value": "4"
+								},
+								{
+									"key": "clientes_ids[1]",
+									"value": "133"
+								}
 							]
 						}
 					},

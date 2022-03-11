@@ -90,6 +90,7 @@ class CatalogoController extends Controller
 
     public function show(Catalogo $catalogo)
     {
+        $catalogo->imagen = url($catalogo->imagen);
         return response()->json($catalogo, 200);
     }
 

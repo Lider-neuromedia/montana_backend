@@ -125,6 +125,7 @@ class PedidoController extends Controller
                 'pedidoVendedor.datos',
                 'pedidoCliente',
                 'pedidoCliente.datos',
+                'pedidoEstado',
                 'detalles',
                 'detalles.detalleProducto',
                 'detalles.detalleTienda',
