@@ -428,3 +428,33 @@ axios.get(`${apiUrl}/offline/imagenes`);
     "http://montanabackend.test/storage/catalogos/66.png"
 ]
 ```
+
+
+------------------------------------------
+
+##### Obtener resumenes de carteras de clientes.
+
+```js
+// Request
+axios.get(`${apiUrl}/offline/resumenes-cartera`);
+```
+
+```json
+// Respuesta
+[
+    {
+        "cliente_id": 137,
+        "cupo_preaprobado": 100000,
+        "cupo_disponible": 0,
+        "saldo_total_deuda": 0,
+        "saldo_mora": 0
+    },
+    {
+        "cliente_id": 133,
+        "cupo_preaprobado": 0,
+        "cupo_disponible": -300000,
+        "saldo_total_deuda": 0,
+        "saldo_mora": 0
+    }
+]
+```

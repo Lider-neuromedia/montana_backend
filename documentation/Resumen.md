@@ -53,6 +53,7 @@ axios.get(`${apiUrl}/resumen/cliente/783`);
 ```json
 // Respuesta
 {
+    "cliente_id": 783,
     "cupo_preaprobado": 3000000,
     "cupo_disponible": -7804000,
     "saldo_total_deuda": 10680000,

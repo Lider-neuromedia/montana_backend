@@ -8,6 +8,7 @@ use App\Entities\Pedido;
 use App\Entities\Producto;
 use App\Entities\Tienda;
 use App\Entities\User;
+use App\Http\Controllers\ResumenController;
 use Illuminate\Http\Request;
 
 class OfflineController extends Controller
@@ -229,29 +230,22 @@ class OfflineController extends Controller
         return response()->json($tiendas, 200);
     }
 
-    public function show($id)
+    public function resumenCarteraClientes()
     {
         $user = auth()->user();
-        $tienda = null;
+        $clientes = [];
+        $carteras = [];
 
-        if ($user->rol_id == 3) {
-            $tienda = $user->tiendas()
-                ->where('id_tiendas', $id)
-                ->with('propietario', 'vendedores')
-                ->firstOrFail();
-        } else {
-            $tienda = Tienda::query()
-                ->where('id_tiendas', $id)
-                ->with('propietario', 'vendedores')
-                ->firstOrFail();
+        if ($user->rol_id == 1) {
+            $clientes = User::where('rol_id', 3)->get();
+        } else if ($user->rol_id == 2) {
+            $clientes = $user->clientes()->with('datos')->get();
         }
 
-        if ($tienda != null);{
-            $tienda->cliente_id = $tienda->cliente;
-            $tienda->cliente = $tienda->propietario;
-            unset($tienda->propietario);
+        foreach ($clientes as $cliente) {
+            $carteras[] = ResumenController::resumenCarteraCliente($cliente);
         }
 
-        return response()->json($tienda, 200);
+        return response()->json($carteras, 200);
     }
 }

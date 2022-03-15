@@ -121,6 +121,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::middleware(['rol:administrador|vendedor'])->get("offline/pedidos", "OfflineController@pedidos");
     Route::middleware(['rol:administrador|vendedor'])->get("offline/productos", "OfflineController@productos");
     Route::middleware(['rol:administrador|vendedor'])->get("offline/imagenes", "OfflineController@imagenes");
+    Route::middleware(['rol:administrador|vendedor'])->get("offline/resumenes-cartera", "OfflineController@resumenCarteraClientes");
 
     // // ENCUESTAS
     // Route::apiResource('encuestas', 'EncuestaController', ['index', 'store', 'update']);

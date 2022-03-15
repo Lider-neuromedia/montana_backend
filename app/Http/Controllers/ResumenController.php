@@ -81,8 +81,12 @@ class ResumenController extends Controller
 
     public function resumenCartera(User $cliente)
     {
-        $dni = $cliente->obtenerDato('nit') ?? $cliente->dni;
+        return response()->json(self::resumenCarteraCliente($cliente), 200);
+    }
 
+    public static function resumenCarteraCliente(User $cliente)
+    {
+        $dni = $cliente->obtenerDato('nit') ?? $cliente->dni;
         $cupoTotal = $cliente->tiendas()->sum('cupo');
         $pedidosTotal = $cliente->clientePedidos()->where('estado', 2)->sum('total');
 
@@ -105,11 +109,12 @@ class ResumenController extends Controller
 
         $cupoDisponible = $cupoTotal - $pedidosTotal - $saldoTotalMora;
 
-        return response()->json([
+        return [
+            'cliente_id' => $cliente->id,
             'cupo_preaprobado' => $cupoPreaprobado,
             'cupo_disponible' => $cupoDisponible,
             'saldo_total_deuda' => $saldoTotal,
             'saldo_mora' => $saldoTotalMora,
-        ], 200);
+        ];
     }
 }
