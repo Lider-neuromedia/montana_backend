@@ -55,6 +55,8 @@ class OfflineController extends Controller
             ->whereHas('productoCatalogo', function ($q) {
                 $q->where('estado', 'activo');
             })
+            ->where("nombre", "!=", "")
+            ->where('precio', '>', 0)
             ->with('productoMarca', 'imagenes')
             ->orderBy('nombre', 'asc')
             ->get()

@@ -14,21 +14,99 @@ class ProductoController extends Controller
     public function index(Request $request, Catalogo $catalogo)
     {
         $search = $request->get('search') ?: false;
+        $user = auth()->user();
 
         $productos = $catalogo->productos()
             ->when($search, function ($q) use ($search) {
-                $q->where('nombre', 'like', "%$search%")
-                    ->orWhere('codigo', 'like', "%$search%")
-                    ->orWhere('referencia', 'like', "%$search%")
-                    ->orWhere('stock', 'like', "%$search%")
-                    ->orWhere('descripcion', 'like', "%$search%")
-                    ->orWhere('sku', 'like', "%$search%")
-                    ->orWhere('precio', 'like', "%$search%")
-                    ->orWhere('total', 'like', "%$search%")
-                    ->orWhereHas('productoMarca', function ($q) use ($search) {
-                        $q->where('nombre_marca', 'like', "%$search%")
-                            ->orWhere('codigo', 'like', "%$search%");
-                    });
+                $q->where(function ($q) use ($search) {
+                    $q->where('nombre', 'like', "%$search%")
+                        ->orWhere('codigo', 'like', "%$search%")
+                        ->orWhere('referencia', 'like', "%$search%")
+                        ->orWhere('stock', 'like', "%$search%")
+                        ->orWhere('descripcion', 'like', "%$search%")
+                        ->orWhere('sku', 'like', "%$search%")
+                        ->orWhere('precio', 'like', "%$search%")
+                        ->orWhere('total', 'like', "%$search%")
+                        ->orWhereHas('productoMarca', function ($q) use ($search) {
+                            $q->where('nombre_marca', 'like', "%$search%")
+                                ->orWhere('codigo', 'like', "%$search%");
+                        });
+                });
+            })
+            ->when($user->rol_id != 1, function ($q) {
+                $q->where("nombre", "!=", "")
+                    ->where('precio', '>', 0);
+            })
+            ->with([
+                'productoMarca',
+                'imagenes' => function ($q) {
+                    $q->where('destacada', 1);
+                },
+            ])
+            ->orderBy('nombre', 'asc')
+            ->paginate(20);
+
+        $productos->setCollection(
+            $productos->getCollection()
+                ->map(function ($x) {
+                    $x->marca_id = $x->marca;
+                    $x->marca = $x->productoMarca;
+                    unset($x->productoMarca);
+
+                    $x->image = null;
+
+                    if ($x->imagenes->isNotEmpty()) {
+                        $x->image = url($x->imagenes->first()->image);
+                    } else {
+                        $imagen = $x->imagenes()->first();
+
+                        if ($imagen != null) {
+                            $x->image = url($imagen->image);
+                        }
+                    }
+
+                    unset($x->imagenes);
+                    return $x;
+                })
+        );
+
+        return response()->json([
+            'productos' => $productos,
+            'response' => 'success',
+            'status' => 200,
+        ], 200);
+    }
+
+    public function productosShowRoom(Request $request)
+    {
+        $search = $request->get('search') ?: false;
+        $user = auth()->user();
+
+        $catalogo = Catalogo::query()
+            ->where('tipo', 'show room')
+            ->where('estado', 'activo')
+            ->firstOrFail();
+
+        $productos = $catalogo->productos()
+            ->when($search, function ($q) use ($search) {
+                $q->where(function ($q) use ($search) {
+                    $q->where('nombre', 'like', "%$search%")
+                        ->orWhere('codigo', 'like', "%$search%")
+                        ->orWhere('referencia', 'like', "%$search%")
+                        ->orWhere('stock', 'like', "%$search%")
+                        ->orWhere('descripcion', 'like', "%$search%")
+                        ->orWhere('sku', 'like', "%$search%")
+                        ->orWhere('precio', 'like', "%$search%")
+                        ->orWhere('total', 'like', "%$search%")
+                        ->orWhereHas('productoMarca', function ($q) use ($search) {
+                            $q->where('nombre_marca', 'like', "%$search%")
+                                ->orWhere('codigo', 'like', "%$search%");
+                        });
+                });
+            })
+            ->when($user->rol_id != 1, function ($q) {
+                $q->where("nombre", "!=", "")
+                    ->where('precio', '>', 0);
             })
             ->with([
                 'productoMarca',
@@ -242,70 +320,6 @@ class ProductoController extends Controller
             'response' => 'success',
             'status' => 200,
             'message' => "Producto eliminado.",
-        ], 200);
-    }
-
-    public function productosShowRoom(Request $request)
-    {
-        $search = $request->get('search') ?: false;
-
-        $catalogo = Catalogo::query()
-            ->where('tipo', 'show room')
-            ->where('estado', 'activo')
-            ->firstOrFail();
-
-        $productos = $catalogo->productos()
-            ->when($search, function ($q) use ($search) {
-                $q->where('nombre', 'like', "%$search%")
-                    ->orWhere('codigo', 'like', "%$search%")
-                    ->orWhere('referencia', 'like', "%$search%")
-                    ->orWhere('stock', 'like', "%$search%")
-                    ->orWhere('descripcion', 'like', "%$search%")
-                    ->orWhere('sku', 'like', "%$search%")
-                    ->orWhere('precio', 'like', "%$search%")
-                    ->orWhere('total', 'like', "%$search%")
-                    ->orWhereHas('productoMarca', function ($q) use ($search) {
-                        $q->where('nombre_marca', 'like', "%$search%")
-                            ->orWhere('codigo', 'like', "%$search%");
-                    });
-            })
-            ->with([
-                'productoMarca',
-                'imagenes' => function ($q) {
-                    $q->where('destacada', 1);
-                },
-            ])
-            ->orderBy('nombre', 'asc')
-            ->paginate(20);
-
-        $productos->setCollection(
-            $productos->getCollection()
-                ->map(function ($x) {
-                    $x->marca_id = $x->marca;
-                    $x->marca = $x->productoMarca;
-                    unset($x->productoMarca);
-
-                    $x->image = null;
-
-                    if ($x->imagenes->isNotEmpty()) {
-                        $x->image = url($x->imagenes->first()->image);
-                    } else {
-                        $imagen = $x->imagenes()->first();
-
-                        if ($imagen != null) {
-                            $x->image = url($imagen->image);
-                        }
-                    }
-
-                    unset($x->imagenes);
-                    return $x;
-                })
-        );
-
-        return response()->json([
-            'productos' => $productos,
-            'response' => 'success',
-            'status' => 200,
         ], 200);
     }
 
