@@ -45,6 +45,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     // OTROS
     Route::post('devices', 'DevicesController@post')->name('devices.store');
     Route::get('/dashboard-resumen', 'ResumenController@dashboardResumen')->name('resume.show');
+    Route::middleware(['rol:administrador|vendedor'])->get('/resumen/cliente/{cliente}', 'ResumenController@resumenCartera')->name('resume.cliente');
 
     // USUARIOS
     Route::middleware(['rol:administrador|vendedor'])->get('/users', 'UserController@index')->name('users.index');

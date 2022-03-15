@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Entities\AmpliacionCupo;
+use App\Entities\Cartera;
 use App\Entities\Pedido;
 use App\Entities\User;
 use Carbon\Carbon;
@@ -75,5 +77,39 @@ class ResumenController extends Controller
             'pendientes' => $pedidos->where('estado', 2)->first()->pedidos ?? 0,
             'rechazados' => $pedidos->where('estado', 3)->first()->pedidos ?? 0,
         ];
+    }
+
+    public function resumenCartera(User $cliente)
+    {
+        $dni = $cliente->obtenerDato('nit') ?? $cliente->dni;
+
+        $cupoTotal = $cliente->tiendas()->sum('cupo');
+        $pedidosTotal = $cliente->clientePedidos()->where('estado', 2)->sum('total');
+
+        $cupoPreaprobado = AmpliacionCupo::query()
+            ->where('cliente', $cliente->id)
+            ->where('estado', 'pendiente')
+            ->get()
+            ->sum('monto');
+
+        $saldoTotal = Cartera::query()
+            ->where('identificador', $dni)
+            ->get()
+            ->sum('saldo');
+
+        $saldoTotalMora = Cartera::query()
+            ->where('identificador', $dni)
+            ->whereDate('fecha_vencimiento', '<', Carbon::now()->format('Y-m-d'))
+            ->get()
+            ->sum('saldo');
+
+        $cupoDisponible = $cupoTotal - $pedidosTotal - $saldoTotalMora;
+
+        return response()->json([
+            'cupo_preaprobado' => $cupoPreaprobado,
+            'cupo_disponible' => $cupoDisponible,
+            'saldo_total_deuda' => $saldoTotal,
+            'saldo_mora' => $saldoTotalMora,
+        ], 200);
     }
 }

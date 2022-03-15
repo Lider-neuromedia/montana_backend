@@ -58,7 +58,19 @@
 								},
 								{
 									"key": "email",
-									"value": "emanuel@gmail.com",
+									"value": "aleandro@neuromedia.com.co",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "password",
+									"value": "montana000",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "email",
+									"value": "fajardo-saenz-carlos-eduardo79685570-3@example.com",
 									"type": "text",
 									"disabled": true
 								},
@@ -372,19 +384,44 @@
 							}
 						],
 						"url": {
-							"raw": "{{url}}/api/dashboard-resumen?fecha_atendidos=2020-02",
+							"raw": "{{url}}/api/dashboard-resumen",
 							"host": [
 								"{{url}}"
 							],
 							"path": [
 								"api",
 								"dashboard-resumen"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET Resumen de cartera de cliente",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/resumen/cliente/566",
+							"host": [
+								"{{url}}"
 							],
-							"query": [
-								{
-									"key": "fecha_atendidos",
-									"value": "2020-02"
-								}
+							"path": [
+								"api",
+								"resumen",
+								"cliente",
+								"566"
 							]
 						}
 					},
@@ -1354,7 +1391,7 @@
 							"formdata": []
 						},
 						"url": {
-							"raw": "{{url}}/api/vendedores/3/tiendas/50/asignar",
+							"raw": "{{url}}/api/vendedores/3/tiendas/340/asignar",
 							"host": [
 								"{{url}}"
 							],
@@ -1363,7 +1400,7 @@
 								"vendedores",
 								"3",
 								"tiendas",
-								"50",
+								"340",
 								"asignar"
 							]
 						}
@@ -2954,18 +2991,18 @@
 								},
 								{
 									"key": "cliente",
-									"value": "4",
+									"value": "566",
 									"type": "text"
 								},
 								{
 									"key": "monto",
-									"value": "300000",
+									"value": "3000000",
 									"type": "text"
 								},
 								{
 									"key": "doc_identidad",
 									"type": "file",
-									"src": "/home/neuromedia/Downloads/producto-1.jpg"
+									"src": "/home/neuromedia/Downloads/catalogo.png"
 								},
 								{
 									"key": "doc_rut",
@@ -2975,7 +3012,7 @@
 								{
 									"key": "doc_camara_com",
 									"type": "file",
-									"src": "/home/neuromedia/Downloads/producto-0.jpg"
+									"src": "/home/neuromedia/Downloads/catalogo.png"
 								}
 							]
 						},

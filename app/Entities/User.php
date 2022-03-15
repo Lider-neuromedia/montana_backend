@@ -110,4 +110,12 @@ class User extends Authenticatable implements Auditable
         $b = substr($this->apellidos, 0, 1);
         return trim("{$a}{$b}");
     }
+
+    public function obtenerDato($key)
+    {
+        return $this->datos()
+            ->where('field_key', $key)
+            ->first()
+            ->value_key ?? null;
+    }
 }

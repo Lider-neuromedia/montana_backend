@@ -18,6 +18,7 @@ const apiUrl = "http://montanabackend.test/api";
 |APIs                                                                       |
 |---------------------------------------------------------------------------|
 |[API de Sesión](documentation/Sesion.md)                                   |
+|[API de Resumen](documentation/Resumen.md)                                 |
 |[API de Monitoreo](documentation/Monitoreo.md)                             |
 |[API de Usuarios](documentation/Usuarios.md)                               |
 |[API de Usuarios Administradores](documentation/UsuariosAdministradores.md)|
@@ -29,4 +30,4 @@ const apiUrl = "http://montanabackend.test/api";
 |[API de Ampliación de Cúpo](documentation/AmpliacionCupo.md)               |
 |[API de Importar base de datos](documentation/ImportarDB.md)               |
 |[API de Pedidos](documentation/Pedidos.md)                                 |
-|[API de Offline Data](documentation/OfflineData.md)                                 |
+|[API de Offline Data](documentation/OfflineData.md)                        |
