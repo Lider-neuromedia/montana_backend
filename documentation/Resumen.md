@@ -60,3 +60,22 @@ axios.get(`${apiUrl}/resumen/cliente/783`);
     "saldo_mora": 9804000
 }
 ```
+
+------------------------------------------
+
+##### Obtener resumen de cartera de vendedor
+
+```js
+// Request
+axios.get(`${apiUrl}/resumen/vendedor/3`);
+```
+
+```json
+// Respuesta
+{
+    "vendedor_id": 3,
+    "comisiones_perdidas": 700000,
+    "comisiones_proximas_perder": 500000,
+    "comisiones_ganadas": 2200000
+}
+```

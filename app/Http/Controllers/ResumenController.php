@@ -117,4 +117,20 @@ class ResumenController extends Controller
             'saldo_mora' => $saldoTotalMora,
         ];
     }
+
+    public function resumenVendedor(User $vendedor)
+    {
+        $usuario = auth()->user();
+
+        if ($usuario->rol_id == 2 && $usuario->id != $vendedor->id) {
+            throw new \Exception("No tiene acceso a esta información.", 1);
+        }
+
+        return [
+            'vendedor_id' => $vendedor->id,
+            'comisiones_perdidas' => 0,
+            'comisiones_proximas_perder' => 0,
+            'comisiones_ganadas' => 0,
+        ];
+    }
 }

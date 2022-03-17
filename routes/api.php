@@ -46,6 +46,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::post('devices', 'DevicesController@post')->name('devices.store');
     Route::get('/dashboard-resumen', 'ResumenController@dashboardResumen')->name('resume.show');
     Route::middleware(['rol:administrador|vendedor'])->get('/resumen/cliente/{cliente}', 'ResumenController@resumenCartera')->name('resume.cliente');
+    Route::middleware(['rol:administrador|vendedor'])->get('/resumen/vendedor/{vendedor}', 'ResumenController@resumenVendedor')->name('resume.vendedor');
 
     // USUARIOS
     Route::middleware(['rol:administrador|vendedor'])->get('/users', 'UserController@index')->name('users.index');
