@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Entities\Catalogo;
+use App\Entities\GaleriaProducto;
 use App\Entities\Marca;
 use App\Entities\Pedido;
 use App\Entities\Producto;
@@ -15,24 +16,25 @@ class OfflineController extends Controller
 {
     public function imagenes(Request $request)
     {
-        $url = url('');
-
-        $imagenesProductos = \DB::table('galeria_productos')
-            ->select(\DB::raw("TRIM(CONCAT(\"$url/\", image)) as url"))
+        $imagenesProductos = GaleriaProducto::query()
+            ->select('image', 'updated_at')
             ->get()
-            ->pluck('url')
+            ->map(function ($x) {
+                return $x->url;
+            })
             ->unique()
             ->toArray();
 
-        $imagenesCatalogos = \DB::table('catalogos')
-            ->select(\DB::raw("TRIM(CONCAT(\"$url/\", imagen)) as url"))
+        $imagenesCatalogos = Catalogo::query()
+            ->select("imagen", "updated_at")
             ->get()
-            ->pluck('url')
+            ->map(function ($x) {
+                return $x->url;
+            })
             ->unique()
             ->toArray();
 
-        $imagenes = array_merge($imagenesProductos, $imagenesCatalogos);
-        return response()->json($imagenes, 200);
+        return response()->json(array_merge($imagenesProductos, $imagenesCatalogos), 200);
     }
 
     public function catalogos()
@@ -43,7 +45,7 @@ class OfflineController extends Controller
             ->orderBy('titulo', 'asc')
             ->get()
             ->map(function ($x) {
-                $x->imagen = url($x->imagen);
+                $x->imagen = $x->url;
                 return $x;
             });
 
@@ -70,7 +72,7 @@ class OfflineController extends Controller
 
                 $x->imagenes = $x->imagenes->map(function ($y) {
                     $y->id = $y->id_galeria_prod;
-                    $y->image = url($y->image);
+                    $y->image = $y->url;
                     unset($y->id_galeria_prod);
                     return $y;
                 });

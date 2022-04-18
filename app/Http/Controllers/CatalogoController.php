@@ -24,7 +24,7 @@ class CatalogoController extends Controller
             ->orderBy('titulo', 'asc')
             ->get()
             ->map(function ($x) {
-                $x->imagen = url($x->imagen);
+                $x->imagen = $x->url;
                 return $x;
             });
 
@@ -77,7 +77,7 @@ class CatalogoController extends Controller
             ->orderBy('titulo', 'asc')
             ->get()
             ->map(function ($x) {
-                $x->imagen = url($x->imagen);
+                $x->imagen = $x->url;
                 return $x;
             });
 
@@ -90,7 +90,7 @@ class CatalogoController extends Controller
 
     public function show(Catalogo $catalogo)
     {
-        $catalogo->imagen = url($catalogo->imagen);
+        $catalogo->imagen = $catalogo->url;
         return response()->json($catalogo, 200);
     }
 
@@ -163,7 +163,7 @@ class CatalogoController extends Controller
                 ]);
             }
 
-            Catalogo::refrescarCantidadDeProductos($catalogo);
+            $catalogo->refrescarCantidadDeProductos();
 
             \DB::commit();
 

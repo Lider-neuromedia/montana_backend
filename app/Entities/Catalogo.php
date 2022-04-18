@@ -39,6 +39,13 @@ class Catalogo extends Model implements Auditable
         return $this->hasOne(Descuento::class);
     }
 
+    public function getUrlAttribute()
+    {
+        $timestamp = $this->updated_at->timestamp;
+        $url = url($this->imagen);
+        return "$url?id=$timestamp";
+    }
+
     /**
      * Actualizar stock de productos en cantidades de catalogos.
      */
@@ -47,14 +54,14 @@ class Catalogo extends Model implements Auditable
         $catalogos = Catalogo::all();
 
         foreach ($catalogos as $catalogo) {
-            self::refrescarCantidadDeProductos($catalogo);
+            $catalogo->refrescarCantidadDeProductos();
         }
     }
 
-    public static function refrescarCantidadDeProductos(Catalogo $catalogo)
+    public function refrescarCantidadDeProductos()
     {
-        $catalogo->update([
-            'cantidad' => $catalogo->productos()->count(),
-        ]);
+        $cantidad = $this->productos()->count();
+        $this->update(['cantidad' => $cantidad]);
+        return $cantidad;
     }
 }

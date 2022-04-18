@@ -29,4 +29,11 @@ class GaleriaProducto extends Model implements Auditable
     {
         return $this->belongsTo(Producto::class, 'producto');
     }
+
+    public function getUrlAttribute()
+    {
+        $timestamp = $this->updated_at->timestamp;
+        $url = url($this->image);
+        return "$url?id=$timestamp";
+    }
 }

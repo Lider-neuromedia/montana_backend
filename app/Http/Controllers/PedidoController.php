@@ -419,7 +419,7 @@ class PedidoController extends Controller
             ->where('cantidad', '!=', 0)
             ->get()
             ->map(function ($x) {
-                $x->imagen = url($x->imagen);
+                $x->imagen = $x->url;
                 return $x;
             });
 

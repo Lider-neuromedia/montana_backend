@@ -56,12 +56,12 @@ class ProductoController extends Controller
                     $x->image = null;
 
                     if ($x->imagenes->isNotEmpty()) {
-                        $x->image = url($x->imagenes->first()->image);
+                        $x->image = $x->imagenes->first()->url;
                     } else {
                         $imagen = $x->imagenes()->first();
 
                         if ($imagen != null) {
-                            $x->image = url($imagen->image);
+                            $x->image = $imagen->url;
                         }
                     }
 
@@ -127,12 +127,12 @@ class ProductoController extends Controller
                     $x->image = null;
 
                     if ($x->imagenes->isNotEmpty()) {
-                        $x->image = url($x->imagenes->first()->image);
+                        $x->image = $x->imagenes->first()->url;
                     } else {
                         $imagen = $x->imagenes()->first();
 
                         if ($imagen != null) {
-                            $x->image = url($imagen->image);
+                            $x->image = $imagen->url;
                         }
                     }
 
@@ -161,12 +161,12 @@ class ProductoController extends Controller
             ->map(function ($x) {
                 $x->id = $x->id_galeria_prod;
                 unset($x->id_galeria_prod);
-                $x->image = url($x->image);
+                $x->image = $x->url;
                 return $x;
             });
 
         if ($producto->imagenes->isNotEmpty()) {
-            $producto->image = $producto->imagenes->first()->image;
+            $producto->image = $producto->imagenes->first()->url;
         }
 
         return response()->json([
@@ -278,7 +278,7 @@ class ProductoController extends Controller
                 }
             }
 
-            Catalogo::refrescarCantidadDeProductos($catalogo);
+            $catalogo->refrescarCantidadDeProductos();
 
             \DB::commit();
 
@@ -309,12 +309,8 @@ class ProductoController extends Controller
         }
 
         $catalogo = $producto->productoCatalogo;
-        $catalogo->cantidad--;
-        $catalogo->save();
-
         $producto->delete();
-
-        Catalogo::refrescarCantidadDeProductos($catalogo);
+        $catalogo->refrescarCantidadDeProductos();
 
         return response()->json([
             'response' => 'success',
