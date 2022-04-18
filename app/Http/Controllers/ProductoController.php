@@ -7,6 +7,7 @@ use App\Entities\GaleriaProducto;
 use App\Entities\Marca;
 use App\Entities\Producto;
 use App\Http\Requests\ProductoRequest;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class ProductoController extends Controller
@@ -279,6 +280,10 @@ class ProductoController extends Controller
             }
 
             $catalogo->refrescarCantidadDeProductos();
+
+            $producto->update([
+                'updated_at' => Carbon::now()->format('Y-m-d H:i:s'),
+            ]);
 
             \DB::commit();
 
